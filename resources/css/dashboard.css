@@ -1,0 +1,347 @@
+
+        :root {
+            --sidebar-width: 180px;
+            --header-height: 52px;
+            --bg-body: var(--color-surface-soft);
+            --bg-sidebar: var(--color-canvas);
+            --bg-header: var(--color-canvas);
+            --bg-card: var(--color-canvas);
+            --border: var(--color-hairline-soft);
+            --text-primary: var(--color-ink-deep);
+            --text-secondary: var(--color-ink);
+            --text-muted: var(--color-steel);
+            --text-sidebar: var(--color-steel);
+            --text-sidebar-active: #ffffff;
+            --bg-sidebar-hover: var(--color-surface-soft);
+            --text-sidebar-hover: var(--color-ink-deep);
+            --bg-sidebar-active: var(--accent);
+            --sidebar-shadow: none;
+            --header-shadow: none;
+            --text-xs: 0.75rem;
+            --text-sm: 0.875rem;
+            --text-base: 1rem;
+            --text-lg: 1.125rem;
+            --text-xl: 1.25rem;
+            --text-2xl: 1.5rem;
+            --accent: var(--color-fb-blue);
+            --accent-hover: var(--color-primary-deep);
+            --accent-bg: var(--color-surface-soft);
+            --success: var(--color-success);
+            --warning: var(--color-warning);
+            --danger: var(--color-critical);
+            --gradient: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-deep) 100%);
+            --shadow-sm: none;
+            --shadow-md: none;
+            --radius: var(--radius-xl);
+        }
+
+        /* Dark mode */
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-sidebar: #0f172a;
+            --bg-header: #0f172a;
+            --bg-card: #1e293b;
+            --border: #1e293b; /* Make border subtle to let shadow do the work */
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --text-sidebar: #cbd5e1;
+            --text-sidebar-active: #ffffff;
+            --bg-sidebar-hover: rgba(255,255,255,0.06);
+            --text-sidebar-hover: #ffffff;
+            --bg-sidebar-active: var(--accent);
+            --sidebar-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+            --header-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3);
+        }
+
+        body {
+            background: var(--bg-body);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            height: calc(100vh - var(--header-height));
+            position: fixed;
+            left: 0;
+            top: var(--header-height);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            box-shadow: var(--sidebar-shadow);
+            transition: transform 0.3s ease, width 0.3s ease, box-shadow 0.3s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none; /* Firefox */
+            padding-bottom: 36px; /* space for fixed footer */
+        }
+
+        /* Custom Scrollbar for Sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: transparent;
+            border-radius: 4px;
+        }
+        .sidebar:hover::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .sidebar:hover {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.15) transparent;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 12px 8px;
+        }
+
+        .nav-section {
+            margin-bottom: 12px;
+        }
+
+        .nav-section-title {
+            font-size: var(--text-xs);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 8px;
+            margin-bottom: 6px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            color: var(--text-sidebar);
+            text-decoration: none;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            transition: all 0.15s;
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-sidebar-hover);
+            color: var(--text-sidebar-hover);
+        }
+
+        .nav-item.active {
+            background: var(--bg-sidebar-active);
+            color: var(--text-sidebar-active);
+        }
+
+        .nav-item svg {
+            width: 20px; height: 20px;
+            flex-shrink: 0;
+            opacity: 0.7;
+        }
+
+        .nav-item.active svg { opacity: 1; }
+
+        /* Header User & Modul buttons */
+        .btn-header-icon {
+            width: 36px; height: 36px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .btn-header-icon:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-header-icon.danger:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* ==================== MAIN ==================== */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding-top: var(--header-height);
+            padding-bottom: 36px; /* space for fixed footer */
+            min-height: 100vh;
+        }
+
+        .header {
+            height: var(--header-height);
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--header-shadow, none);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 60;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-right: 16px;
+        }
+
+        .header-brand .brand-icon {
+            width: 36px; height: 36px;
+            background: var(--gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .header-brand .brand-icon svg { width: 18px; height: 18px; fill: white; }
+
+        .header-brand .brand-text {
+            font-size: var(--text-base);
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .header-brand .brand-version {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .header-left h2 {
+            font-size: var(--text-lg);
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+
+
+        .page-content {
+            padding: 28px;
+        }
+
+        /* License Warning Banner */
+        .license-banner {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 10px 28px;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .license-banner.expired {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        /* Welcome Card */
+        .welcome-card {
+            background: var(--gradient);
+            border-radius: var(--radius);
+            padding: 32px;
+            color: white;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-card::after {
+            content: '';
+            position: absolute;
+            right: -20px; top: -20px;
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+
+        .welcome-card h1 {
+            font-size: var(--text-xl);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .welcome-card p {
+            opacity: 0.8;
+            font-size: var(--text-sm);
+        }
+
+
+
+        /* Sidebar text transitions */
+        .nav-text, .nav-section-title, .user-info {
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+        }
+
+        /* Responsive: Icon-only Sidebar for Portrait Desktop & Tablet */
+        @media (max-width: 1080px) {
+            .sidebar {
+                width: 68px;
+                overflow-x: hidden;
+                box-shadow: none;
+                transform: translateX(0); /* always show */
+            }
+            
+            .main-content {
+                margin-left: 68px;
+            }
+
+            .sidebar .nav-section-title,
+            .sidebar .nav-text {
+                display: none;
+            }
+            
+            .sidebar .nav-item {
+                width: 36px;
+                height: 36px;
+                padding: 0;
+                margin-left: auto;
+                margin-right: auto;
+                justify-content: center;
+            }
+        }
+    

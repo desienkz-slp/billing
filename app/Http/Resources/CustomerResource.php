@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class CustomerResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'uuid' => $this->uuid,
+            'customer_id_display' => $this->customer_id_display,
+            'name' => $this->name,
+            'username' => $this->username,
+            'phone' => $this->phone,
+            'address' => $this->address,
+            'nik' => $this->nik,
+            'package' => new PackageResource($this->whenLoaded('package')),
+            'area' => new AreaResource($this->whenLoaded('area')),
+            'router' => new RouterResource($this->whenLoaded('router')),
+            'server' => $this->whenLoaded('server', fn () => [
+                'id' => $this->server->id,
+                'name' => $this->server->name,
+            ]),
+            'odp' => $this->whenLoaded('odp', fn () => [
+                'id' => $this->odp->id,
+                'name' => $this->odp->name,
+            ]),
+            'effective_price' => $this->getEffectivePrice(),
+            'effective_price_formatted' => 'Rp ' . number_format($this->getEffectivePrice(), 0, ',', '.'),
+            'status' => $this->status,
+            'is_isolated' => $this->is_isolated,
+            'isolated_since' => $this->isolated_since?->toDateString(),
+            'is_on_leave' => $this->is_on_leave,
+            'registration_date' => $this->registration_date?->toDateString(),
+            'billing_date' => $this->billing_date,
+            'sales' => $this->whenLoaded('sales', fn () => [
+                'id' => $this->sales->id,
+                'name' => $this->sales->name,
+            ]),
+            'notes' => $this->notes,
+            'password_pppoe' => $this->when(
+                $request->user()?->hasCapability('monitor.pppoe.access'),
+                $this->password_pppoe
+            ),
+            'outstanding_balance' => $this->when(
+                $request->routeIs('*.show'),
+                fn () => $this->getOutstandingBalance()
+            ),
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
+        ];
+    }
+}

@@ -1,0 +1,130 @@
+# Bab 1: Pendahuluan dan Arsitektur Sistem (SISPEMB / LadaPala-Bill)
+
+Selamat datang pada dokumentasi komprehensif Sistem Billing (SISPEMB). Bab ini akan membahas secara mendalam mengenai fondasi sistem, spesifikasi teknologi yang digunakan, alur arsitektur dasar, hingga rincian struktur direktori yang membentuk sistem ini.
+
+## 1.1 Gambaran Umum Sistem
+
+Sistem Billing (SISPEMB / LadaPala-Bill) adalah sebuah sistem manajemen terpadu yang dirancang khusus untuk Internet Service Provider (ISP) dan Wireless Internet Service Provider (WISP). Sistem ini berfungsi sebagai pusat kendali operasional yang menangani berbagai aspek bisnis, mulai dari manajemen pelanggan (CRM), penagihan (billing), pencatatan keuangan, hingga pemantauan jaringan secara langsung (network monitoring) yang terintegrasi dengan perangkat eksternal seperti router MikroTik dan server FreeRADIUS.
+
+Aplikasi ini mengadopsi pendekatan antarmuka berbasis web (Web-based Interface) yang responsif, serta dilengkapi dengan modul khusus untuk tampilan mobile (`mobile-view`) yang dapat diintegrasikan menjadi aplikasi Android (APK) berbasis WebView.
+
+### Fitur Utama Sistem:
+- **Manajemen Pelanggan**: Pendaftaran pelanggan baru, manajemen paket, manajemen ODP (Optical Distribution Point), dan status cuti pelanggan.
+- **Sistem Penagihan Terpusat**: Pembuatan tagihan (invoice) otomatis, konfirmasi pembayaran, dan pembuatan nota digital.
+- **Isolir Otomatis**: Integrasi langsung dengan MikroTik dan Radius untuk melakukan pemblokiran (isolir) secara otomatis bagi pelanggan yang menunggak.
+- **Role-Based Access Control (RBAC)**: Pembatasan akses berbasis peran (Admin, Sales, Teknisi, dll), sehingga setiap entitas hanya melihat halaman dan modul yang diizinkan.
+- **Laporan dan Keuangan**: Pencatatan arus kas (cashflow), laporan pendapatan, setoran sales, dan detail pengeluaran.
+- **Integrasi Jaringan**: Pemantauan langsung (live monitoring) status router MikroTik, pengguna aktif FreeRADIUS, dan sinkronisasi data antar server.
+
+---
+
+## 1.2 Spesifikasi Teknologi (Tech Stack)
+
+Sistem ini dibangun dengan arsitektur klasik Monolitik berbasis PHP murni (Vanilla PHP) yang dipadukan dengan database relasional MySQL. Berikut adalah rincian spesifikasi teknologi yang menopang sistem:
+
+| Komponen | Spesifikasi / Teknologi yang Digunakan |
+| :--- | :--- |
+| **Bahasa Pemrograman (Backend)** | PHP (Minimal versi 8.0, direkomendasikan 8.1 / 8.2). Tidak menggunakan framework berat seperti Laravel atau CodeIgniter, melainkan menggunakan pola desain prosedural modular. |
+| **Sistem Basis Data (Database)** | MySQL (Minimal 5.7) atau MariaDB. Interaksi database menggunakan ekstensi PDO (PHP Data Objects) untuk memastikan keamanan terhadap SQL Injection. |
+| **Web Server** | Apache (dengan `mod_rewrite` diaktifkan) atau Nginx. |
+| **Frontend / Antarmuka Pengguna** | HTML5, CSS3 murni (Vanilla CSS), dan JavaScript murni. Sistem menggunakan library eksternal ringan seperti **jQuery** (untuk DOM manipulasi & AJAX), **Bootstrap Icons** (untuk ikon), **Select2** (untuk dropdown yang dapat dicari), **Flatpickr** (untuk datepicker), dan **Leaflet.js** (untuk pemetaan ODP dan lokasi pelanggan). |
+| **Sistem Konfigurasi** | Berbasis environment variables menggunakan file `.env` (untuk kredensial database dan URL) serta file `.json` di folder `inc/` (untuk profil perusahaan dan konfigurasi nota). |
+| **Otomatisasi (Background Jobs)** | Mengandalkan sistem Cron Jobs (`crontab` di Linux atau Task Scheduler di Windows) yang menjalankan skrip-skrip PHP secara berkala (CLI mode atau HTTP trigger). |
+
+Ekstensi PHP esensial yang diwajibkan untuk menjalankan sistem ini meliputi: `PDO`, `pdo_mysql` (untuk interaksi database), `json` (untuk pemrosesan API), `mbstring` (untuk encoding karakter), `curl` (untuk HTTP request ke layanan eksternal), dan `gd` (untuk manipulasi gambar/logo).
+
+---
+
+## 1.3 Alur Arsitektur Dasar (Routing dan Navigasi)
+
+Arsitektur aplikasi ini menggunakan skema _Front Controller_ sederhana di mana pengguna dihadapkan pada satu gerbang utama, namun memiliki percabangan yang kompleks berdasarkan tipe perangkat (Desktop vs Mobile) dan hak akses (Permissions).
+
+### 1.3.1 Titik Masuk (Entry Point): `index.php`
+
+Ketika pengguna mengakses domain utama (misal: `https://billing.domainanda.com/`), permintaan pertama kali diterima oleh file `index.php`. 
+Tugas utama file ini adalah:
+1. **Otentikasi**: Memanggil `inc/auth_guard.php` untuk memastikan pengguna memiliki sesi (session) yang valid. Jika tidak, pengguna dilempar ke `login.php`.
+2. **Pengecekan Otorisasi**: Memanggil `inc/auth_permissions.php` untuk mengambil daftar aplikasi/modul yang boleh diakses pengguna tersebut (disimpan dalam variabel `$apps`).
+3. **Deteksi Perangkat (User-Agent Sniffing)**: Mendeteksi apakah permintaan datang dari peramban ponsel (Mobile Browser) atau WebView Android (ditandai dengan string `wv` pada User-Agent).
+4. **Pengalihan Otomatis (Auto-Redirect)**:
+   - Jika pengguna mengakses via **Mobile/WebView** dan memiliki izin ke aplikasi `billing`, mereka akan diarahkan secara paksa ke sub-direktori `mobile-view/index.php`.
+   - Jika pengguna hanya memiliki hak akses ke **satu** aplikasi (misalnya hanya `billing`), mereka diarahkan langsung ke antarmuka utama (`index-shell.php`).
+   - Jika pengguna memiliki hak akses lebih dari satu modul (misal: `billing` dan `config`), mereka diarahkan ke `app-gateway.php`.
+
+### 1.3.2 Portal Gerbang: `app-gateway.php`
+
+File ini bertindak sebagai _Application Launcher_ (seperti peluncur aplikasi pada OS pintar). Halaman ini merender antarmuka visual (Grid Layout) yang menampilkan ikon modul-modul yang berhak diakses oleh pengguna yang login.
+Beberapa modul yang ditampilkan pada gerbang ini antara lain:
+- **Billing** (mengarah ke `index-shell.php`)
+- **RADIUS** (mengarah ke `Monitor/pages/radius-users.php`)
+- **MikroTik** (mengarah ke `pages/mikrotik-status.php`)
+- **Peta (ACS)** (mengarah ke `map/index-shell.php`)
+- **Config** (mengarah ke `Config/index-shell.php`)
+
+### 1.3.3 Kerangka Utama Halaman (App Shell): `index-shell.php`
+
+Jika pengguna memilih modul "Billing", mereka diarahkan ke `index-shell.php`. Sistem ini tidak memuat ulang seluruh halaman (full page reload) setiap kali pengguna berpindah menu. 
+Metodologi yang digunakan adalah:
+1. File `index-shell.php` merender kerangka statis (Sidebar Navigation, Header Breadcrumb, dan Footer).
+2. Sistem _Dynamic Includes_: Bergantung pada parameter URL `?page=...` (misal `?page=input`), sistem akan mengeksekusi struktur `switch-case` di sisi server untuk memanggil file konten spesifik dari direktori `pages/` (misalnya `include __DIR__ . '/pages/input-pelanggan.php'`).
+3. **Navigasi AJAX / Pjax**: Sistem mengimplementasikan navigasi AJAX (Partial Load). Saat pengguna mengklik menu di sidebar, JavaScript mendeteksi klik tersebut, mengambil URL baru (ditambah parameter `_partial=1`), dan server merespons hanya dengan memuat file konten HTML (tanpa header dan sidebar lagi), lalu menyuntikkannya (inject) ke elemen `.sh-panel`. Hal ini memberikan pengalaman pengguna (User Experience) yang sangat cepat menyerupai SPA (Single Page Application).
+
+---
+
+## 1.4 Struktur Direktori Sistem
+
+Untuk memahami lokasi dan mempermudah pelacakan (debugging), berikut adalah pembedahan mendetail mengenai fungsionalitas setiap direktori:
+
+*   **`api/`**
+    Digunakan untuk integrasi HTTP API (Third-party clients). Menyediakan skrip seperti pendaftaran _device token_ untuk Firebase Cloud Messaging.
+*   **`asset/`**
+    Gudang aset publik berwujud statis. Berisi gambar (logo perusahaan), ikon favicon, file CSS (`asset/css/`), dan file JavaScript (`asset/js/`) termasuk library Flatpickr.
+*   **`BACKUP/` (khususnya `BACKUP/sql/`)**
+    Folder sementara berizin tulis (writable) yang digunakan oleh sistem untuk menyimpan file SQL hasil pem-backup-an otomatis dari database (melalui _cron job_) serta file ekspor berformat `.csv` data pelanggan.
+*   **`bill_apk/`**
+    Berisi *source code* terkait pengembangan aplikasi Android (berbasis Kotlin/Java) untuk mewadahi _webview_ halaman mobile.
+*   **`billing/`**
+    Direktori yang krusial. Ini adalah _Backend API handlers_ yang mengurus semua logika penyimpanan dan manipulasi (Create, Update, Delete) data dari antarmuka pengguna (AJAX endpoint).
+*   **`Config/`**
+    Folder yang mewadahi antarmuka pengaturan sistem lanjutan (konfigurasi profil perusahaan, user, hak akses, mikroTik router, dan setup format nota).
+*   **`cron/`**
+    Jantung otomatisasi sistem. Berisi kumpulan skrip (Automated Tasks) yang berjalan di latar belakang (Background Jobs) secara konstan, seperti isolir otomatis (`cron_auto_isolir.php`), penagihan WhatsApp, pencadangan router, dan sinkronisasi Radius/PPPoE.
+*   **`data/`**
+    Direktori cadangan / data sementara opsional untuk memproses pemindahan state atau migrasi.
+*   **`docs/`**
+    Berisi dokumentasi format `.md` turunan dari sistem untuk perihal instalasi server (CloudPanel, cPanel).
+*   **`inc/`**
+    Direktori Core Helpers. Berisi _library_ fungsi internal, seperti autentikasi (`auth_guard.php`, `auth_permissions.php`), konfigurasi DB (`billing_db.php`), implementasi pencegahan serangan CSRF (`csrf.php`), serta kelas API MikroTik (`routeros_api.class.php`).
+*   **`map/` & `map_api/`**
+    Antarmuka visual dan _backend endpoint_ untuk merender koordinat geografis pelanggan (GIS) ke dalam peta menggunakan library Leaflet.
+*   **`mobile-view/`**
+    Versi aplikasi (antarmuka) yang khusus didesain untuk layar gawai berukuran kecil (ponsel cerdas), membuang layout *sidebar* dan menggantinya dengan gaya navigasi *bottom bar* atau tumpukan elemen vertikal sederhana yang sangat ringan.
+*   **`modules/`**
+    Folder ekstensi sistem untuk menyuntikkan plugin terisolasi atau integrasi khusus (seperti sinkronisasi master API eksternal).
+*   **`Monitor/`**
+    Berisi halaman khusus pemantauan infrastruktur _real-time_ jaringan, seperti sinkronisasi basis data pengguna Radius.
+*   **`pages/`**
+    Berisi potongan tampilan antar muka (View/Presentation layer) untuk setiap entitas halaman (misalnya halaman pendaftaran `input-pelanggan.php`, dan halaman laporan `laporan-cashflow.php`). File di sini dimuat secara dinamis oleh `index-shell.php`.
+*   **`sql/`**
+    Menyimpan skema basis data mentah (`schema_tables.sql`) dan skrip pembaruan struktural (schema migration) yang dipanggil pada tahap pengaturan awal.
+*   **`tmp/`**
+    Direktori untuk menulis file sementara (temporary run-time files). Sering digunakan untuk sistem _rate limiting_, pencegahan eksploitasi API berulang, atau file sesi statis lainnya.
+
+---
+
+## 1.5 Alur Instalasi dan Setup Awal (Setup Wizard)
+
+Sistem billing didesain agar mudah di-deploy di berbagai lingkungan peladen (lokal menggunakan XAMPP, VPS menggunakan CloudPanel, maupun shared hosting cPanel). Proses ini difasilitasi oleh Setup Wizard yang digerakkan oleh file `setup.php` dan `setup-api.php`.
+
+### Alur Eksekusi Konfigurasi Awal:
+1.  **Akses Instalasi:** Jika sistem tidak dapat mendeteksi file `.env`, maka aplikasi dalam keadaan inisialisasi awal. (Saat URL diakses, manual diarahkan atau disarankan membuka `/setup.php`).
+2.  **Pembuatan Form Konfigurasi (`setup.php`):** Halaman GUI yang modern menyajikan tiga tahapan instalasi. Pada Step 1, pengguna diminta memasukkan _Database Host_, _Name_, _Username_, dan _Password_.
+3.  **Proses Uji Koneksi:** Form mengirimkan payload AJAX ke endpoint `setup-api.php?action=test_connection`. Skrip PHP merespons dengan memverifikasi koneksi PDO _Try-Catch_. Jika berhasil, pengguna dapat melangkah ke bagian berikutnya.
+4.  **Injeksi Konfigurasi:** Skrip memanggil `setup-api.php?action=save_credentials` yang akan membuat (atau menimpa) file `.env` di _root directory_ dengan parameter akses database dan URL dasar (Base URL) milik sistem.
+5.  **Eksekusi Skema Basis Data (`action=run_schema`):** Pada Step 2, skrip wizard akan membaca file `sql/schema_tables.sql`. PHP akan memisahkan per-kueri dan mengeksekusinya ke dalam MySQL untuk membuat tabel-tabel utama (seperti `customers`, `invoices`, `users`, dll) serta memberikan data penyemaian awalan (Seed Data) berupa akun admin bawaan (`admin/admin123`).
+
+Begitu proses ini selesai, konfigurasi sistem ditandai komplit dan skrip wizard akan otomatis memblokir dirinya agar tidak dieksploitasi, kemudian mengarahkan pengguna ke halaman login otentikasi.
+
+---
+> [!NOTE]
+> Pada Bab berikutnya (Bab 2), kita akan membongkar arsitektur struktur basis data. Kita akan menelaah secara detail entitas tabel yang menghubungkan modul pelanggan dengan modul keuangan dan penagihan, serta memahami bagaimana data divalidasi dan disimpan di level MySQL.

@@ -1,0 +1,65 @@
+@import 'tailwindcss';
+@import './dashboard.css';
+@source "c:/xampp/htdocs/laravel-bill/resources/js";
+
+@variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+
+@theme {
+    --font-sans: 'Optimistic VF', 'Montserrat', 'Helvetica', 'Inter', system-ui, sans-serif;
+    
+    --color-primary: #0064e0;
+    --color-primary-deep: #0457cb;
+    --color-primary-soft: #0091ff;
+    --color-on-primary: #ffffff;
+    --color-ink-button: #000000;
+    --color-on-ink-button: #ffffff;
+    --color-fb-blue: #1876f2;
+    --color-meta-link: #385898;
+    --color-oculus-purple: #a121ce;
+    --color-success: #31a24c;
+    --color-success-bg: #24e400;
+    --color-attention: #f2a918;
+    --color-warning: #f7b928;
+    --color-warning-bg: #ffe200;
+    --color-critical: #e41e3f;
+    --color-critical-strong: #f0284a;
+    --color-canvas: #ffffff;
+    --color-surface-soft: #f1f4f7;
+    --color-ink-deep: #0a1317;
+    --color-ink: #1c1e21;
+    --color-charcoal: #444950;
+    --color-slate: #4b4c4f;
+    --color-steel: #5d6c7b;
+    --color-stone: #8595a4;
+    --color-hairline: #ced0d4;
+    --color-hairline-soft: #dee3e9;
+    --color-disabled-text: #bcc0c4;
+    
+    --radius-xs: 2px;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 16px;
+    --radius-xxl: 24px;
+    --radius-xxxl: 32px;
+    --radius-feature: 40px;
+    --radius-full: 100px;
+}
+
+[data-theme="dark"], .dark {
+    color-scheme: dark;
+}
+
+[data-theme="light"], :root:not(.dark) {
+    color-scheme: light;
+}
+
+[data-theme="dark"] option, .dark option {
+    background-color: #1e293b; /* bg-slate-800 */
+    color: #f1f5f9; /* text-slate-100 */
+}
+
+/* Fade Transition */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.5s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }

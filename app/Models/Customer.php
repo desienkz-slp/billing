@@ -1,0 +1,80 @@
+<?php
+
+namespace App\Models;
+
+use App\Traits\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Scopes\VisibilityScope;
+use Illuminate\Support\Str;
+
+class Customer extends Model
+{
+    use HasFactory, BelongsToTenant, SoftDeletes;
+
+    protected $guarded = ['id'];
+
+    protected $casts = [
+        'is_isolated' => 'boolean',
+        'is_on_leave' => 'boolean',
+        'auto_isolir' => 'boolean',
+        'pakai_ppn' => 'boolean',
+        'pakai_bhp' => 'boolean',
+        'pakai_admin' => 'boolean',
+        'auto_wa_tagihan' => 'boolean',
+        'sync_db_pusat' => 'boolean',
+        'max_tunggakan' => 'integer',
+        'registration_date' => 'date',
+        'isolated_since' => 'date',
+        'leave_start' => 'date',
+        'leave_end' => 'date',
+        'metadata' => 'array',
+    ];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new VisibilityScope);
+
+        static::creating(function (Customer $c) {
+            if (empty($c->uuid)) {
+                $c->uuid = (string) Str::uuid();
+            }
+        });
+    }
+
+    // Relationships
+    public function area(): BelongsTo { return $this->belongsTo(Area::class); }
+    public function package(): BelongsTo { return $this->belongsTo(Package::class); }
+    public function router(): BelongsTo { return $this->belongsTo(Router::class); }
+    public function server(): BelongsTo { return $this->belongsTo(Server::class); }
+    public function odp(): BelongsTo { return $this->belongsTo(Odp::class); }
+    public function sales(): BelongsTo { return $this->belongsTo(User::class, 'sales_id'); }
+    public function coordinate(): HasOne { return $this->hasOne(CustomerCoordinate::class); }
+    public function invoices(): HasMany { return $this->hasMany(Invoice::class); }
+    public function payments(): HasMany { return $this->hasMany(Payment::class); }
+    public function monthlyBalances(): HasMany { return $this->hasMany(MonthlyBalance::class); }
+    public function isolirLogs(): HasMany { return $this->hasMany(IsolirLog::class); }
+
+    // Helpers
+    public function getEffectivePrice(): int
+    {
+        $base = $this->custom_price ?? $this->package?->price ?? 0;
+        $addon = is_numeric($this->tambahan_layanan) ? (int)$this->tambahan_layanan : 0;
+        $discount = is_numeric($this->diskon) ? (int)$this->diskon : 0;
+        return max(0, $base + $addon - $discount);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active' && !$this->is_isolated;
+    }
+
+    public function getOutstandingBalance(): int
+    {
+        return $this->monthlyBalances()->where('status', '!=', 'paid')->sum('balance');
+    }
+}

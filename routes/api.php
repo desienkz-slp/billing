@@ -1,0 +1,66 @@
+<?php
+
+use App\Http\Controllers\Api\V1\AreaController;
+use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\CustomerController;
+use App\Http\Controllers\Api\V1\PackageController;
+use App\Http\Controllers\Api\V1\PaymentController;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes — /api/v1/*
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('v1')->group(function () {
+
+    // Public API info
+    Route::get('/', fn () => response()->json([
+        'app' => 'LadaPala-Bill API',
+        'version' => '1.0.0',
+        'status' => 'ok',
+    ]));
+
+    // Auth (guest)
+    Route::post('login', [AuthController::class, 'login']);
+
+    // Protected routes
+    Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
+        // Auth
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('me', [AuthController::class, 'me']);
+
+        // === CUSTOMERS ===
+        Route::middleware('permission:billing.customers.view')->group(function () {
+            Route::get('customers', [CustomerController::class, 'index']);
+            Route::get('customers/stats', [CustomerController::class, 'stats']);
+            Route::get('customers/{customer}', [CustomerController::class, 'show']);
+        });
+        Route::post('customers', [CustomerController::class, 'store'])
+            ->middleware('permission:billing.customers.create');
+        Route::put('customers/{customer}', [CustomerController::class, 'update'])
+            ->middleware('permission:billing.customers.edit');
+        Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])
+            ->middleware('permission:billing.customers.delete');
+
+        // === PAYMENTS ===
+        Route::middleware('permission:billing.payments.view')->group(function () {
+            Route::get('payments', [PaymentController::class, 'index']);
+            Route::get('payments/summary', [PaymentController::class, 'summary']);
+            Route::get('payments/{payment}', [PaymentController::class, 'show']);
+        });
+        Route::post('payments', [PaymentController::class, 'store'])
+            ->middleware('permission:billing.payments.create');
+        Route::post('payments/{payment}/cancel', [PaymentController::class, 'cancel'])
+            ->middleware('permission:billing.payments.cancel');
+
+        // === MASTER DATA ===
+        Route::apiResource('packages', PackageController::class)
+            ->middleware('permission:master.packages.manage');
+        Route::apiResource('areas', AreaController::class)
+            ->middleware('permission:master.areas.manage');
+
+        // Phase 3+ endpoints will be added here
+    });
+});

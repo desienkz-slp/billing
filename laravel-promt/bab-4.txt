@@ -1,0 +1,67 @@
+# Bab 4: Integrasi Pihak Ketiga & Jaringan
+
+Sebuah sistem manajemen penyedia layanan internet (ISP) modern tidak bisa berdiri sendiri. SISPEMB (LadaPala-Bill) dirancang untuk berkolaborasi dengan perangkat keras perutean (_routing hardware_), peladen AAA (_Authentication, Authorization, Accounting_), layanan pesan instan, hingga sistem pelaporan eksternal.
+
+Bab ini menjelaskan protokol, *library*, dan kelas (Class) yang digunakan untuk mendobrak batas aplikasi web biasa menjadi sistem terintegrasi jaringan.
+
+---
+
+## 4.1 Otomatisasi Perutean: MikroTik RouterOS API
+
+Untuk mengendalikan *router* fisik di gardu (site/POP), sistem tidak menggunakan *tunneling* SSH atau telnet, melainkan memanfaatkan API resmi MikroTik. 
+
+### Kelas `RouterosAPI` (`api/routeros_api.class.php`)
+Sistem menggunakan *library* PHP pihak ketiga yang sangat andal (`RouterosAPI`). Beberapa kehebatan implementasinya dalam sistem ini meliputi:
+*   **Port & Keamanan**: API berkomunikasi secara bawaan di porta `8728` (TCP). Sistem juga mendukungan lapisan enkripsi via porta `8729` (SSL) melalui variabel `$this->ssl = true` yang akan mengubah protokol stream PHP menjadi `ssl://`.
+*   **Mekanisme Login Paralel**: API telah dirancang ulang untuk mendukung metode prapengesahan versi MikroTik lawas (sebelum versi 6.43, yang menggunakan MD5 Hash berbasis respons acak) maupun versi terbaru (setelah 6.43 yang mengirim _plaintext password_ via SSL).
+*   **Manajemen Perintah (Write/Read)**: Perintah-perintah khas (misal: `/ppp/secret/add` atau `/ip/firewall/address-list/add`) dieksekusi secara asinkron menggunakan metode `$api->comm()`. Data ditransmisikan menggunakan spesifikasi Word Length (*encoding* biner bit-shift) khas MikroTik, kemudian dibaca (*read stream*) menjadi _array_ asosiatif PHP.
+
+> [!TIP]
+> Penggunaan API murni sangat cepat. Saat fitur **Auto-Isolir** berjalan, perintah pemutusan layanan dari ratusan pelanggan hanya memakan waktu milidetik per *record*, tanpa membani CPU pada *router* itu sendiri.
+
+---
+
+## 4.2 Peladen RADIUS Terpusat (FreeRADIUS)
+
+Sistem juga mendukungan lingkungan skala besar (Ribuan PPPoE/Hotspot) yang mana perangkat MikroTik tidak lagi kuat menyimpan _database user_ lokalnya.
+
+Berbeda dengan MikroTik yang dikendalikan melalui API, integrasi RADIUS bersifat **Native Database Level**.
+*   MikroTik dialihkan fungsinya hanya sebagai NAS (*Network Access Server*).
+*   Sistem tagihan menulis data paket berlangganan secara langsung ke tabel `radcheck`, `radreply`, dan `radusergroup` di MySQL.
+*   Daemon (servis) FreeRADIUS di Linux membaca tabel yang sama. Jika LadaPala-Bill menghapus pelanggan dari `radcheck`, saat itu juga MikroTik akan menolak koneksi perangkat pelanggan (Error 691) karena FreeRADIUS membalas dengan `Access-Reject`.
+
+Pendekatan ini menjamin ketersediaan tinggi (High Availability) tanpa _delay_ sinkronisasi API.
+
+---
+
+## 4.3 Pembangkit Pesan WhatsApp (`billing/billing_wa_message.php`)
+
+Penagihan yang baik membutuhkan notifikasi persuasif yang ramah kepada pengguna. Sistem tidak menggunakan *provider* SMS kuno, melainkan WhatsApp Gateway (biasanya di-hubungkan dengan API pihak ketiga seperti Baileys/Wablas/M-Pedia yang bertindak sebagai _Device_ Node).
+
+### Pemformatan Dinamis (Templating)
+Fungsionalitas utama di berkas ini adalah pembentukan *string* pesan (Message Generator).
+1.  **Penggalian Tagihan (Deep Query)**: Skrip mencari seluruh bulan tertunggak pelanggan berbekal metode irisan waktu (dari `tgl_daftar` hingga bulan ini) yang dikurangi dengan jumlah `billing_payments` aktual.
+2.  **Pemetaan Variabel (Variable Mapping)**: Sistem mendukung token _placeholder_ kustom yang dapat diatur oleh masing-masing agen (*Sales*). Variabel seperti `{{nama}}`, `{{paket}}`, `{{harga_paket}}`, `{{tagihan_belum_bayar}}`, dan `{{total_pembayaran}}` diganti menggunakan fungsi `str_replace`.
+3.  **Sterilisasi JSON**: Pesan akhir (*plain text* untuk WA) dihilangkan (*strip_tags*) dari segala injeksi HTML dan diekspor (*output*) dalam bentuk JSON. JSON ini yang akan ditangkap oleh aplikasi *Frontend* (ataupun *cron worker*) untuk didorong (*push*) ke nomor WhatsApp tujuan.
+
+---
+
+## 4.4 Laporan Eksekutif: Google Apps Script (`google_sheets_sync.gs`)
+
+Sebuah _hidden gem_ dalam arsitektur LadaPala-Bill adalah kemampuannya menancapkan (hook) laporan keuangan mentah langsung ke dasbor Eksekutif (BOD / Direktur) melalui **Google Sheets** tanpa mereka perlu melakukan "Login" ke sistem aplikasi Billing.
+
+1.  **Google Apps Script (GAS)**: Tersedia _script extension_ berbahasa JavaScript.
+2.  **Trigger Otomatis**: Skrip `syncAllData()` dirancang untuk dipicu (*Time-driven Trigger*) oleh *server* Google pada jam 6 pagi setiap harinya.
+3.  **Protokol Autentikasi**: Skrip mengirim _HTTP GET Request_ ke Endpoint Billing (`UrlFetchApp.fetch`) menggunakan `X-API-Key` statis yang dibangkitkan dari _backend_ (fungsi `GENERATE_API_KEY`).
+4.  **Parsing Multi-Dimensional**: JSON balasan (*response*) dari LadaPala-Bill dibongkar oleh GAS menjadi beberapa _Sheet_ (Tab Excel):
+    *   **Summary**: Mencetak rasio Total Pembayaran, PPN, Fee Agen/Sales, hingga Pendapatan Bersih (Net Revenue).
+    *   **Pembayaran & Pengeluaran**: Membuat salinan tabel (Dump) baris per baris.
+    *   **Fee Sales & Setoran**: Digunakan untuk penghitungan gaji bulanan dan validasi uang setor (*Cash on Hand*) dari tiap staf lapangan.
+
+Integrasi ini mendemonstrasikan bahwa sistem ini dirancang dengan mentalitas *Cloud-Native* yang siap beroperasi dalam ekosistem *SaaS (Software as a Service)* berskala _enterprise_.
+
+---
+> [!IMPORTANT]
+> Mengikat berbagai pihak ketiga menuntut konsistensi sinkronisasi. Bagaimana LadaPala-Bill menjamin *router* MikroTik tetap mengetahui jika seorang pelanggan telat membayar, sementara sang admin aplikasi mungkin sedang tidur? 
+>
+> Penjelasannya ada di **Bab 5: Pekerjaan Latar Belakang (Cron Jobs & Otomatisasi)**.

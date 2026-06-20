@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Models;
+
+use App\Traits\BelongsToTenant;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class PackageHistory extends Model
+{
+    use BelongsToTenant;
+
+    protected $guarded = ['id'];
+
+    protected $casts = [
+        'old_price' => 'integer',
+        'new_price' => 'integer',
+    ];
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function oldPackage(): BelongsTo
+    {
+        return $this->belongsTo(Package::class, 'old_package_id');
+    }
+
+    public function newPackage(): BelongsTo
+    {
+        return $this->belongsTo(Package::class, 'new_package_id');
+    }
+
+    public function changedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'changed_by');
+    }
+}

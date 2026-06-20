@@ -1,0 +1,57 @@
+# Bab 6: Aplikasi Mobile & Tampilan Antarmuka (Front-End & Mobile View)
+
+Sebuah *billing system* yang berfokus pada mobilitas *Sales* tentu harus mengutamakan kemudahan akses dari gawai (Mobile). LadaPala-Bill tidak hanya menyediakan portal administratif bagi pekerja kantoran, tetapi juga merancang modul antarmuka web progresif (PWA) tersendiri di direktori `mobile-view/`.
+
+Modul ini dikonstruksi secara hibrida (Hybrid Web-View) yang nantinya akan dimuat (di-_load_) dari dalam paket APK Android (yang kodenya tersimpan di folder `bill_apk/`).
+
+---
+
+## 6.1 Arsitektur Antarmuka Modul Mobile (`mobile-view/`)
+
+Pendekatan rekayasa di *frontend* tidak menggunakan *framework* JavaScript berat seperti React atau Vue, melainkan murni memanfaatkan *Vanilla JavaScript* dan HTML hibrida PHP untuk memangkas waktu muat (*load time*) ke tahap maksimal (Blazing Fast).
+
+### 6.1.1 Struktur dan Estetika Dinamis
+Berkas utama **`mobile-view/index.php`** memiliki keistimewaan *UX (User Experience)*:
+1.  **Sapaan Waktu Otomatis**: PHP membaca zona waktu (`Asia/Jakarta`) dan mengalkulasi jam untuk menentukan salam ("Selamat pagi", "Selamat siang", "Selamat malam") serta memodifikasi ikon (*Sun*, *Moon*, *Sunset*).
+2.  **Tema CSS Transparan (Dynamic Theming)**: Bergantung pada jam, *body* diberikan kelasi spesifik seperti `theme-pagi` atau `theme-malam`. CSS kemudian merespons transisi warna gradien latar belakang untuk mencegah kelelahan mata staf (*Sales*) yang bekerja hingga larut.
+
+### 6.1.2 Manipulasi Navigasi (*Single Page App Illusion*)
+Meskipun tidak memakai _framework_ SPA, ia menggunakan pendekatan Ilusi Tab:
+*   Semua menu (Utama, Laporan, Master, Monitoring) dimuat dalam satu berkas DOM, namun diletakkan dalam *section* yang disembunyikan (`display: none`).
+*   Skrip JavaScript pada **`switchTab()`** memanipulasi *History State* peramban (`history.pushState`). 
+*   Pengguna merasakan transisi antar-menu secara instan tanpa memuat ulang (reload) halaman, namun tombol *Back* pada Android tetap berfungsi natural layaknya berpindah *Activity* pada sistem operasi asli (Native).
+
+### 6.1.3 Injeksi Filter Dinamis
+Sistem menyediakan *Filter Card* (Bulan dan Tahun) di bagian atas. Setiap kali pengguna mengubah bulan pada *combo-box*:
+*   JS memindai semua tautan (link / `<a href>`) berkelas `menu-item`.
+*   Ia menyuntikkan (inject) kueri parameter URI (contoh: `?bulan=05&tahun=2026`) secara _real-time_. Sehingga ketika *Sales* menekan menu "Laporan Pendapatan", ia akan langsung diarahkan ke laporan bulan spesifik tanpa melalui halaman filter perantara.
+
+---
+
+## 6.2 Sistem Otorisasi Penampilan (RBAC Tampilan)
+
+LadaPala-Bill menghindari pendekatan "tampilkan tombol lalu cegah di *backend*". 
+Pendekatannya adalah: **Mencegah tombol itu muncul sejak awal**.
+
+Dengan menggunakan fungsi `can_access($user, 'nama_modul')`, PHP akan melewati (skip) perenderan HTML untuk menu-menu yang dilarang. 
+Jika seorang pegawai berstatus Teknisi, yang tidak punya hak melihat uang sama sekali, maka *Section Laporan* tidak akan mencetak *grid* apa pun. Jika kosong, sistem secara elegan akan memunculkan kelasi `.empty-menu-state` dengan ilustrasi Gembok yang menyatakan "Tidak ada akses yang tersedia", menjaga *User Interface* (UI) tetap rapi dan *User Experience* (UX) tetap terarah.
+
+---
+
+## 6.3 Komunikasi Web-to-Native (Jembatan Firebase)
+
+Modul `mobile-view/` dimuat di dalam aplikasi Android. Namun Web View tidak memiliki akses langsung untuk menangkap _Push Notification_ Firebase dari OS Android. 
+Maka dibuatlah **FCM Token Bridge** di dalam berkas indeks:
+
+```javascript
+window.registerAndroidFcmToken = function(fcmToken, sessionKey) {
+    // ...
+    fetch('../api/register_device_token.php', { ... });
+};
+```
+Fungsi global di atas bertindak sebagai lubang jarum (port). Kode bahasa Java/Kotlin di Android akan mengeksekusi *JavaScript Inject* yang memanggil fungsi `registerAndroidFcmToken()` dan melempar *Token Hardware Firebase* ke dalamnya. JS kemudian membungkus *token* tersebut dan mengirimnya ke peladen _backend_ PHP (via _Fetch API_) untuk ditanamkan ke dalam tabel `app_devices`. 
+Inilah alasan mengapa sistem secara sempurna bisa "mem-ping" atau membunyikan dering notifikasi spesifik ke HP seorang Manajer ketika ada uang disetor.
+
+---
+> [!NOTE]
+> Kemudahan penggunaan (*Usability*) dan kekuatan otomasi sudah kita bahas. Terakhir, di **Bab 7: Keamanan, Konfigurasi, & Deployment**, kita akan menelaah lapis demi lapis fondasi yang menjaga aplikasi LadaPala-Bill dari serangan peretas (*Hacker*) dan konfigurasi _deployment_-nya.

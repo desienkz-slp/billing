@@ -1,0 +1,161 @@
+services:
+  # ==========================================
+  # Laravel Application (PHP-FPM)
+  # ==========================================
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    image: ladapala-bill:latest
+    container_name: ladapala-app
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - .:/var/www/html
+      - ./storage/app:/var/www/html/storage/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_DATABASE: ${DB_DATABASE:-billing_db}
+      DB_USERNAME: ${DB_USERNAME:-ladapala}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      REDIS_HOST: redis
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+    networks:
+      - ladapala-network
+
+  # ==========================================
+  # Nginx Web Server
+  # ==========================================
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ladapala-nginx
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "${APP_PORT:-80}:80"
+      - "${APP_SSL_PORT:-443}:443"
+    volumes:
+      - .:/var/www/html:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - app
+    networks:
+      - ladapala-network
+
+  # ==========================================
+  # PostgreSQL (Billing Database)
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: ladapala-postgres
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-billing_db}
+      POSTGRES_USER: ${DB_USERNAME:-ladapala}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      TZ: Asia/Jakarta
+    ports:
+      - "${DB_FORWARD_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-ladapala}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ladapala-network
+
+  # ==========================================
+  # Redis (Cache + Queue + Session)
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: ladapala-redis
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_FORWARD_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ladapala-network
+
+  # ==========================================
+  # Queue Worker (Background Jobs)
+  # ==========================================
+  queue-worker:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: ladapala-queue
+    restart: unless-stopped
+    privileged: true
+    command: php artisan queue:work redis --queue=isolir,notifications,sync,default --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+    networks:
+      - ladapala-network
+
+  # ==========================================
+  # Scheduler (Cron replacement)
+  # ==========================================
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: ladapala-scheduler
+    restart: unless-stopped
+    privileged: true
+    command: php artisan schedule:work --verbose --no-interaction
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      REDIS_HOST: redis
+    networks:
+      - ladapala-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  ladapala-network:
+    driver: bridge
