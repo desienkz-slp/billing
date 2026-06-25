@@ -487,8 +487,6 @@ const permissionGroups = [
             { key: 'can_delete_finance', label: 'Global Void Transaksi', desc: 'Void: Hak membatalkan Pembayaran (Tagihan), Pengeluaran, Pemasukan Lain, dan Setoran.' },
             { key: 'can_manage_deposits', label: 'Input Setoran', desc: 'Setoran: Melakukan input setoran.' },
             { key: 'can_manage_saldo', label: 'Add/Min Saldo', desc: 'Saldo: Menambah atau mengurangi saldo.' },
-            { key: 'fee_locked', label: 'Lock Fee (Global)', desc: 'Fee/Komisi: User ini selalu menerima komisi dari pelanggannya, meski tagihan dibayar oleh orang lain.' },
-            { key: 'is_saldo_limited', label: 'Limit Pembayaran (Saldo)', desc: 'Saldo: User ini hanya bisa menerima pembayaran tagihan jika limit saldonya masih mencukupi.' },
             { key: 'can_view_finance', label: 'Akses Menu Keuangan', desc: 'Hak melihat laporan keuangan (laba rugi, arus kas, dll).' }
         ]
     },
