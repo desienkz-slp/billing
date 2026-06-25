@@ -1,8 +1,75 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 10:05:32              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::create('customers', function (Blueprint $Zf3GW) { goto BHuW7; tnyOX: $Zf3GW->date('isolated_since')->nullable(); goto MCX_M; xhVFr: $Zf3GW->text('password_pppoe')->nullable(); goto ek8Jd; UlA7a: $Zf3GW->foreignId('server_id')->nullable()->constrained()->nullOnDelete(); goto rRkSU; cR9m4: $Zf3GW->string('customer_id_display', 50)->nullable(); goto V9IzW; jQtSQ: $Zf3GW->foreign('sales_id')->references('id')->on('users')->nullOnDelete(); goto rfbvJ; t9KPj: $Zf3GW->string('username', 100)->nullable(); goto xhVFr; ek8Jd: $Zf3GW->string('phone', 20)->nullable(); goto fqrou; so7sB: $Zf3GW->date('leave_start')->nullable(); goto XMqSZ; kHkj9: $Zf3GW->integer('billing_date')->default(1); goto RD0cV; BHgzb: $Zf3GW->string('status', 30)->default('active'); goto cPA5P; EE9Yb: $Zf3GW->index(['tenant_id', 'package_id']); goto JRDO4; e_e51: $Zf3GW->unique(['tenant_id', 'username']); goto jQtSQ; ixpXo: $Zf3GW->index(['tenant_id', 'status']); goto SLXH9; fqrou: $Zf3GW->text('address')->nullable(); goto PikUC; Ib_2E: $Zf3GW->foreignId('router_id')->nullable()->constrained()->nullOnDelete(); goto UlA7a; cPA5P: $Zf3GW->boolean('is_isolated')->default(false); goto tnyOX; qGAl2: $Zf3GW->string('odp_port', 20)->nullable(); goto BHgzb; NY6EK: $Zf3GW->jsonb('metadata')->nullable(); goto ZrTBW; Jtium: $Zf3GW->foreignId('area_id')->nullable()->constrained()->nullOnDelete(); goto tTWNT; PikUC: $Zf3GW->string('nik', 20)->nullable(); goto EpKlf; rRkSU: $Zf3GW->foreignId('odp_id')->nullable()->constrained()->nullOnDelete(); goto BopHW; ZrTBW: $Zf3GW->timestamps(); goto D3bnP; MCX_M: $Zf3GW->boolean('is_on_leave')->default(false); goto so7sB; EpKlf: $Zf3GW->date('registration_date')->nullable(); goto kHkj9; XMqSZ: $Zf3GW->date('leave_end')->nullable(); goto DQu5_; DQu5_: $Zf3GW->text('notes')->nullable(); goto NY6EK; hycsZ: $Zf3GW->uuid('uuid')->unique(); goto SuOkc; BHuW7: $Zf3GW->id(); goto hycsZ; SLXH9: $Zf3GW->index(['tenant_id', 'area_id']); goto EE9Yb; RD0cV: $Zf3GW->integer('custom_price')->nullable(); goto qGAl2; tTWNT: $Zf3GW->foreignId('package_id')->nullable()->constrained()->nullOnDelete(); goto Ib_2E; V9IzW: $Zf3GW->string('name'); goto t9KPj; BopHW: $Zf3GW->unsignedBigInteger('sales_id')->nullable(); goto cR9m4; JRDO4: $Zf3GW->index(['tenant_id', 'is_isolated']); goto e_e51; D3bnP: $Zf3GW->softDeletes(); goto ixpXo; SuOkc: $Zf3GW->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto Jtium; rfbvJ: }); Schema::create('customer_coordinates', function (Blueprint $Zf3GW) { goto cifeN; QFtEs: $Zf3GW->index('tenant_id'); goto HkQ8R; cifeN: $Zf3GW->id(); goto SbpTE; PpY6E: $Zf3GW->decimal('longitude', 10, 7); goto z4UTT; BiGgJ: $Zf3GW->decimal('latitude', 10, 7); goto PpY6E; vCP40: $Zf3GW->foreignId('customer_id')->constrained()->cascadeOnDelete(); goto BiGgJ; z4UTT: $Zf3GW->timestamps(); goto AoaGj; SbpTE: $Zf3GW->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto vCP40; AoaGj: $Zf3GW->unique('customer_id'); goto QFtEs; HkQ8R: }); } public function down(): void { Schema::dropIfExists('customer_coordinates'); Schema::dropIfExists('customers'); } };
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('customers', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('uuid')->unique();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('area_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('package_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('router_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('server_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('odp_id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedBigInteger('sales_id')->nullable();
+
+            $table->string('customer_id_display', 50)->nullable();
+            $table->string('name');
+            $table->string('username', 100)->nullable();
+            $table->text('password_pppoe')->nullable();
+            $table->string('phone', 20)->nullable();
+            $table->text('address')->nullable();
+            $table->string('nik', 20)->nullable();
+            $table->date('registration_date')->nullable();
+            $table->integer('billing_date')->default(1);
+            $table->integer('custom_price')->nullable();
+            $table->string('odp_port', 20)->nullable();
+
+            // Status
+            $table->string('status', 30)->default('active');
+            $table->boolean('is_isolated')->default(false);
+            $table->date('isolated_since')->nullable();
+            $table->boolean('is_on_leave')->default(false);
+            $table->date('leave_start')->nullable();
+            $table->date('leave_end')->nullable();
+
+            // Metadata
+            $table->text('notes')->nullable();
+            $table->jsonb('metadata')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->index(['tenant_id', 'status']);
+            $table->index(['tenant_id', 'area_id']);
+            $table->index(['tenant_id', 'package_id']);
+            $table->index(['tenant_id', 'is_isolated']);
+            $table->unique(['tenant_id', 'username']);
+
+            $table->foreign('sales_id')->references('id')->on('users')->nullOnDelete();
+        });
+
+        Schema::create('customer_coordinates', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
+            $table->decimal('latitude', 10, 7);
+            $table->decimal('longitude', 10, 7);
+            $table->timestamps();
+
+            $table->unique('customer_id');
+            $table->index('tenant_id');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('customer_coordinates');
+        Schema::dropIfExists('customers');
+    }
+};

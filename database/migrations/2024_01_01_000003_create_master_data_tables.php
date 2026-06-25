@@ -1,8 +1,108 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 10:05:32              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { goto G6oY1; uqvwa: Schema::create('odps', function (Blueprint $NZagA) { goto AjR6F; eCIIc: $NZagA->foreignId('area_id')->nullable()->constrained()->nullOnDelete(); goto QyETV; j3Uf8: $NZagA->index(['tenant_id', 'area_id']); goto YP1bO; BE_UN: $NZagA->timestamps(); goto j3Uf8; Br_jt: $NZagA->integer('used')->default(0); goto AH2Od; tCtuo: $NZagA->decimal('longitude', 10, 7)->nullable(); goto xnNvK; QyETV: $NZagA->string('name', 100); goto jyXvv; xnNvK: $NZagA->string('description')->nullable(); goto MIlaf; AjR6F: $NZagA->id(); goto XX22_; LEuYe: $NZagA->integer('capacity')->default(8); goto Br_jt; MIlaf: $NZagA->boolean('is_active')->default(true); goto BE_UN; XX22_: $NZagA->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto eCIIc; jyXvv: $NZagA->string('location')->nullable(); goto LEuYe; AH2Od: $NZagA->decimal('latitude', 10, 7)->nullable(); goto tCtuo; YP1bO: }); goto wWrW1; XzGMv: Schema::create('routers', function (Blueprint $NZagA) { goto RnzyP; kc8Q0: $NZagA->string('username', 100); goto MELLX; NIePi: $NZagA->string('description')->nullable(); goto KXc90; p1mun: $NZagA->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto yFY6c; gMULr: $NZagA->string('host', 255); goto ghWvZ; J_at4: $NZagA->index(['tenant_id', 'is_active']); goto KkqWg; XTxIH: $NZagA->timestamp('last_backup_at')->nullable(); goto EZpva; MELLX: $NZagA->text('password'); goto R4_km; RnzyP: $NZagA->id(); goto p1mun; KXc90: $NZagA->boolean('is_active')->default(true); goto XTxIH; ghWvZ: $NZagA->integer('port')->default(8728); goto kc8Q0; yFY6c: $NZagA->string('name', 100); goto gMULr; R4_km: $NZagA->boolean('use_ssl')->default(false); goto NIePi; EZpva: $NZagA->timestamps(); goto J_at4; KkqWg: }); goto HOPpS; HOPpS: Schema::create('servers', function (Blueprint $NZagA) { goto prOr2; hGwte: $NZagA->string('description')->nullable(); goto wdsTy; L8lqF: $NZagA->integer('port')->default(3306); goto sxqum; sxqum: $NZagA->string('db_name', 100)->default('radius'); goto Ya9CV; YcamS: $NZagA->string('host', 255); goto L8lqF; ELdpR: $NZagA->string('name', 100); goto YcamS; hXx2S: $NZagA->index(['tenant_id', 'type']); goto Edhlj; Z3L_N: $NZagA->text('db_password'); goto k0mlp; k0mlp: $NZagA->string('type', 50)->default('freeradius'); goto hGwte; Ya9CV: $NZagA->string('db_username', 100); goto Z3L_N; prOr2: $NZagA->id(); goto BcQfD; wdsTy: $NZagA->boolean('is_active')->default(true); goto YjaIE; BcQfD: $NZagA->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto ELdpR; YjaIE: $NZagA->timestamps(); goto hXx2S; Edhlj: }); goto uqvwa; Sw4tM: Schema::create('packages', function (Blueprint $NZagA) { goto b_JiI; rObul: $NZagA->string('speed', 50)->nullable(); goto UrtP3; bW9Ku: $NZagA->integer('price_ppn')->default(0); goto YT6Lr; eTK4P: $NZagA->integer('sort_order')->default(0); goto wZs2Q; YT6Lr: $NZagA->string('pppoe_profile', 100)->nullable(); goto ZlDtV; wZs2Q: $NZagA->timestamps(); goto fliH1; RIPdN: $NZagA->string('name', 100); goto rObul; fliH1: $NZagA->index(['tenant_id', 'is_active']); goto AoGKh; ZlDtV: $NZagA->string('radius_group', 100)->nullable(); goto BCNql; UrtP3: $NZagA->integer('price'); goto bW9Ku; ZrwP6: $NZagA->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto RIPdN; b_JiI: $NZagA->id(); goto ZrwP6; BCNql: $NZagA->string('description')->nullable(); goto qsPT1; qsPT1: $NZagA->boolean('is_active')->default(true); goto eTK4P; AoGKh: }); goto XzGMv; G6oY1: Schema::create('areas', function (Blueprint $NZagA) { goto fZfIV; DX1GI: $NZagA->string('description')->nullable(); goto nR7Ol; fZfIV: $NZagA->id(); goto NTXIo; ruepL: $NZagA->timestamps(); goto Hw2IN; Hw2IN: $NZagA->index(['tenant_id', 'name']); goto WBR28; lMVGA: $NZagA->string('name', 100); goto DX1GI; NTXIo: $NZagA->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto lMVGA; nR7Ol: $NZagA->boolean('is_active')->default(true); goto ruepL; WBR28: }); goto Sw4tM; wWrW1: } public function down(): void { goto MLCGC; MLCGC: Schema::dropIfExists('odps'); goto JpA0s; YmqHa: Schema::dropIfExists('areas'); goto HXSi3; D3zpt: Schema::dropIfExists('packages'); goto YmqHa; JpA0s: Schema::dropIfExists('servers'); goto GZE0H; GZE0H: Schema::dropIfExists('routers'); goto D3zpt; HXSi3: } };
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Master data tables: areas, packages, routers, servers, ODPs.
+ * Semua tabel memiliki tenant_id untuk multi-tenant isolation.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Areas / Wilayah layanan
+        Schema::create('areas', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->string('name', 100);
+            $table->string('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+
+            $table->index(['tenant_id', 'name']);
+        });
+
+        // Packages / Paket internet
+        Schema::create('packages', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->string('name', 100);
+            $table->string('speed', 50)->nullable();       // e.g. "10M/10M"
+            $table->integer('price');                       // dalam Rupiah (bukan cents)
+            $table->integer('price_ppn')->default(0);       // harga + PPN
+            $table->string('pppoe_profile', 100)->nullable(); // nama profile di MikroTik
+            $table->string('radius_group', 100)->nullable();  // group di RADIUS
+            $table->string('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->integer('sort_order')->default(0);
+            $table->timestamps();
+
+            $table->index(['tenant_id', 'is_active']);
+        });
+
+        // Routers / MikroTik devices (Server 2)
+        Schema::create('routers', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->string('name', 100);
+            $table->string('host', 255);                    // IP/hostname
+            $table->integer('port')->default(8728);
+            $table->string('username', 100);
+            $table->text('password');                        // encrypted via Laravel Crypt
+            $table->boolean('use_ssl')->default(false);
+            $table->string('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('last_backup_at')->nullable();
+            $table->timestamps();
+
+            $table->index(['tenant_id', 'is_active']);
+        });
+
+        // Servers / RADIUS servers (Server 3)
+        Schema::create('servers', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->string('name', 100);
+            $table->string('host', 255);
+            $table->integer('port')->default(3306);
+            $table->string('db_name', 100)->default('radius');
+            $table->string('db_username', 100);
+            $table->text('db_password');                     // encrypted
+            $table->string('type', 50)->default('freeradius'); // freeradius, mikrotik
+            $table->string('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+
+            $table->index(['tenant_id', 'type']);
+        });
+
+        // ODP - Optical Distribution Points
+        Schema::create('odps', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('area_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('name', 100);
+            $table->string('location')->nullable();
+            $table->integer('capacity')->default(8);        // jumlah port
+            $table->integer('used')->default(0);            // port terpakai
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
+            $table->string('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+
+            $table->index(['tenant_id', 'area_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('odps');
+        Schema::dropIfExists('servers');
+        Schema::dropIfExists('routers');
+        Schema::dropIfExists('packages');
+        Schema::dropIfExists('areas');
+    }
+};

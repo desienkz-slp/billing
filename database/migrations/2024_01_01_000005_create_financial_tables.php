@@ -1,8 +1,92 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 10:05:32              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { goto ALuMu; b8sc9: Schema::create('monthly_balances', function (Blueprint $P56yP) { goto aYafm; NWqc3: $P56yP->string('period', 7); goto bpj8b; kqSRX: $P56yP->string('status', 20)->default('unpaid'); goto Pb0RW; O6lmU: $P56yP->integer('balance')->default(0); goto kqSRX; Pb0RW: $P56yP->timestamps(); goto juDnB; zKeRO: $P56yP->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto sV7_q; klwz3: $P56yP->index(['tenant_id', 'period', 'status']); goto T5CNq; juDnB: $P56yP->unique(['tenant_id', 'customer_id', 'period']); goto klwz3; pIw3m: $P56yP->integer('paid_amount')->default(0); goto O6lmU; sV7_q: $P56yP->foreignId('customer_id')->constrained()->cascadeOnDelete(); goto NWqc3; bpj8b: $P56yP->integer('charge_amount')->default(0); goto pIw3m; aYafm: $P56yP->id(); goto zKeRO; T5CNq: }); goto A0rAa; Kd2AF: Schema::create('payments', function (Blueprint $P56yP) { goto CaCWi; Rl3r5: $P56yP->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto QJpQq; aH6zr: $P56yP->timestamps(); goto sDNLW; Disjd: $P56yP->string('payment_method', 30)->default('cash'); goto Vnkzc; NRdzN: $P56yP->integer('paid_amount'); goto Disjd; O4GPI: $P56yP->string('period', 7); goto TsjgO; cttnH: $P56yP->string('receipt_number', 50)->nullable(); goto dRYRk; mvG3K: $P56yP->text('notes')->nullable(); goto ZNqKs; sDNLW: $P56yP->index(['tenant_id', 'customer_id']); goto t1kv9; muOTh: $P56yP->integer('discount')->default(0); goto NRdzN; VbYd_: $P56yP->index(['tenant_id', 'period']); goto XSeFz; Bdx2d: $P56yP->date('payment_date'); goto O4GPI; T3MAY: $P56yP->foreign('collected_by')->references('id')->on('users')->nullOnDelete(); goto KRQly; oQWsm: $P56yP->foreignId('invoice_id')->nullable()->constrained()->nullOnDelete(); goto o0EM8; o0EM8: $P56yP->unsignedBigInteger('collected_by')->nullable(); goto cttnH; QJpQq: $P56yP->foreignId('customer_id')->constrained()->cascadeOnDelete(); goto oQWsm; XSeFz: $P56yP->index(['tenant_id', 'receipt_group']); goto uiLYC; TsjgO: $P56yP->integer('amount'); goto qSWTu; FHSAM: $P56yP->unsignedBigInteger('cancelled_by')->nullable(); goto aH6zr; Vnkzc: $P56yP->string('status', 20)->default('paid'); goto mvG3K; PHADo: $P56yP->uuid('uuid')->unique(); goto Rl3r5; t1kv9: $P56yP->index(['tenant_id', 'payment_date']); goto VbYd_; ZNqKs: $P56yP->timestamp('cancelled_at')->nullable(); goto FHSAM; qSWTu: $P56yP->integer('ppn_amount')->default(0); goto muOTh; uiLYC: $P56yP->index(['tenant_id', 'collected_by']); goto T3MAY; dRYRk: $P56yP->string('receipt_group', 50)->nullable(); goto Bdx2d; KRQly: $P56yP->foreign('cancelled_by')->references('id')->on('users')->nullOnDelete(); goto v8mqq; CaCWi: $P56yP->id(); goto PHADo; v8mqq: }); goto b8sc9; ALuMu: Schema::create('invoices', function (Blueprint $P56yP) { goto o4j6m; a_U58: $P56yP->integer('discount')->default(0); goto s_3mU; VcDld: $P56yP->index(['tenant_id', 'status']); goto MC4ad; In40z: $P56yP->date('invoice_date'); goto FDK9c; s_3mU: $P56yP->integer('total_amount'); goto uOIwF; uOIwF: $P56yP->string('status', 20)->default('unpaid'); goto klFld; ZYTuI: $P56yP->index(['tenant_id', 'customer_id']); goto gaKUh; FDK9c: $P56yP->string('period', 7); goto xq24K; mbTb9: $P56yP->string('receipt_group', 50)->nullable(); goto In40z; S6chr: $P56yP->uuid('uuid')->unique(); goto hS3EM; klFld: $P56yP->text('notes')->nullable(); goto NLSIq; pZbEp: $P56yP->foreignId('customer_id')->constrained()->cascadeOnDelete(); goto bRwqv; hS3EM: $P56yP->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto pZbEp; pH4Ls: $P56yP->integer('ppn_amount')->default(0); goto a_U58; xq24K: $P56yP->integer('amount'); goto pH4Ls; MC4ad: $P56yP->unique(['tenant_id', 'invoice_number']); goto hSqO5; o4j6m: $P56yP->id(); goto S6chr; bRwqv: $P56yP->string('invoice_number', 50); goto mbTb9; NLSIq: $P56yP->timestamps(); goto ZYTuI; gaKUh: $P56yP->index(['tenant_id', 'period']); goto VcDld; hSqO5: }); goto Kd2AF; A0rAa: } public function down(): void { goto m7Goo; eiMdi: Schema::dropIfExists('payments'); goto PN46P; m7Goo: Schema::dropIfExists('monthly_balances'); goto eiMdi; PN46P: Schema::dropIfExists('invoices'); goto AEQtD; AEQtD: } };
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Invoices / Tagihan
+        Schema::create('invoices', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('uuid')->unique();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
+            $table->string('invoice_number', 50);
+            $table->string('receipt_group', 50)->nullable();
+            $table->date('invoice_date');
+            $table->string('period', 7);                   // YYYY-MM
+            $table->integer('amount');
+            $table->integer('ppn_amount')->default(0);
+            $table->integer('discount')->default(0);
+            $table->integer('total_amount');
+            $table->string('status', 20)->default('unpaid'); // unpaid, paid, partial, cancelled
+            $table->text('notes')->nullable();
+            $table->timestamps();
+
+            $table->index(['tenant_id', 'customer_id']);
+            $table->index(['tenant_id', 'period']);
+            $table->index(['tenant_id', 'status']);
+            $table->unique(['tenant_id', 'invoice_number']);
+        });
+
+        // Payments / Pembayaran
+        Schema::create('payments', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('uuid')->unique();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('invoice_id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedBigInteger('collected_by')->nullable();
+
+            $table->string('receipt_number', 50)->nullable();
+            $table->string('receipt_group', 50)->nullable();
+            $table->date('payment_date');
+            $table->string('period', 7);                   // YYYY-MM
+            $table->integer('amount');
+            $table->integer('ppn_amount')->default(0);
+            $table->integer('discount')->default(0);
+            $table->integer('paid_amount');
+            $table->string('payment_method', 30)->default('cash');
+            $table->string('status', 20)->default('paid');  // paid, cancelled
+            $table->text('notes')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
+            $table->unsignedBigInteger('cancelled_by')->nullable();
+            $table->timestamps();
+
+            $table->index(['tenant_id', 'customer_id']);
+            $table->index(['tenant_id', 'payment_date']);
+            $table->index(['tenant_id', 'period']);
+            $table->index(['tenant_id', 'receipt_group']);
+            $table->index(['tenant_id', 'collected_by']);
+
+            $table->foreign('collected_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('cancelled_by')->references('id')->on('users')->nullOnDelete();
+        });
+
+        // Monthly Balances / Ledger piutang per bulan per pelanggan
+        Schema::create('monthly_balances', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
+            $table->string('period', 7);                   // YYYY-MM
+            $table->integer('charge_amount')->default(0);   // tagihan bulan ini
+            $table->integer('paid_amount')->default(0);     // sudah dibayar
+            $table->integer('balance')->default(0);         // sisa (charge - paid)
+            $table->string('status', 20)->default('unpaid'); // unpaid, paid, partial
+            $table->timestamps();
+
+            $table->unique(['tenant_id', 'customer_id', 'period']);
+            $table->index(['tenant_id', 'period', 'status']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('monthly_balances');
+        Schema::dropIfExists('payments');
+        Schema::dropIfExists('invoices');
+    }
+};

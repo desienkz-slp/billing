@@ -1,8 +1,65 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 10:05:37              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::table('roles', function (Blueprint $MJizI) { goto O7CJa; RI3rQ: $MJizI->boolean('can_view_menu_expenses')->default(false); goto XbSIA; U0g5s: $MJizI->boolean('can_view_menu_fee')->default(false); goto AV1IA; cfNZI: $MJizI->boolean('can_view_menu_saldo')->default(false); goto vGdzS; O7CJa: $MJizI->boolean('can_view_menu_dashboard')->default(false); goto Lh0d0; kNm7X: $MJizI->boolean('can_view_menu_income')->default(false); goto nxJzz; XbSIA: $MJizI->boolean('can_view_menu_tax')->default(false); goto WGHfd; AV1IA: $MJizI->boolean('can_view_menu_setoran')->default(false); goto cfNZI; GGXDw: $MJizI->boolean('can_view_menu_isolir')->default(false); goto kNm7X; DPsaK: $MJizI->boolean('can_view_menu_statistics')->default(false); goto U0g5s; qwNzd: $MJizI->boolean('can_view_menu_cashflow')->default(false); goto DPsaK; vGdzS: $MJizI->boolean('can_view_menu_mitra')->default(false); goto Nxkgf; cRXiy: $MJizI->boolean('can_view_menu_pelanggan_cuti')->default(false); goto GGXDw; Nxkgf: $MJizI->boolean('can_view_menu_master_paket')->default(false); goto O31Yv; O31Yv: $MJizI->boolean('can_view_menu_master_area')->default(false); goto qjUA6; WGHfd: $MJizI->boolean('can_view_menu_recap')->default(false); goto qwNzd; Lh0d0: $MJizI->boolean('can_view_menu_pelanggan')->default(false); goto cRXiy; nxJzz: $MJizI->boolean('can_view_menu_other_in')->default(false); goto RI3rQ; qjUA6: }); } public function down(): void { Schema::table('roles', function (Blueprint $MJizI) { $MJizI->dropColumn(['can_view_menu_dashboard', 'can_view_menu_pelanggan', 'can_view_menu_pelanggan_cuti', 'can_view_menu_isolir', 'can_view_menu_income', 'can_view_menu_other_in', 'can_view_menu_expenses', 'can_view_menu_tax', 'can_view_menu_recap', 'can_view_menu_cashflow', 'can_view_menu_statistics', 'can_view_menu_fee', 'can_view_menu_setoran', 'can_view_menu_saldo', 'can_view_menu_mitra', 'can_view_menu_master_paket', 'can_view_menu_master_area']); }); } };
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('roles', function (Blueprint $table) {
+            $table->boolean('can_view_menu_dashboard')->default(false);
+            $table->boolean('can_view_menu_pelanggan')->default(false);
+            $table->boolean('can_view_menu_pelanggan_cuti')->default(false);
+            $table->boolean('can_view_menu_isolir')->default(false);
+            
+            $table->boolean('can_view_menu_income')->default(false);
+            $table->boolean('can_view_menu_other_in')->default(false);
+            $table->boolean('can_view_menu_expenses')->default(false);
+            $table->boolean('can_view_menu_tax')->default(false);
+            $table->boolean('can_view_menu_recap')->default(false);
+            $table->boolean('can_view_menu_cashflow')->default(false);
+            $table->boolean('can_view_menu_statistics')->default(false);
+            
+            $table->boolean('can_view_menu_fee')->default(false);
+            $table->boolean('can_view_menu_setoran')->default(false);
+            $table->boolean('can_view_menu_saldo')->default(false);
+            $table->boolean('can_view_menu_mitra')->default(false);
+            
+            $table->boolean('can_view_menu_master_paket')->default(false);
+            $table->boolean('can_view_menu_master_area')->default(false);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('roles', function (Blueprint $table) {
+            $table->dropColumn([
+                'can_view_menu_dashboard',
+                'can_view_menu_pelanggan',
+                'can_view_menu_pelanggan_cuti',
+                'can_view_menu_isolir',
+                'can_view_menu_income',
+                'can_view_menu_other_in',
+                'can_view_menu_expenses',
+                'can_view_menu_tax',
+                'can_view_menu_recap',
+                'can_view_menu_cashflow',
+                'can_view_menu_statistics',
+                'can_view_menu_fee',
+                'can_view_menu_setoran',
+                'can_view_menu_saldo',
+                'can_view_menu_mitra',
+                'can_view_menu_master_paket',
+                'can_view_menu_master_area',
+            ]);
+        });
+    }
+};

@@ -1,8 +1,40 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 10:05:37              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::create('other_incomes', function (Blueprint $Bgjjj) { goto welxA; d6Qfz: $Bgjjj->date('income_date'); goto tO0Xn; XcPOM: $Bgjjj->index(['tenant_id', 'category']); goto ppqE0; tO0Xn: $Bgjjj->string('payment_method', 30)->default('cash'); goto WSHle; JseI3: $Bgjjj->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete(); goto ObcsY; Vw7mu: $Bgjjj->timestamps(); goto M73RR; MC6GB: $Bgjjj->integer('amount'); goto d6Qfz; ObcsY: $Bgjjj->string('category', 50); goto MC6GB; DRsiH: $Bgjjj->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto oWZQX; oWZQX: $Bgjjj->foreignId('customer_id')->nullable()->constrained()->nullOnDelete(); goto JseI3; WSHle: $Bgjjj->text('notes')->nullable(); goto Vw7mu; welxA: $Bgjjj->id(); goto DRsiH; M73RR: $Bgjjj->index(['tenant_id', 'income_date']); goto XcPOM; ppqE0: }); } public function down(): void { Schema::dropIfExists('other_incomes'); } };
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('other_incomes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            
+            $table->string('category', 50); // e.g. instalasi, perangkat, denda, lainnya
+            $table->integer('amount');
+            $table->date('income_date');
+            $table->string('payment_method', 30)->default('cash');
+            $table->text('notes')->nullable();
+            
+            $table->timestamps();
+            
+            $table->index(['tenant_id', 'income_date']);
+            $table->index(['tenant_id', 'category']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('other_incomes');
+    }
+};

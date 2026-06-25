@@ -1,8 +1,119 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 10:05:32              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { goto zyj2I; zyj2I: Schema::create('roles', function (Blueprint $fOY4H) { goto VJq8T; C3hv0: $fOY4H->boolean('can_view_map')->default(false); goto iEsKU; vdkeZ: $fOY4H->boolean('can_access_radius')->default(false); goto PNKUO; wCJFt: $fOY4H->boolean('can_input_customer')->default(false); goto ALPw1; VEe1U: $fOY4H->boolean('can_manage_config')->default(false); goto bVT4O; M4Vti: $fOY4H->boolean('can_manage_servers')->default(false); goto NY3X_; duE3S: $fOY4H->boolean('can_manage_routers')->default(false); goto M4Vti; VJq8T: $fOY4H->id(); goto qfaTq; zMLbn: $fOY4H->boolean('can_delete_customer')->default(false); goto CkYsr; SZ8dm: $fOY4H->index(['tenant_id', 'name']); goto TRgFL; xelDX: $fOY4H->boolean('can_manage_roles')->default(false); goto RHuiP; XkDuh: $fOY4H->boolean('can_process_payment')->default(false); goto zHrn_; OjOBa: $fOY4H->string('name', 100); goto CeXqW; sRVx9: $fOY4H->boolean('can_manage_packages')->default(false); goto GR4nQ; hA8pM: $fOY4H->boolean('can_send_wa_blast')->default(false); goto C3hv0; NY3X_: $fOY4H->boolean('can_manage_users')->default(false); goto xelDX; tLZl2: $fOY4H->jsonb('allowed_sales_ids')->nullable(); goto MVeYI; Uq4Sd: $fOY4H->boolean('can_auto_isolir_config')->default(false); goto SLGdt; nMMku: $fOY4H->boolean('can_export_customer')->default(false); goto XkDuh; qfaTq: $fOY4H->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto OjOBa; AOYk2: $fOY4H->boolean('can_manage_isolir')->default(false); goto Uq4Sd; dQzF_: $fOY4H->boolean('can_manage_deposits')->default(false); goto LRU5Z; bVT4O: $fOY4H->boolean('can_backup_restore')->default(false); goto tTMld; jR5Kj: $fOY4H->boolean('can_view_payment_history')->default(false); goto AOYk2; EXIK7: $fOY4H->boolean('can_view_finance')->default(false); goto v3N7i; YQWvl: $fOY4H->boolean('can_view_dashboard')->default(false); goto wCJFt; RHuiP: $fOY4H->boolean('can_view_audit_logs')->default(false); goto VEe1U; LRU5Z: $fOY4H->boolean('can_deduct_balance')->default(false); goto sRVx9; PNKUO: $fOY4H->boolean('can_manage_pppoe')->default(false); goto hA8pM; CeXqW: $fOY4H->string('description')->nullable(); goto YQWvl; LkXtL: $fOY4H->boolean('can_manage_odp')->default(false); goto duE3S; zHrn_: $fOY4H->boolean('can_cancel_payment')->default(false); goto jR5Kj; iEsKU: $fOY4H->boolean('can_view_monitor')->default(false); goto nELnU; MVeYI: $fOY4H->timestamps(); goto SZ8dm; tTMld: $fOY4H->boolean('can_access_mikrotik')->default(false); goto vdkeZ; v3N7i: $fOY4H->boolean('can_manage_expenses')->default(false); goto dQzF_; ALPw1: $fOY4H->boolean('can_edit_customer')->default(false); goto zMLbn; SLGdt: $fOY4H->boolean('can_view_reports')->default(false); goto EXIK7; CkYsr: $fOY4H->boolean('can_import_customer')->default(false); goto nMMku; GR4nQ: $fOY4H->boolean('can_manage_areas')->default(false); goto LkXtL; nELnU: $fOY4H->jsonb('allowed_area_ids')->nullable(); goto tLZl2; TRgFL: }); goto rurw3; P3rXs: Schema::create('password_reset_tokens', function (Blueprint $fOY4H) { goto mYc_E; jfSvo: $fOY4H->timestamp('created_at')->nullable(); goto MgeR1; mYc_E: $fOY4H->string('email')->primary(); goto dsPR0; dsPR0: $fOY4H->string('token'); goto jfSvo; MgeR1: }); goto neGBl; neGBl: Schema::create('sessions', function (Blueprint $fOY4H) { goto zLAwA; Dv2VH: $fOY4H->longText('payload'); goto H88cA; tRYe0: $fOY4H->text('user_agent')->nullable(); goto Dv2VH; nosLl: $fOY4H->foreignId('user_id')->nullable()->index(); goto TbeKY; TbeKY: $fOY4H->string('ip_address', 45)->nullable(); goto tRYe0; H88cA: $fOY4H->integer('last_activity')->index(); goto sGOrm; zLAwA: $fOY4H->string('id')->primary(); goto nosLl; sGOrm: }); goto NatYz; rurw3: Schema::create('users', function (Blueprint $fOY4H) { goto EWhBP; FmI9p: $fOY4H->rememberToken(); goto U3aA9; HCLRs: $fOY4H->string('last_login_ip', 45)->nullable(); goto FmI9p; X6L0M: $fOY4H->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto FJrK_; VWnyq: $fOY4H->string('email')->nullable(); goto fRzvR; SQas2: $fOY4H->unique(['tenant_id', 'username']); goto pof8V; jQOJn: $fOY4H->string('username', 100); goto Cv5kZ; Cv5kZ: $fOY4H->string('name'); goto VWnyq; O2Yut: $fOY4H->timestamp('last_login_at')->nullable(); goto HCLRs; wtiQg: $fOY4H->string('password'); goto DiRAY; DiRAY: $fOY4H->boolean('is_active')->default(true); goto O2Yut; U3aA9: $fOY4H->timestamps(); goto SQas2; NS_XD: $fOY4H->uuid('uuid')->unique(); goto X6L0M; EWhBP: $fOY4H->id(); goto NS_XD; FJrK_: $fOY4H->foreignId('role_id')->nullable()->constrained()->nullOnDelete(); goto jQOJn; fRzvR: $fOY4H->string('phone', 20)->nullable(); goto wtiQg; pof8V: $fOY4H->index(['tenant_id', 'is_active']); goto gKCQ4; gKCQ4: }); goto P3rXs; NatYz: } public function down(): void { goto QKsiN; fEjN9: Schema::dropIfExists('password_reset_tokens'); goto nci54; QKsiN: Schema::dropIfExists('sessions'); goto fEjN9; nci54: Schema::dropIfExists('users'); goto DrawW; DrawW: Schema::dropIfExists('roles'); goto gPLU8; gPLU8: } };
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Capability-based RBAC roles (~30 boolean permissions)
+        Schema::create('roles', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->string('name', 100);
+            $table->string('description')->nullable();
+
+            // Customer management
+            $table->boolean('can_view_dashboard')->default(false);
+            $table->boolean('can_input_customer')->default(false);
+            $table->boolean('can_edit_customer')->default(false);
+            $table->boolean('can_delete_customer')->default(false);
+            $table->boolean('can_import_customer')->default(false);
+            $table->boolean('can_export_customer')->default(false);
+
+            // Payment & billing
+            $table->boolean('can_process_payment')->default(false);
+            $table->boolean('can_cancel_payment')->default(false);
+            $table->boolean('can_view_payment_history')->default(false);
+
+            // Isolir
+            $table->boolean('can_manage_isolir')->default(false);
+            $table->boolean('can_auto_isolir_config')->default(false);
+
+            // Reports & finance
+            $table->boolean('can_view_reports')->default(false);
+            $table->boolean('can_view_finance')->default(false);
+            $table->boolean('can_manage_expenses')->default(false);
+            $table->boolean('can_manage_deposits')->default(false);
+            $table->boolean('can_deduct_balance')->default(false);
+
+            // Master data
+            $table->boolean('can_manage_packages')->default(false);
+            $table->boolean('can_manage_areas')->default(false);
+            $table->boolean('can_manage_odp')->default(false);
+            $table->boolean('can_manage_routers')->default(false);
+            $table->boolean('can_manage_servers')->default(false);
+
+            // Admin
+            $table->boolean('can_manage_users')->default(false);
+            $table->boolean('can_manage_roles')->default(false);
+            $table->boolean('can_view_audit_logs')->default(false);
+            $table->boolean('can_manage_config')->default(false);
+            $table->boolean('can_backup_restore')->default(false);
+
+            // Technical
+            $table->boolean('can_access_mikrotik')->default(false);
+            $table->boolean('can_access_radius')->default(false);
+            $table->boolean('can_manage_pppoe')->default(false);
+            $table->boolean('can_send_wa_blast')->default(false);
+
+            // Map & monitor
+            $table->boolean('can_view_map')->default(false);
+            $table->boolean('can_view_monitor')->default(false);
+
+            // Visibility scoping
+            $table->jsonb('allowed_area_ids')->nullable();
+            $table->jsonb('allowed_sales_ids')->nullable();
+
+            $table->timestamps();
+
+            $table->index(['tenant_id', 'name']);
+        });
+
+        // Modify default users table to add tenant support
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('uuid')->unique();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('role_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('username', 100);
+            $table->string('name');
+            $table->string('email')->nullable();
+            $table->string('phone', 20)->nullable();
+            $table->string('password');
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('last_login_at')->nullable();
+            $table->string('last_login_ip', 45)->nullable();
+            $table->rememberToken();
+            $table->timestamps();
+
+            $table->unique(['tenant_id', 'username']);
+            $table->index(['tenant_id', 'is_active']);
+        });
+
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $table->string('email')->primary();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
+
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('roles');
+    }
+};

@@ -1,8 +1,78 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 10:05:33              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { goto onaIa; expMu: Schema::create('job_batches', function (Blueprint $wPcti) { goto cyfwu; pPtXv: $wPcti->longText('failed_job_ids'); goto h0g68; gVMWF: $wPcti->integer('pending_jobs'); goto frl8H; frl8H: $wPcti->integer('failed_jobs'); goto pPtXv; w6Pap: $wPcti->integer('created_at'); goto mH964; lPLyC: $wPcti->integer('cancelled_at')->nullable(); goto w6Pap; ixJ2z: $wPcti->integer('total_jobs'); goto gVMWF; cyfwu: $wPcti->string('id')->primary(); goto n78w8; mH964: $wPcti->integer('finished_at')->nullable(); goto xB28m; n78w8: $wPcti->string('name'); goto ixJ2z; h0g68: $wPcti->mediumText('options')->nullable(); goto lPLyC; xB28m: }); goto T53Lx; KIr7P: Schema::create('notifications', function (Blueprint $wPcti) { goto aEn0B; aEn0B: $wPcti->uuid('id')->primary(); goto DqDAE; DqDAE: $wPcti->string('type'); goto rYqAm; rYqAm: $wPcti->morphs('notifiable'); goto ItWHD; ItWHD: $wPcti->text('data'); goto O8g2q; NcWvu: $wPcti->timestamps(); goto c291e; O8g2q: $wPcti->timestamp('read_at')->nullable(); goto NcWvu; c291e: }); goto ZMMsl; Dx_sq: Schema::create('cache_locks', function (Blueprint $wPcti) { goto qzXRa; HS2bF: $wPcti->integer('expiration'); goto rGxWL; lJxJM: $wPcti->string('owner'); goto HS2bF; qzXRa: $wPcti->string('key')->primary(); goto lJxJM; rGxWL: }); goto Tbiw4; onaIa: Schema::create('cache', function (Blueprint $wPcti) { goto mRMDf; U9aZM: $wPcti->integer('expiration'); goto wwM5n; mRMDf: $wPcti->string('key')->primary(); goto l5AKY; l5AKY: $wPcti->mediumText('value'); goto U9aZM; wwM5n: }); goto Dx_sq; Tbiw4: Schema::create('jobs', function (Blueprint $wPcti) { goto hdWR7; AtDKd: $wPcti->unsignedInteger('created_at'); goto xdY8g; TNiM3: $wPcti->longText('payload'); goto HVUv1; HVUv1: $wPcti->unsignedTinyInteger('attempts'); goto KDgEE; hdWR7: $wPcti->id(); goto Hs6eC; Hs6eC: $wPcti->string('queue')->index(); goto TNiM3; KDgEE: $wPcti->unsignedInteger('reserved_at')->nullable(); goto NENCE; NENCE: $wPcti->unsignedInteger('available_at'); goto AtDKd; xdY8g: }); goto expMu; T53Lx: Schema::create('failed_jobs', function (Blueprint $wPcti) { goto KJXsW; LB1PH: $wPcti->text('queue'); goto jYS_u; xNwPW: $wPcti->string('uuid')->unique(); goto QwWk3; e8DTs: $wPcti->timestamp('failed_at')->useCurrent(); goto AwP1Y; jYS_u: $wPcti->longText('payload'); goto jI_0Y; QwWk3: $wPcti->text('connection'); goto LB1PH; jI_0Y: $wPcti->longText('exception'); goto e8DTs; KJXsW: $wPcti->id(); goto xNwPW; AwP1Y: }); goto KIr7P; ZMMsl: } public function down(): void { goto BYRLL; FtuUD: Schema::dropIfExists('jobs'); goto U1fxo; nzKbA: Schema::dropIfExists('failed_jobs'); goto VnipI; VnipI: Schema::dropIfExists('job_batches'); goto FtuUD; U1fxo: Schema::dropIfExists('cache_locks'); goto cGJdz; BYRLL: Schema::dropIfExists('notifications'); goto nzKbA; cGJdz: Schema::dropIfExists('cache'); goto eEn33; eEn33: } };
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Laravel framework tables: cache, jobs, failed_jobs.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('cache', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->mediumText('value');
+            $table->integer('expiration');
+        });
+
+        Schema::create('cache_locks', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->string('owner');
+            $table->integer('expiration');
+        });
+
+        Schema::create('jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('queue')->index();
+            $table->longText('payload');
+            $table->unsignedTinyInteger('attempts');
+            $table->unsignedInteger('reserved_at')->nullable();
+            $table->unsignedInteger('available_at');
+            $table->unsignedInteger('created_at');
+        });
+
+        Schema::create('job_batches', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('name');
+            $table->integer('total_jobs');
+            $table->integer('pending_jobs');
+            $table->integer('failed_jobs');
+            $table->longText('failed_job_ids');
+            $table->mediumText('options')->nullable();
+            $table->integer('cancelled_at')->nullable();
+            $table->integer('created_at');
+            $table->integer('finished_at')->nullable();
+        });
+
+        Schema::create('failed_jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('uuid')->unique();
+            $table->text('connection');
+            $table->text('queue');
+            $table->longText('payload');
+            $table->longText('exception');
+            $table->timestamp('failed_at')->useCurrent();
+        });
+
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('type');
+            $table->morphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('failed_jobs');
+        Schema::dropIfExists('job_batches');
+        Schema::dropIfExists('jobs');
+        Schema::dropIfExists('cache_locks');
+        Schema::dropIfExists('cache');
+    }
+};

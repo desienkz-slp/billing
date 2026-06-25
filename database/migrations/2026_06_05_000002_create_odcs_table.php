@@ -1,8 +1,46 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 10:05:34              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::create('odcs', function (Blueprint $CQQbZ) { goto n3aHV; LXas2: $CQQbZ->string('name', 100); goto nNTpt; NLTg0: $CQQbZ->boolean('is_active')->default(true); goto S0jds; aP6Ym: $CQQbZ->index(['tenant_id', 'area_id']); goto vt5Yo; IJOSS: $CQQbZ->string('description')->nullable(); goto NLTg0; YOjDB: $CQQbZ->decimal('latitude', 10, 7)->nullable(); goto Zn523; BE1A4: $CQQbZ->integer('used')->default(0); goto YOjDB; vWSHJ: $CQQbZ->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto DXZS6; Zn523: $CQQbZ->decimal('longitude', 10, 7)->nullable(); goto IJOSS; S0jds: $CQQbZ->timestamps(); goto aP6Ym; nNTpt: $CQQbZ->string('location')->nullable(); goto jssag; DXZS6: $CQQbZ->foreignId('area_id')->nullable()->constrained()->nullOnDelete(); goto LXas2; n3aHV: $CQQbZ->id(); goto vWSHJ; jssag: $CQQbZ->integer('capacity')->default(96); goto BE1A4; vt5Yo: }); Schema::table('odps', function (Blueprint $CQQbZ) { $CQQbZ->foreignId('odc_id')->nullable()->after('area_id')->constrained('odcs')->nullOnDelete(); }); } public function down(): void { Schema::table('odps', function (Blueprint $CQQbZ) { $CQQbZ->dropConstrainedForeignId('odc_id'); }); Schema::dropIfExists('odcs'); } };
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * ODC - Optical Distribution Cabinet.
+ * Level di atas ODP dalam hierarki jaringan FTTH:
+ * OLT → ODC → ODP → Customer
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('odcs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('area_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('name', 100);
+            $table->string('location')->nullable();
+            $table->integer('capacity')->default(96);       // jumlah port splitter
+            $table->integer('used')->default(0);             // port terpakai
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
+            $table->string('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+
+            $table->index(['tenant_id', 'area_id']);
+        });
+
+        // Add odc_id to odps table (ODP belongs to ODC)
+        Schema::table('odps', function (Blueprint $table) {
+            $table->foreignId('odc_id')->nullable()->after('area_id')->constrained('odcs')->nullOnDelete();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('odps', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('odc_id');
+        });
+        Schema::dropIfExists('odcs');
+    }
+};
