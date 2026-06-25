@@ -20,19 +20,46 @@ check_command() {
     fi
 }
 
-# Cek dependensi utama
-MISSING_DEPS=0
-check_command php || MISSING_DEPS=1
-check_command composer || MISSING_DEPS=1
-check_command npm || MISSING_DEPS=1
-check_command psql || MISSING_DEPS=1
+NEEDS_UPDATE=0
 
-if [ $MISSING_DEPS -eq 1 ]; then
-    echo "🚨 PERINGATAN: Server Anda masih kosong! (PHP, Composer, NPM, atau PostgreSQL belum terpasang)."
-    read -p "Apakah Anda ingin saya MENGINSTAL OTOMATIS semua dependensi tersebut? (hanya untuk Ubuntu/Debian) [y/N]: " install_deps
+# Cek versi PHP (minimal 8.2)
+if check_command php; then
+    php_version=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null)
+    if [ "$(printf '%s\n' "8.2" "$php_version" | sort -V | head -n1)" != "8.2" ]; then
+        echo "⚠️  PHP versi lawas terdeteksi ($php_version). Membutuhkan >= 8.2"
+        NEEDS_UPDATE=1
+    fi
+else
+    NEEDS_UPDATE=1
+fi
+
+# Cek versi Node (minimal 18)
+if check_command node; then
+    node_version=$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1)
+    if [ "$node_version" -lt 18 ]; then
+        echo "⚠️  Node.js versi lawas terdeteksi (v$node_version). Membutuhkan >= 18"
+        NEEDS_UPDATE=1
+    fi
+else
+    NEEDS_UPDATE=1
+fi
+
+check_command composer || NEEDS_UPDATE=1
+check_command npm || NEEDS_UPDATE=1
+check_command psql || NEEDS_UPDATE=1
+
+if [ $NEEDS_UPDATE -eq 1 ]; then
+    echo "🚨 PERINGATAN: Server Anda tidak memiliki dependensi atau versinya terlalu lawas!"
+    echo "Sistem membutuhkan minimal: PHP 8.2+ dan Node.js 18+"
+    read -p "Apakah Anda ingin saya MENGHAPUS versi lama (jika ada) dan MENGINSTAL OTOMATIS versi terbaru? (hanya untuk Ubuntu/Debian) [y/N]: " install_deps
     
     if [[ "$install_deps" == "y" || "$install_deps" == "Y" ]]; then
-        echo "Memulai instalasi dependensi server. Mohon tunggu..."
+        echo "Memulai pembaruan dependensi server. Mohon tunggu..."
+        
+        # Hapus versi lawas agar tidak bentrok
+        apt-get purge -y "php*" nodejs npm 2>/dev/null
+        apt-get autoremove -y 2>/dev/null
+        
         apt-get update
         apt-get install -y software-properties-common curl unzip
         
@@ -68,7 +95,7 @@ if [ $MISSING_DEPS -eq 1 ]; then
         
         echo "✅ Instalasi dependensi server selesai!"
     else
-        echo "❌ Proses dibatalkan. Skrip tidak dapat dilanjutkan tanpa dependensi yang lengkap."
+        echo "❌ Proses dibatalkan. Skrip tidak dapat dilanjutkan tanpa dependensi yang memenuhi syarat."
         exit 1
     fi
 fi
