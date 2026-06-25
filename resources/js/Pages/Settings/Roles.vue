@@ -313,8 +313,8 @@ const defaultForm = {
     can_view_monitor: false, is_saldo_limited: false,
     // Sidebar Billing Menus
     can_view_menu_dashboard: false, can_view_menu_pelanggan: false, can_view_menu_pelanggan_cuti: false, can_view_menu_isolir: false,
-    can_view_menu_income: false, can_view_menu_other_in: false, can_view_menu_expenses: false, can_view_menu_tax: false, can_view_menu_recap: false,
-    can_view_menu_cashflow: false, can_view_menu_statistics: false, can_view_menu_fee: false, can_view_menu_setoran: false, can_view_menu_saldo: false,
+    can_view_menu_income: false, can_view_menu_other_in: false, can_view_menu_expenses: false, 
+    can_view_menu_fee: false, can_view_menu_setoran: false, can_view_menu_saldo: false,
     can_view_menu_mitra: false, can_view_menu_master_paket: false, can_view_menu_master_area: false
 };
 
@@ -446,10 +446,6 @@ const permissionGroups = [
             { key: 'can_view_menu_income', label: 'Income', desc: 'Menu Laporan: Income' },
             { key: 'can_view_menu_other_in', label: 'Other-IN', desc: 'Menu Laporan: Other-IN' },
             { key: 'can_view_menu_expenses', label: 'Expenses', desc: 'Menu Laporan: Expenses' },
-            { key: 'can_view_menu_tax', label: 'Tax', desc: 'Menu Laporan: Tax' },
-            { key: 'can_view_menu_recap', label: 'Recap', desc: 'Menu Laporan: Recap' },
-            { key: 'can_view_menu_cashflow', label: 'Cashflow', desc: 'Menu Laporan: Cashflow' },
-            { key: 'can_view_menu_statistics', label: 'Statistics', desc: 'Menu Laporan: Statistics' },
             { key: 'can_view_menu_fee', label: 'Fee', desc: 'Menu Laporan Sales: Fee' },
             { key: 'can_view_menu_setoran', label: 'Setoran', desc: 'Menu Laporan Sales: Setoran' },
             { key: 'can_view_menu_saldo', label: 'Saldo', desc: 'Menu Laporan Sales: Saldo' },
