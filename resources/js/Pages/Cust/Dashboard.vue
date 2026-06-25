@@ -148,7 +148,7 @@
                         />
                     </div>
                     <!-- Search -->
-                    <div class="relative min-w-[120px] w-full">
+                    <div class="relative min-w-[120px] flex-1">
                         <input 
                             v-model="formFilters.search" 
                             type="text" 
