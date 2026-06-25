@@ -1,0 +1,8 @@
+<?php
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-25 10:05:28              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Models; use App\Traits\BelongsToTenant; use Illuminate\Database\Eloquent\Builder; use Illuminate\Database\Eloquent\Model; use Illuminate\Support\Facades\Crypt; class Server extends Model { use BelongsToTenant; protected $guarded = ['id']; protected $casts = ['is_active' => 'boolean']; protected $hidden = ['db_password', 'password', 'api_token']; public function setDbPasswordAttribute($RifkV): void { $this->attributes['db_password'] = Crypt::encryptString($RifkV); } public function getDecryptedDbPassword(): string { return Crypt::decryptString($this->db_password); } public function setPasswordAttribute($RifkV): void { $this->attributes['password'] = $RifkV ? Crypt::encryptString($RifkV) : null; } public function getDecryptedPassword(): ?string { return $this->password ? Crypt::decryptString($this->password) : null; } public function setApiTokenAttribute($RifkV): void { $this->attributes['api_token'] = $RifkV ? Crypt::encryptString($RifkV) : null; } public function getDecryptedApiToken(): ?string { return $this->api_token ? Crypt::decryptString($this->api_token) : null; } public function scopeGeniacs(Builder $LqT4G): Builder { return $LqT4G->where('type', 'geniacs'); } public function scopeFreeradius(Builder $LqT4G): Builder { return $LqT4G->where('type', 'freeradius'); } public function scopeRadiusApi(Builder $LqT4G): Builder { return $LqT4G->whereIn('type', ['daloradius_api', 'radiusdesk_api']); } }

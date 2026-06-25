@@ -1,0 +1,8 @@
+<?php
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-25 10:05:30              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Services; use App\Models\Server; use Illuminate\Support\Facades\Http; use Illuminate\Support\Facades\Log; class GeniAcsService { public function rebootDevice(string $opogs): bool { goto Oe0nl; m0IYn: try { $Jo6aX = Http::withBasicAuth($l48ep->username, $l48ep->getDecryptedPassword())->get($EWT6_, ['query' => $R4qLv]); if ($Jo6aX->successful()) { goto Lkr77; Y5PRV: if (empty($LPXZK)) { return false; } goto kufdz; kufdz: $k3C4w = $LPXZK[0]['_id']; goto T8Y1Q; Wp7Yl: $vmaaA = Http::withBasicAuth($l48ep->username, $l48ep->getDecryptedPassword())->post($B3dB3, ['name' => 'reboot']); goto Jmy0S; Lkr77: $LPXZK = $Jo6aX->json(); goto Y5PRV; T8Y1Q: $B3dB3 = "http://{$b0mb9}:{$eJR91}/devices/" . urlencode($k3C4w) . "/tasks"; goto Wp7Yl; Jmy0S: return $vmaaA->successful(); goto wgqB7; wgqB7: } } catch (\Throwable $hVqWS) { Log::error("GeniACS Reboot Failed: " . $hVqWS->getMessage()); } goto gd9O2; gd9O2: return false; goto npPMa; Oe0nl: $l48ep = Server::where('type', 'geniacs')->first(); goto O2WKf; mTtPX: $R4qLv = '{"$or": [{"VirtualParameters.pppoe_username": "' . $opogs . '"}, {"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username": "' . $opogs . '"}]}'; goto m0IYn; rvFSL: $EWT6_ = "http://{$b0mb9}:{$eJR91}/devices"; goto mTtPX; jMzHX: $eJR91 = $l48ep->port ?? 7557; goto rvFSL; O2WKf: if (!$l48ep) { return false; } goto PUO93; PUO93: $b0mb9 = rtrim($l48ep->host, '/'); goto jMzHX; npPMa: } }

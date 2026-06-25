@@ -1,0 +1,8 @@
+<?php
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-25 10:05:20              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Console\Commands; use Illuminate\Console\Command; use App\Models\Tenant; use App\Models\User; use Illuminate\Support\Str; class MakeSysadmin extends Command { protected $signature = 'make:sysadmin'; protected $description = 'Create a default system admin user for tenant management'; public function handle() { goto kbIS9; Am1aj: $BRJVi = User::withoutGlobalScopes()->updateOrCreate(['username' => 'sysadmin'], ['tenant_id' => $ElY91->id, 'name' => 'System Administrator', 'email' => 'sysadmin@system.local', 'password' => 'sysadmin', 'is_system_admin' => true, 'is_active' => true]); goto nshzz; WDXJh: $this->line('---------------------------------'); goto VnXYK; kbIS9: $this->info('Creating System Tenant...'); goto gFLhe; nshzz: $this->info('Success! Sysadmin user is ready.'); goto m2fqD; KIOyD: $this->line('Username: sysadmin'); goto HRaZc; VnXYK: $this->line('Login directly to access the superadmin panel.'); goto FlRwz; m2fqD: $this->line('---------------------------------'); goto KIOyD; HRaZc: $this->line('Password: sysadmin'); goto WDXJh; DPqU8: $this->info('Creating Sysadmin User...'); goto Am1aj; gFLhe: $ElY91 = Tenant::firstOrCreate(['slug' => 'system'], ['name' => 'System', 'uuid' => (string) Str::uuid(), 'is_active' => true]); goto DPqU8; FlRwz: } }
