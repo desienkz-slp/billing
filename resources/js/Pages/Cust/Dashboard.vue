@@ -139,18 +139,14 @@
                         <option value="isolated">Isolated</option>
                     </select>
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 shrink-0 mx-1"></div>
-                    <!-- Tgl Tagih Awal -->
-                    <select v-model="formFilters.billing_start" class="bg-transparent border-none text-sm text-slate-700 dark:text-slate-200 focus:ring-0 cursor-pointer py-1 pl-3 pr-7 min-w-max">
-                        <option value="">Tagih Awal</option>
-                        <option v-for="d in 28" :key="'start-'+d" :value="d">Tgl {{ d }}</option>
-                    </select>
-                    <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 shrink-0 mx-1"></div>
-                    <!-- Tgl Tagih Akhir -->
-                    <select v-model="formFilters.billing_end" class="bg-transparent border-none text-sm text-slate-700 dark:text-slate-200 focus:ring-0 cursor-pointer py-1 pl-3 pr-7 min-w-max">
-                        <option value="">Tagih Akhir</option>
-                        <option v-for="d in 28" :key="'end-'+d" :value="d">Tgl {{ d }}</option>
-                    </select>
-                    <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 shrink-0 mx-1"></div>
+                    <!-- Billing Calendar Range Picker -->
+                    <div class="px-2 border-r border-slate-200 dark:border-slate-700">
+                        <BillingCalendarFilter 
+                            :modelValue="{ start: formFilters.billing_start, end: formFilters.billing_end }"
+                            @update:modelValue="val => { formFilters.billing_start = val.start; formFilters.billing_end = val.end }"
+                            :projections="billing_projections"
+                        />
+                    </div>
                     <!-- Search -->
                     <div class="relative min-w-[120px] w-full">
                         <input 
@@ -300,18 +296,17 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import PaymentModal from '@/Pages/Cust/Customers/Components/PaymentModal.vue';
 import WaModal from '@/Pages/Cust/Customers/Components/WaModal.vue';
+import BillingCalendarFilter from '@/Components/BillingCalendarFilter.vue';
 
 const props = defineProps({
-    capabilities: {
-        type: Array,
-        default: () => [],
-    },
+    capabilities: Array,
     stats: Object,
     customers: Object,
     areas: Array,
     packages: Array,
     users: Array,
     filters: Object,
+    billing_projections: Object,
 });
 
 const can = (capability) => props.capabilities.includes(capability);
