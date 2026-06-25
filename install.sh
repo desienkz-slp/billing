@@ -34,13 +34,31 @@ if [ $MISSING_DEPS -eq 1 ]; then
     if [[ "$install_deps" == "y" || "$install_deps" == "Y" ]]; then
         echo "Memulai instalasi dependensi server. Mohon tunggu..."
         apt-get update
-        apt-get install -y php php-cli php-fpm php-pgsql php-mysql php-mbstring php-xml php-bcmath php-curl php-zip unzip curl
+        apt-get install -y software-properties-common curl unzip
+        
+        # Tambahkan PPA untuk PHP 8.2
+        add-apt-repository -y ppa:ondrej/php
+        
+        # Tambahkan repositori Node.js versi 20
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        
+        apt-get update
+        
+        # Instal PHP 8.2 dan ekstensi
+        apt-get install -y php8.2 php8.2-cli php8.2-fpm php8.2-pgsql php8.2-mysql php8.2-mbstring php8.2-xml php8.2-bcmath php8.2-curl php8.2-zip
+        
+        # Pastikan sistem menggunakan PHP 8.2 sebagai default
+        update-alternatives --set php /usr/bin/php8.2
+        
+        # Instal PostgreSQL
         apt-get install -y postgresql postgresql-contrib
-        apt-get install -y npm
+        
+        # Instal Node.js (sudah termasuk NPM versi terbaru)
+        apt-get install -y nodejs
         
         # Install Composer jika tidak ada di repositori APT standar
         if ! command -v composer &> /dev/null; then
-            curl -sS https://getcomposer.org/installer | php
+            curl -sS https://getcomposer.org/installer | php8.2
             mv composer.phar /usr/local/bin/composer
         fi
         
