@@ -241,7 +241,7 @@ class CustomerController extends Controller
         $users = [];
 
         // 1. Fetch from FreeRADIUS
-        $radiusServer = Server::where('type', 'freeradius')->where('is_active', true)->first();
+        $radiusServer = Server::whereIn('type', ['freeradius', 'upluk_upluk_api'])->where('is_active', true)->first();
         if ($radiusServer) {
             $radiusService = app(RadiusService::class);
             $radiusUsers = $radiusService->listUsers();
@@ -288,14 +288,19 @@ class CustomerController extends Controller
     public function getRadiusGroups()
     {
         $groups = [];
-        $server = Server::where('type', 'freeradius')->where('is_active', true)->first();
+        $server = Server::whereIn('type', ['freeradius', 'upluk_upluk_api'])->where('is_active', true)->first();
         if ($server) {
             $radiusService = app(RadiusService::class);
-            // Assuming RadiusService has getGroups or we can query RadGroupReply
-            if (method_exists($radiusService, 'getGroups')) {
-                $groups = $radiusService->getGroups();
+            $radiusService->connectTo($server);
+            
+            if (method_exists($radiusService, 'listGroups')) {
+                $groups = collect($radiusService->listGroups())->pluck('groupname')->unique()->values()->toArray();
             } else {
-                $groups = \App\Models\Radius\RadGroupReply::select('groupname')->distinct()->pluck('groupname');
+                try {
+                    $groups = \App\Models\Radius\RadGroupReply::select('groupname')->distinct()->pluck('groupname')->toArray();
+                } catch (\Throwable $e) {
+                    $groups = [];
+                }
             }
         }
         return response()->json(['status' => 'success', 'data' => $groups]);
@@ -418,7 +423,7 @@ class CustomerController extends Controller
             try {
                 if ($customer->server_id) {
                     $server = Server::find($customer->server_id);
-                    if ($server && $server->type === 'freeradius') {
+                    if ($server && in_array($server->type, ['freeradius', 'upluk_upluk_api'])) {
                         $radiusService = app(RadiusService::class);
                         $radiusService->connectTo($server);
                         $radiusService->deleteUser($customer->username);

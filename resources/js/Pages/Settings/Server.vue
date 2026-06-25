@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Kelola GenieACS Server">
-        <div class="max-w-full h-full flex flex-col min-h-0 w-full mx-auto p-4 px-4 sm:px-6 lg:px-8">
+        <div class="h-full flex flex-col min-h-0 w-full p-2">
             <!-- Header -->
             <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 sm:px-0">
                 <div class="flex items-center">
@@ -249,6 +249,9 @@ import { ref, computed, onMounted } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import axios from 'axios';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm } = useConfirm();
 
 const props = defineProps({
     servers: {
@@ -427,8 +430,16 @@ const toggleServerStatus = (s) => {
         .catch(() => showFlash('Gagal mengubah status server.', 'error'));
 };
 
-const deleteServer = (s) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus server "${s.name}"?`)) {
+const deleteServer = async (s) => {
+    const isConfirmed = await confirm({
+        title: 'Hapus Server',
+        message: `Apakah Anda yakin ingin menghapus server "${s.name}"?`,
+        confirmText: 'Ya, Hapus',
+        cancelText: 'Batal',
+        confirmColor: 'rose'
+    });
+    
+    if (isConfirmed) {
         axios.delete(`/config/server/${s.id}`)
             .then(res => {
                 if (res.data.status === 'success') {

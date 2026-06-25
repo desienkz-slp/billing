@@ -199,7 +199,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap">{{ customer.sales?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-center flex items-center justify-center gap-2">
-                                    <button v-if="can('billing.payments.create')" @click="openPaymentModal(customer)" class="text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1">
+                                    <button v-if="$page.props.auth.isAdmin || $page.props.auth.role?.can_process_payment" @click="openPaymentModal(customer)" class="text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                                         Bayar
                                     </button>
@@ -207,16 +207,16 @@
                                         WA
                                     </button>
                                     <template v-if="customer.is_isolated">
-                                        <button v-if="can('billing.isolir.manage')" @click="confirmUnisolir(customer)" class="text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1">
+                                        <button v-if="$page.props.auth.isAdmin || $page.props.auth.role?.can_manage_isolir" @click="confirmUnisolir(customer)" class="text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1">
                                             Unisolir
                                         </button>
                                     </template>
                                     <template v-else>
-                                        <button v-if="can('billing.isolir.manage')" @click="confirmIsolir(customer)" class="text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1">
+                                        <button v-if="$page.props.auth.isAdmin || $page.props.auth.role?.can_manage_isolir" @click="confirmIsolir(customer)" class="text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1">
                                             Isolir
                                         </button>
                                     </template>
-                                    <button v-if="can('billing.cuti.manage')" @click="confirmCuti(customer)" class="text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1">
+                                    <button v-if="$page.props.auth.isAdmin || $page.props.auth.role?.can_cuti" @click="confirmCuti(customer)" class="text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1">
                                         Cuti
                                     </button>
                                 </td>

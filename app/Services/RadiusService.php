@@ -2,82 +2,71 @@
 
 namespace App\Services;
 
-use App\Models\Radius\RadAcct;
-use App\Models\Radius\RadCheck;
-use App\Models\Radius\RadGroupReply;
-use App\Models\Radius\RadReply;
-use App\Models\Radius\RadUserGroup;
 use App\Models\Server;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * RadiusService — Manage FreeRADIUS database secara dinamis per server.
- *
- * Setiap tenant bisa punya banyak server RADIUS. Service ini:
- * 1. Set koneksi MySQL dinamis ke server RADIUS target
- * 2. CRUD radcheck/radreply/radusergroup untuk manage user PPPoE
- * 3. Read radacct untuk monitoring session (read-only)
- * 4. Bulk sync dari billing ke RADIUS
+ * RadiusService — Manage RADIUS menggunakan Upluk Upluk RADIUS API (radius-ui backend)
  */
 class RadiusService
 {
     protected ?Server $currentServer = null;
+    protected ?string $baseUrl = null;
+    protected ?string $token = null;
 
     /**
-     * Set koneksi database RADIUS ke server tertentu.
-     * Harus dipanggil sebelum operasi RADIUS lainnya.
+     * Set server target.
      */
     public function connectTo(Server $server): self
     {
-        Config::set('database.connections.radius', [
-            'driver'    => 'mysql',
-            'host'      => $server->host,
-            'port'      => $server->port ?? 3306,
-            'database'  => $server->db_name ?? 'radius',
-            'username'  => $server->username,
-            'password'  => $server->getDecryptedDbPassword(),
-            'charset'   => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-            'prefix'    => '',
-            'strict'    => true,
-        ]);
-
-        // Purge cached connection sehingga Laravel buat koneksi baru
-        DB::purge('radius');
-
         $this->currentServer = $server;
+        
+        $this->baseUrl = rtrim($server->api_endpoint ?? $server->host, '/');
+        if (!str_starts_with($this->baseUrl, 'http')) {
+            $this->baseUrl = 'http://' . $this->baseUrl;
+        }
+        $this->token = $server->getDecryptedApiToken();
 
         return $this;
     }
 
     /**
-     * Test apakah koneksi ke RADIUS server berhasil.
+     * Test koneksi ke Upluk Upluk RADIUS API.
      */
     public function testConnection(Server $server): array
     {
         try {
             $this->connectTo($server);
-            DB::connection('radius')->getPdo();
+            
+            $response = Http::withToken($this->token)
+                ->timeout(5)
+                ->get("{$this->baseUrl}/api/users");
+            
+            $configIdentity = '';
+            try {
+                $configResponse = Http::withToken($this->token)->timeout(5)->get("{$this->baseUrl}/api/config/server");
+                if ($configResponse->successful()) {
+                    $configIdentity = $configResponse->json('SERVER_IDENTITY') ?? '';
+                }
+            } catch (\Throwable $e) {}
 
-            // Cek apakah tabel radcheck exists
-            $tables = DB::connection('radius')
-                ->select("SHOW TABLES LIKE 'radcheck'");
-
-            $hasRadcheck = count($tables) > 0;
-
-            // Count existing users
-            $userCount = $hasRadcheck
-                ? DB::connection('radius')->table('radcheck')->count()
-                : 0;
+            if ($response->successful()) {
+                $users = $response->json();
+                $msg = "Koneksi API berhasil ke ";
+                return [
+                    'status' => 'success',
+                    'message' => $msg,
+                    'identity' => $configIdentity ?: $this->baseUrl,
+                    'has_radcheck' => true,
+                    'user_count' => count($users),
+                ];
+            }
 
             return [
-                'status' => 'success',
-                'message' => "Koneksi berhasil ke {$server->host}:{$server->port}/{$server->db_name}",
-                'has_radcheck' => $hasRadcheck,
-                'user_count' => $userCount,
+                'status' => 'error',
+                'message' => "Gagal konek: API merespons dengan HTTP " . $response->status(),
             ];
         } catch (\Throwable $e) {
             return [
@@ -88,93 +77,103 @@ class RadiusService
     }
 
     // ===================================================
-    // USER MANAGEMENT (radcheck + radusergroup)
+    // USER MANAGEMENT
     // ===================================================
 
-    /**
-     * Buat user baru di RADIUS.
-     * Insert ke radcheck (password) dan radusergroup (group/paket).
-     */
     public function createUser(string $username, string $password, ?string $group = null): bool
     {
         try {
-            DB::connection('radius')->transaction(function () use ($username, $password, $group) {
-                // Insert password ke radcheck
-                RadCheck::on('radius')->updateOrCreate(
-                    ['username' => $username, 'attribute' => 'Cleartext-Password'],
-                    ['op' => ':=', 'value' => $password]
-                );
+            $response = Http::withToken($this->token)->post("{$this->baseUrl}/api/users", [
+                'username' => $username,
+                'password' => $password,
+                'profile' => $group
+            ]);
 
-                // Assign ke group jika ada
-                if ($group) {
-                    RadUserGroup::on('radius')->updateOrCreate(
-                        ['username' => $username],
-                        ['groupname' => $group, 'priority' => 1]
-                    );
-                }
-            });
-
-            return true;
+            return $response->successful();
         } catch (\Throwable $e) {
             Log::error("RadiusService::createUser failed: {$e->getMessage()}", [
                 'username' => $username,
-                'server' => $this->currentServer?->host,
+                'server' => $this->currentServer?->name,
             ]);
             return false;
         }
     }
 
-    /**
-     * Update password user di RADIUS.
-     */
-    public function updatePassword(string $username, string $newPassword): bool
+    public function updateUser(string $username, ?string $newPassword = null, ?string $newGroup = null): bool
     {
         try {
-            $updated = RadCheck::on('radius')
-                ->where('username', $username)
-                ->where('attribute', 'Cleartext-Password')
-                ->update(['value' => $newPassword]);
-
-            return $updated > 0;
+            $response = Http::withToken($this->token)->post("{$this->baseUrl}/api/users/batch", [
+                'users' => [
+                    [
+                        'username' => $username,
+                        'password' => $newPassword,
+                        'profile' => $newGroup
+                    ]
+                ]
+            ]);
+            return $response->successful();
         } catch (\Throwable $e) {
-            Log::error("RadiusService::updatePassword failed: {$e->getMessage()}");
+            Log::error("RadiusService::updateUser failed: {$e->getMessage()}");
             return false;
         }
     }
 
-    /**
-     * Hapus user dari RADIUS (semua entry di radcheck, radreply, radusergroup).
-     */
     public function deleteUser(string $username): bool
     {
         try {
-            DB::connection('radius')->transaction(function () use ($username) {
-                RadCheck::on('radius')->where('username', $username)->delete();
-                RadReply::on('radius')->where('username', $username)->delete();
-                RadUserGroup::on('radius')->where('username', $username)->delete();
-            });
-
-            return true;
+            $response = Http::withToken($this->token)->delete("{$this->baseUrl}/api/users/batch", [
+                'usernames' => [$username]
+            ]);
+            return $response->successful();
         } catch (\Throwable $e) {
             Log::error("RadiusService::deleteUser failed: {$e->getMessage()}");
             return false;
         }
     }
 
-    /**
-     * Ganti group user (ganti paket).
-     */
-    public function changeGroup(string $username, string $newGroup): bool
+    public function getConfig(): array
     {
         try {
-            RadUserGroup::on('radius')->updateOrCreate(
-                ['username' => $username],
-                ['groupname' => $newGroup, 'priority' => 1]
-            );
-
-            return true;
+            $response = Http::withToken($this->token)->get("{$this->baseUrl}/api/config/server");
+            if ($response->successful()) {
+                return $response->json();
+            }
+            return [];
         } catch (\Throwable $e) {
-            Log::error("RadiusService::changeGroup failed: {$e->getMessage()}");
+            Log::error("RadiusService::getConfig failed: {$e->getMessage()}");
+            return [];
+        }
+    }
+
+    public function createProfile(array $data): bool
+    {
+        try {
+            $response = Http::withToken($this->token)->post("{$this->baseUrl}/api/profiles", $data);
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error("RadiusService::createProfile failed: {$e->getMessage()}");
+            return false;
+        }
+    }
+
+    public function updateProfile(int $id, array $data): bool
+    {
+        try {
+            $response = Http::withToken($this->token)->put("{$this->baseUrl}/api/profiles/{$id}", $data);
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error("RadiusService::updateProfile failed: {$e->getMessage()}");
+            return false;
+        }
+    }
+
+    public function deleteProfile(int $id): bool
+    {
+        try {
+            $response = Http::withToken($this->token)->delete("{$this->baseUrl}/api/profiles/{$id}");
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error("RadiusService::deleteProfile failed: {$e->getMessage()}");
             return false;
         }
     }
@@ -183,87 +182,26 @@ class RadiusService
     // ISOLIR / UNISOLIR
     // ===================================================
 
-    /**
-     * Disable user di RADIUS (isolir).
-     * Menghapus entry dari radcheck sehingga auth gagal.
-     */
     public function disableUser(string $username): bool
     {
         try {
-            // Simpan password saat ini ke atribut khusus sebelum hapus
-            $current = RadCheck::on('radius')
-                ->where('username', $username)
-                ->where('attribute', 'Cleartext-Password')
-                ->first();
-
-            if ($current) {
-                // Backup password ke atribut non-auth
-                RadCheck::on('radius')->updateOrCreate(
-                    ['username' => $username, 'attribute' => 'Backup-Password'],
-                    ['op' => ':=', 'value' => $current->value]
-                );
-
-                // Set Auth-Type ke Reject
-                RadCheck::on('radius')->updateOrCreate(
-                    ['username' => $username, 'attribute' => 'Auth-Type'],
-                    ['op' => ':=', 'value' => 'Reject']
-                );
-            }
-
-            return true;
+            $response = Http::withToken($this->token)->post("{$this->baseUrl}/api/users/{$username}/disable");
+            return $response->successful();
         } catch (\Throwable $e) {
             Log::error("RadiusService::disableUser failed: {$e->getMessage()}");
             return false;
         }
     }
 
-    /**
-     * Enable user di RADIUS (unisolir).
-     * Restore password dari backup.
-     */
     public function enableUser(string $username, ?string $password = null, ?string $group = null): bool
     {
         try {
-            DB::connection('radius')->transaction(function () use ($username, $password, $group) {
-                // Coba restore dari backup
-                if (!$password) {
-                    $backup = RadCheck::on('radius')
-                        ->where('username', $username)
-                        ->where('attribute', 'Backup-Password')
-                        ->first();
-                    $password = $backup?->value;
-                }
+            $payload = [];
+            if ($password) $payload['password'] = $password;
+            if ($group) $payload['profile'] = $group;
 
-                if ($password) {
-                    // Restore password
-                    RadCheck::on('radius')->updateOrCreate(
-                        ['username' => $username, 'attribute' => 'Cleartext-Password'],
-                        ['op' => ':=', 'value' => $password]
-                    );
-                }
-
-                // Hapus Auth-Type Reject
-                RadCheck::on('radius')
-                    ->where('username', $username)
-                    ->where('attribute', 'Auth-Type')
-                    ->delete();
-
-                // Hapus backup password
-                RadCheck::on('radius')
-                    ->where('username', $username)
-                    ->where('attribute', 'Backup-Password')
-                    ->delete();
-
-                // Restore group jika diberikan
-                if ($group) {
-                    RadUserGroup::on('radius')->updateOrCreate(
-                        ['username' => $username],
-                        ['groupname' => $group, 'priority' => 1]
-                    );
-                }
-            });
-
-            return true;
+            $response = Http::withToken($this->token)->post("{$this->baseUrl}/api/users/{$username}/enable", $payload);
+            return $response->successful();
         } catch (\Throwable $e) {
             Log::error("RadiusService::enableUser failed: {$e->getMessage()}");
             return false;
@@ -274,64 +212,65 @@ class RadiusService
     // MONITORING (READ-ONLY)
     // ===================================================
 
-    /**
-     * Get active sessions dari radacct (belum disconnect).
-     */
     public function getActiveSessions(): Collection
     {
         try {
-            return RadAcct::on('radius')
-                ->whereNull('acctstoptime')
-                ->orderByDesc('acctstarttime')
-                ->get();
+            $response = Http::withToken($this->token)->get("{$this->baseUrl}/api/sessions");
+            if ($response->successful()) {
+                return collect($response->json());
+            }
+            return collect();
         } catch (\Throwable $e) {
             Log::error("RadiusService::getActiveSessions failed: {$e->getMessage()}");
             return collect();
         }
     }
 
-    /**
-     * Get session history untuk user tertentu.
-     */
     public function getUserSessions(string $username, int $limit = 50): Collection
     {
         try {
-            return RadAcct::on('radius')
-                ->where('username', $username)
-                ->orderByDesc('acctstarttime')
-                ->limit($limit)
-                ->get();
+            // API saat ini hanya mengembalikan sesi aktif (acctstoptime IS NULL).
+            // Kita filter berdasarkan username.
+            $response = Http::withToken($this->token)->get("{$this->baseUrl}/api/sessions");
+            if ($response->successful()) {
+                return collect($response->json())
+                    ->where('username', $username)
+                    ->take($limit)
+                    ->values();
+            }
+            return collect();
         } catch (\Throwable $e) {
             return collect();
         }
     }
 
-    /**
-     * Get semua user yang terdaftar di radcheck.
-     */
     public function listUsers(): Collection
     {
         try {
-            return RadCheck::on('radius')
-                ->where('radcheck.attribute', 'Cleartext-Password')
-                ->leftJoin('radusergroup', 'radcheck.username', '=', 'radusergroup.username')
-                ->select('radcheck.username', 'radcheck.value as password', 'radusergroup.groupname as profile')
-                ->orderBy('radcheck.username')
-                ->get();
+            $response = Http::withToken($this->token)->get("{$this->baseUrl}/api/users");
+            if ($response->successful()) {
+                // API mengembalikan array of {username, password, profile}
+                // Map menjadi object agar mirip dengan struktur Eloquent Collection sebelumnya
+                return collect($response->json())->map(function ($item) {
+                    return (object) $item;
+                });
+            }
+            return collect();
         } catch (\Throwable $e) {
             return collect();
         }
     }
 
-    /**
-     * Get semua group dan atributnya.
-     */
     public function listGroups(): Collection
     {
         try {
-            return RadGroupReply::on('radius')
-                ->orderBy('groupname')
-                ->get();
+            $response = Http::withToken($this->token)->get("{$this->baseUrl}/api/profiles");
+            if ($response->successful()) {
+                return collect($response->json())->map(function ($item) {
+                    return (object) $item;
+                });
+            }
+            return collect();
         } catch (\Throwable $e) {
             return collect();
         }
@@ -341,14 +280,13 @@ class RadiusService
     // BULK SYNC
     // ===================================================
 
-    /**
-     * Sync customers dari billing ke RADIUS database.
-     * Hanya sync customer yang aktif dan punya username.
-     */
     public function syncCustomersToRadius(Collection $customers): array
     {
         $synced = 0;
         $errors = 0;
+
+        // Kita bisa menggunakan batch API jika radius-ui memiliki /api/users/batch
+        $usersToSync = [];
 
         foreach ($customers as $customer) {
             if (!$customer->username) continue;
@@ -356,16 +294,37 @@ class RadiusService
             $group = $customer->package?->radius_group;
             $password = $customer->pppoe_password ?? $customer->username;
 
-            try {
-                if ($customer->is_isolated) {
+            if ($customer->is_isolated) {
+                // Handle isolir individually since batch may not support disable
+                try {
                     $this->disableUser($customer->username);
-                } else {
-                    $this->createUser($customer->username, $password, $group);
+                    $synced++;
+                } catch (\Throwable $e) {
+                    $errors++;
                 }
-                $synced++;
+            } else {
+                $usersToSync[] = [
+                    'username' => $customer->username,
+                    'password' => $password,
+                    'profile' => $group
+                ];
+            }
+        }
+
+        if (count($usersToSync) > 0) {
+            try {
+                $response = Http::withToken($this->token)->post("{$this->baseUrl}/api/users/batch", [
+                    'users' => $usersToSync
+                ]);
+                
+                if ($response->successful()) {
+                    $synced += count($usersToSync);
+                } else {
+                    $errors += count($usersToSync);
+                }
             } catch (\Throwable $e) {
-                $errors++;
-                Log::warning("Sync failed for {$customer->username}: {$e->getMessage()}");
+                $errors += count($usersToSync);
+                Log::warning("Batch sync failed: {$e->getMessage()}");
             }
         }
 

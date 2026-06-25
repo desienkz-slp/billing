@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
             ],
             'tenant' => $request->attributes->get('tenant'),
+            'company' => config('company'),
         ];
     }
 }

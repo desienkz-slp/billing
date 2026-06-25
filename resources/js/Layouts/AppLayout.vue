@@ -1,13 +1,20 @@
 <template>
     <div class="flex h-screen bg-[var(--bg-body)] transition-colors duration-200" :data-theme="theme">
-        <Sidebar :isOpen="isSidebarOpen" />
-        
-        <div class="flex-1 flex flex-col main-content min-w-0 transition-all duration-300">
-            <div v-if="page.props.flash?.license_warning" class="license-banner" :class="{ 'expired': page.props.flash?.license_expired }">
+        <Sidebar v-if="!hideSidebar" :isOpen="isSidebarOpen" />
+
+        <div class="flex-1 flex flex-col main-content min-w-0 transition-all duration-300 relative" :style="hideSidebar ? 'margin-left: 0 !important;' : ''">
+            <!-- Global Watermark Background -->
+            <div class="pointer-events-none fixed inset-0 flex items-center justify-center opacity-[0.03] dark:opacity-[0.02] z-0 overflow-hidden" aria-hidden="true">
+                <span class="text-[8vw] font-black uppercase tracking-widest text-slate-900 dark:text-white transform -rotate-12 whitespace-nowrap">
+                    {{ page.props.company?.name || 'upluk-upluk_dev' }}
+                </span>
+            </div>
+
+            <div v-if="page.props.flash?.license_warning" class="license-banner relative z-10" :class="{ 'expired': page.props.flash?.license_expired }">
                 ⚠️ {{ page.props.flash.license_warning }}
             </div>
 
-            <Header :title="title" @toggle-sidebar="isSidebarOpen = !isSidebarOpen" @toggle-theme="theme = $event" />
+            <Header class="relative z-10" :title="title" @toggle-sidebar="isSidebarOpen = !isSidebarOpen" @toggle-theme="theme = $event" />
 
             <main class="flex-1 overflow-y-auto m-2 flex flex-col relative">
                 <transition name="fade">
@@ -40,11 +47,14 @@
 
         <!-- Footer -->
         <footer class="fixed bottom-0 left-0 w-full py-2 px-4 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700/50 bg-[var(--bg-body)] z-[60]">
-            &copy; 2026 upluk-upluk_dev version 2.0
+            &copy; {{ new Date().getFullYear() }} {{ page.props.company?.name || 'upluk-upluk_dev' }} &bull; versi 2.0
         </footer>
 
         <!-- Mobile overlay -->
         <div v-if="isSidebarOpen" @click="isSidebarOpen = false" class="fixed inset-0 bg-black/50 z-[55] md:hidden"></div>
+
+        <!-- Global Confirm Modal -->
+        <ConfirmModal />
     </div>
 </template>
 
@@ -53,11 +63,16 @@ import { ref, watch, onMounted, onErrorCaptured } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import Sidebar from '../Components/Sidebar.vue';
 import Header from '../Components/Header.vue';
+import ConfirmModal from '../Components/ConfirmModal.vue';
 
 defineProps({
     title: {
         type: String,
         default: 'Dashboard'
+    },
+    hideSidebar: {
+        type: Boolean,
+        default: false
     }
 });
 

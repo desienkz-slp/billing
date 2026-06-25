@@ -256,6 +256,9 @@ import axios from 'axios';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import KpiCard from './Components/KpiCard.vue';
 import Chart from 'chart.js/auto';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm } = useConfirm();
 
 const props = defineProps({
     bulan: String,
@@ -360,7 +363,14 @@ const loadHiddenMonths = async () => {
 };
 
 const toggleHideMonth = async () => {
-    if (!confirm(isHiddenMonth.value ? `Tampilkan kembali bulan ${formatMonthLabel(selectedBulan.value)}?` : `Sembunyikan bulan ${formatMonthLabel(selectedBulan.value)}?\nData akan ditampilkan sebagai 0 di laporan tren.`)) return;
+    const isConfirmed = await confirm({
+        title: isHiddenMonth.value ? 'Tampilkan Bulan' : 'Sembunyikan Bulan',
+        message: isHiddenMonth.value ? `Tampilkan kembali bulan ${formatMonthLabel(selectedBulan.value)}?` : `Sembunyikan bulan ${formatMonthLabel(selectedBulan.value)}?\nData akan ditampilkan sebagai 0 di laporan tren.`,
+        confirmText: isHiddenMonth.value ? 'Ya, Tampilkan' : 'Ya, Sembunyikan',
+        cancelText: 'Batal',
+        confirmColor: isHiddenMonth.value ? 'emerald' : 'amber'
+    });
+    if (!isConfirmed) return;
     try {
         await axios.post('/reports/statistics/toggle-hide', { periode: selectedBulan.value });
         await loadHiddenMonths();
@@ -371,7 +381,14 @@ const toggleHideMonth = async () => {
 };
 
 const unhideMonth = async (periode) => {
-    if (!confirm(`Tampilkan kembali bulan ${formatMonthLabel(periode)}?`)) return;
+    const isConfirmed = await confirm({
+        title: 'Tampilkan Bulan',
+        message: `Tampilkan kembali bulan ${formatMonthLabel(periode)}?`,
+        confirmText: 'Ya, Tampilkan',
+        cancelText: 'Batal',
+        confirmColor: 'emerald'
+    });
+    if (!isConfirmed) return;
     try {
         await axios.post('/reports/statistics/toggle-hide', { periode });
         await loadHiddenMonths();

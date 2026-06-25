@@ -120,6 +120,9 @@
 import { ref, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm } = useConfirm();
 
 const props = defineProps({
     areas: {
@@ -175,8 +178,16 @@ const submitForm = () => {
     closeModal();
 };
 
-const deleteArea = (area) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus area "${area.name}"?`)) {
+const deleteArea = async (area) => {
+    const isConfirmed = await confirm({
+        title: 'Hapus Area',
+        message: `Apakah Anda yakin ingin menghapus area "${area.name}"?`,
+        confirmText: 'Ya, Hapus',
+        cancelText: 'Batal',
+        confirmColor: 'rose'
+    });
+    
+    if (isConfirmed) {
         alert('Simulasi: Area ' + area.name + ' berhasil dihapus.');
     }
 };

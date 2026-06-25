@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @import './dashboard.css';
-@source "c:/xampp/htdocs/laravel-bill/resources/js";
+@source "../js";
 
 @variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 

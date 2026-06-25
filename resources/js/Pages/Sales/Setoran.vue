@@ -268,6 +268,9 @@ import { ref, computed } from 'vue';
 import { usePage, router, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm } = useConfirm();
 
 const props = defineProps({
     capabilities: Array,
@@ -338,8 +341,16 @@ const fetchHistory = async () => {
     }
 };
 
-const cancelDeposit = (id) => {
-    if (confirm('Yakin ingin membatalkan setoran ini? Saldo Sisa Agen akan otomatis menyesuaikan.')) {
+const cancelDeposit = async (id) => {
+    const isConfirmed = await confirm({
+        title: 'Batalkan Setoran',
+        message: 'Yakin ingin membatalkan setoran ini? Saldo Sisa Agen akan otomatis menyesuaikan.',
+        confirmText: 'Ya, Batalkan',
+        cancelText: 'Kembali',
+        confirmColor: 'rose'
+    });
+
+    if (isConfirmed) {
         router.delete(route('sales.setoran.destroy', id), {
             onSuccess: () => {
                 fetchHistory();

@@ -11,7 +11,7 @@
                     <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Data Pengeluaran</h1>
                 </div>
 
-                <button @click="openAddModal" class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto transition-all">
+                <button v-if="$page.props.auth.isAdmin || $page.props.auth.role?.can_manage_expenses" @click="openAddModal" class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto transition-all">
                     <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
@@ -113,7 +113,7 @@
                                     {{ formatRupiah(expense.amount) }}
                                 </td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap">
-                                    <button @click="confirmDelete(expense)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/50 rounded transition-colors" title="Hapus">
+                                    <button v-if="$page.props.auth.isAdmin || $page.props.auth.role?.can_delete_finance" @click="confirmDelete(expense)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/50 rounded transition-colors" title="Hapus">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                     </button>
                                 </td>

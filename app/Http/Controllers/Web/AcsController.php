@@ -9,6 +9,8 @@ class AcsController extends Controller
 {
     public function index()
     {
-        return redirect()->route('dashboard')->with('info', 'Modul ACS sedang dalam tahap pengembangan.');
+        return \Inertia\Inertia::render('Maintenance/Index', [
+            'module' => 'ACS System'
+        ]);
     }
 }

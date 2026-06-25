@@ -52,6 +52,13 @@ class LoginController extends Controller
             ]);
         }
 
+        // Platform access check — only for web login (desktop)
+        if (!$user->is_system_admin && $user->role && !$user->role->can_access_desktop) {
+            throw ValidationException::withMessages([
+                'username' => ['Role Anda tidak memiliki izin untuk login melalui browser web.'],
+            ]);
+        }
+
         // Login via session
         Auth::login($user, $request->boolean('remember'));
 

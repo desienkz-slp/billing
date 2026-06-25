@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="pageTitle">
-        <div class="max-w-full h-full flex flex-col min-h-0 w-full mx-auto p-4 px-4 sm:px-6 lg:px-8">
+        <div class="h-full flex flex-col min-h-0 w-full p-2">
             <!-- Header -->
             <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 sm:px-0">
                 <div class="flex items-center">
@@ -38,9 +38,16 @@
                         </div>
 
                         <!-- Nama Perusahaan -->
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Nama Perusahaan / ISP</label>
-                            <input v-model="form.company_nama" type="text" class="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 bg-slate-50 dark:text-white dark:bg-slate-900/50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all" placeholder="Contoh: LadaPala Net">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Nama Perusahaan / ISP</label>
+                                <input v-model="form.company_nama" type="text" class="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 bg-slate-50 dark:text-white dark:bg-slate-900/50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all" placeholder="Contoh: LadaPala Net">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">ID Perusahaan</label>
+                                <input v-model="form.company_id" type="text" class="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 bg-slate-50 dark:text-white dark:bg-slate-900/50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all font-mono uppercase" placeholder="Contoh: LADA">
+                                <p v-if="form.errors.company_id" class="mt-1 text-xs text-red-500">{{ form.errors.company_id }}</p>
+                            </div>
                         </div>
 
                         <!-- Alamat -->
@@ -128,6 +135,7 @@ const logoInput = ref(null);
 const logoPreview = ref(null);
 
 const form = useForm({
+    company_id: props.configs?.company_id || '',
     company_nama: props.configs?.company_nama || '',
     company_alamat: props.configs?.company_alamat || '',
     company_telepon: props.configs?.company_telepon || '',

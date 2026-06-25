@@ -14,13 +14,13 @@
                     
                     <div class="flex items-center gap-3 mt-4 sm:mt-0 w-full sm:w-auto">
                         <!-- Batch Restore Button -->
-                        <button v-if="selectedCustomers.length > 0" @click="confirmBatchRestore" class="px-4 py-2 bg-emerald-100 dark:bg-emerald-900/50 hover:bg-emerald-200 dark:hover:bg-emerald-800/70 text-emerald-700 dark:text-emerald-400 text-sm font-medium rounded-xl transition-all flex items-center whitespace-nowrap">
+                        <button v-if="selectedCustomers.length > 0 && ($page.props.auth.isAdmin || $page.props.auth.role?.can_delete_customer)" @click="confirmBatchRestore" class="px-4 py-2 bg-emerald-100 dark:bg-emerald-900/50 hover:bg-emerald-200 dark:hover:bg-emerald-800/70 text-emerald-700 dark:text-emerald-400 text-sm font-medium rounded-xl transition-all flex items-center whitespace-nowrap">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
                             Restore ({{ selectedCustomers.length }})
                         </button>
 
                         <!-- Batch Delete Button -->
-                        <button v-if="selectedCustomers.length > 0" @click="confirmBatchForceDelete" class="px-4 py-2 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-800/70 text-red-700 dark:text-red-400 text-sm font-medium rounded-xl transition-all flex items-center whitespace-nowrap">
+                        <button v-if="selectedCustomers.length > 0 && ($page.props.auth.isAdmin || $page.props.auth.role?.can_delete_customer)" @click="confirmBatchForceDelete" class="px-4 py-2 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-800/70 text-red-700 dark:text-red-400 text-sm font-medium rounded-xl transition-all flex items-center whitespace-nowrap">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             Hapus Permanen ({{ selectedCustomers.length }})
                         </button>
@@ -106,11 +106,11 @@
                                 <td class="px-4 py-3 text-center whitespace-nowrap">{{ customer.area?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap">{{ customer.sales?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap flex items-center justify-center gap-2">
-                                    <button @click="confirmRestore(customer)" class="px-3 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 dark:hover:bg-emerald-800/70 rounded-md transition-colors text-xs font-medium flex items-center" title="Restore">
+                                    <button v-if="$page.props.auth.isAdmin || $page.props.auth.role?.can_delete_customer" @click="confirmRestore(customer)" class="px-3 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 dark:hover:bg-emerald-800/70 rounded-md transition-colors text-xs font-medium flex items-center" title="Restore">
                                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
                                         Restore
                                     </button>
-                                    <button @click="confirmForceDelete(customer)" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/50 dark:text-red-400 dark:hover:bg-red-800/70 rounded-md transition-colors text-xs font-medium flex items-center" title="Hapus Permanen">
+                                    <button v-if="$page.props.auth.isAdmin || $page.props.auth.role?.can_delete_customer" @click="confirmForceDelete(customer)" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/50 dark:text-red-400 dark:hover:bg-red-800/70 rounded-md transition-colors text-xs font-medium flex items-center" title="Hapus Permanen">
                                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         Hapus
                                     </button>

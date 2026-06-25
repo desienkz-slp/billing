@@ -258,6 +258,9 @@
 import { ref, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm } = useConfirm();
 
 const pageTitle = computed(() => {
     return 'Master Paket SaaS - LadaPala-Bill';
@@ -280,8 +283,16 @@ const editPackage = (packageName) => {
     showForm.value = true;
 };
 
-const deletePackage = (packageName) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus paket "${packageName}"? Paket yang sedang aktif di tenant mungkin akan terdampak.`)) {
+const deletePackage = async (packageName) => {
+    const isConfirmed = await confirm({
+        title: 'Hapus Paket',
+        message: `Apakah Anda yakin ingin menghapus paket "${packageName}"? Paket yang sedang aktif di tenant mungkin akan terdampak.`,
+        confirmText: 'Ya, Hapus',
+        cancelText: 'Batal',
+        confirmColor: 'rose'
+    });
+    
+    if (isConfirmed) {
         alert(`Simulasi: Paket "${packageName}" berhasil dihapus dari database!`);
     }
 };

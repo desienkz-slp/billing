@@ -3,191 +3,174 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Customer;
-use App\Models\IsolirLog;
-use App\Models\PppoeProfile;
-use App\Models\PppoeSecret;
-use App\Models\Router;
-use App\Services\MikroTik\MikroTikService;
+use App\Models\Server;
+use App\Services\RadiusService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class RadiusController extends Controller
 {
-    protected MikroTikService $mikrotik;
+    protected RadiusService $radiusService;
 
-    public function __construct(MikroTikService $mikrotik)
+    public function __construct(RadiusService $radiusService)
     {
-        $this->mikrotik = $mikrotik;
+        $this->radiusService = $radiusService;
     }
 
     /**
-     * RADIUS Dashboard — list routers for PPPoE management.
+     * RADIUS Dashboard — list radius servers.
      */
     public function index()
     {
-        $routers = Router::where('is_active', true)
-            ->withCount('customers')
-            ->withCount('pppoeSecrets')
-            ->withCount('pppoeProfiles')
+        // Only get Upluk Upluk API servers
+        $server = Server::where('type', 'upluk_upluk_api')
+            ->where('is_active', true)
             ->orderBy('name')
-            ->get();
+            ->first();
 
-        return Inertia::render('Radius/Index', compact('routers'));
-    }
-
-    /**
-     * PPPoE Secrets for a router.
-     */
-    public function secrets(Router $router)
-    {
-        // Live fetch from router
-        $secrets = $this->mikrotik->getPppoeSecrets($router);
-        $active = $this->mikrotik->getActiveConnections($router);
-        $activeNames = collect($active)->pluck('name')->toArray();
-
-        // Match with local customers
-        $customerMap = Customer::where('router_id', $router->id)
-            ->whereNotNull('username')
-            ->get(['id', 'name', 'username', 'status', 'is_isolated'])
-            ->keyBy('username');
-
-        $enrichedSecrets = collect($secrets)->map(function ($s) use ($activeNames, $customerMap) {
-            $name = $s['name'] ?? '';
-            $customer = $customerMap[$name] ?? null;
-            return [
-                'name' => $name,
-                'password' => $s['password'] ?? '***',
-                'profile' => $s['profile'] ?? '-',
-                'service' => $s['service'] ?? 'pppoe',
-                'disabled' => ($s['disabled'] ?? 'false') === 'true',
-                'comment' => $s['comment'] ?? '',
-                'is_online' => in_array($name, $activeNames),
-                'customer_name' => $customer?->name,
-                'customer_id' => $customer?->id,
-                'customer_status' => $customer?->status,
-                'customer_isolated' => $customer?->is_isolated,
-            ];
-        })->sortByDesc('is_online')->values();
-
-        $profiles = $this->mikrotik->getPppoeProfiles($router);
-
-        return Inertia::render('Radius/Secrets', compact('router', 'enrichedSecrets', 'profiles', 'active'));
-    }
-
-    /**
-     * PPPoE Profiles for a router.
-     */
-    public function profiles(Router $router)
-    {
-        $profiles = $this->mikrotik->getPppoeProfiles($router);
-        return response()->json(['status' => 'success', 'data' => $profiles]);
-    }
-
-    /**
-     * Sync PPPoE data from router to local DB.
-     */
-    public function sync(Router $router)
-    {
-        $tenantId = session('tenant_id');
-
-        // Sync profiles
-        $profiles = $this->mikrotik->getPppoeProfiles($router);
-        $syncedProfiles = 0;
-        foreach ($profiles as $p) {
-            if (!isset($p['name'])) continue;
-            PppoeProfile::updateOrCreate(
-                ['tenant_id' => $tenantId, 'router_id' => $router->id, 'name' => $p['name']],
-                [
-                    'rate_limit' => $p['rate-limit'] ?? null,
-                    'local_address' => $p['local-address'] ?? null,
-                    'remote_address' => $p['remote-address'] ?? null,
-                    'mikrotik_data' => $p,
-                ]
-            );
-            $syncedProfiles++;
+        if ($server) {
+            return Inertia::render('Radius/ServerDetail', compact('server'));
         }
 
-        // Sync secrets
-        $secrets = $this->mikrotik->getPppoeSecrets($router);
-        $customerUsernames = Customer::whereNotNull('username')
-            ->pluck('id', 'username')
-            ->toArray();
+        return Inertia::render('Radius/Index'); // Or handle empty state if needed
+    }
 
-        $syncedSecrets = 0;
-        foreach ($secrets as $s) {
-            if (!isset($s['name'])) continue;
-            PppoeSecret::updateOrCreate(
-                ['tenant_id' => $tenantId, 'router_id' => $router->id, 'name' => $s['name']],
-                [
-                    'customer_id' => $customerUsernames[$s['name']] ?? null,
-                    'password_plain' => $s['password'] ?? null,
-                    'profile' => $s['profile'] ?? null,
-                    'service' => $s['service'] ?? 'pppoe',
-                    'disabled' => ($s['disabled'] ?? 'false') === 'true',
-                    'comment' => $s['comment'] ?? null,
-                    'mikrotik_data' => $s,
-                ]
-            );
-            $syncedSecrets++;
-        }
+    /**
+     * Page: Server Detail (Status, Users, Profiles)
+     */
+    public function serverDetail(Server $server)
+    {
+        return Inertia::render('Radius/ServerDetail', compact('server'));
+    }
 
-        return response()->json([
-            'status' => 'success',
-            'message' => "Sync selesai: {$syncedProfiles} profile, {$syncedSecrets} secret.",
+    // ==========================================================
+    // API PROXIES FOR VUE FRONTEND
+    // ==========================================================
+
+    public function apiGetSessions(Server $server)
+    {
+        $this->radiusService->connectTo($server);
+        return response()->json($this->radiusService->getActiveSessions());
+    }
+
+    public function apiGetConfig(Server $server)
+    {
+        $this->radiusService->connectTo($server);
+        return response()->json($this->radiusService->getConfig());
+    }
+
+    public function apiGetUsers(Server $server)
+    {
+        $this->radiusService->connectTo($server);
+        return response()->json($this->radiusService->listUsers());
+    }
+
+    public function apiStoreUser(Request $request, Server $server)
+    {
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+            'profile' => 'nullable|string'
         ]);
+
+        $this->radiusService->connectTo($server);
+        $success = $this->radiusService->createUser($request->username, $request->password, $request->profile);
+
+        if ($success) {
+            return response()->json(['message' => 'User created successfully']);
+        }
+        return response()->json(['message' => 'Failed to create user'], 500);
     }
 
-    /**
-     * Isolir customer via router.
-     */
-    public function isolir(Router $router, Customer $customer)
+    public function apiDestroyUsers(Request $request, Server $server)
     {
-        if (!$customer->username) {
-            return response()->json(['status' => 'error', 'message' => 'Customer tidak punya username PPPoE.']);
+        $request->validate([
+            'usernames' => 'required|array'
+        ]);
+
+        $this->radiusService->connectTo($server);
+        // Batch delete is supported if we add it, but our RadiusService currently only supports deleting 1 user or passing multiple.
+        // Wait, RadiusService deleteUser takes a single username but sends it as array. Let's just loop for simplicity, or we can add batchDelete to service.
+        // Since deleteUser deletes 1, let's just loop.
+        $success = true;
+        foreach ($request->usernames as $username) {
+            if (!$this->radiusService->deleteUser($username)) {
+                $success = false;
+            }
         }
 
-        $success = $this->mikrotik->disableSecret($router, $customer->username);
         if ($success) {
-            $customer->update(['is_isolated' => true, 'isolated_since' => now()]);
-            IsolirLog::create([
-                'tenant_id' => session('tenant_id'),
-                'customer_id' => $customer->id,
-                'action' => 'isolir',
-                'method' => 'manual',
-                'executed_by' => auth()->id(),
-                'success' => true,
-                'details' => "Isolir via RADIUS - Router: {$router->name}",
-            ]);
-            return response()->json(['status' => 'success', 'message' => "{$customer->name} berhasil di-isolir."]);
+            return response()->json(['message' => 'Users deleted successfully']);
         }
-        return response()->json(['status' => 'error', 'message' => 'Gagal isolir. Cek koneksi ke router.']);
+        return response()->json(['message' => 'Some users failed to delete'], 500);
     }
 
-    /**
-     * Unisolir customer via router.
-     */
-    public function unisolir(Router $router, Customer $customer)
+    public function apiDisableUser(Server $server, $username)
     {
-        if (!$customer->username) {
-            return response()->json(['status' => 'error', 'message' => 'Customer tidak punya username PPPoE.']);
-        }
+        $this->radiusService->connectTo($server);
+        $success = $this->radiusService->disableUser($username);
+        return response()->json(['success' => $success]);
+    }
 
-        $success = $this->mikrotik->enableSecret($router, $customer->username);
+    public function apiEnableUser(Request $request, Server $server, $username)
+    {
+        $this->radiusService->connectTo($server);
+        $success = $this->radiusService->enableUser($username, $request->password, $request->profile);
+        return response()->json(['success' => $success]);
+    }
+
+    // --- PROFILES ---
+
+    public function apiGetProfiles(Server $server)
+    {
+        $this->radiusService->connectTo($server);
+        return response()->json($this->radiusService->listGroups());
+    }
+
+    public function apiStoreProfile(Request $request, Server $server)
+    {
+        $data = $request->validate([
+            'groupname' => 'required|string',
+            'attribute' => 'required|string',
+            'op' => 'required|string',
+            'value' => 'required|string'
+        ]);
+
+        $this->radiusService->connectTo($server);
+        $success = $this->radiusService->createProfile($data);
+
         if ($success) {
-            $customer->update(['is_isolated' => false, 'isolated_since' => null]);
-            IsolirLog::create([
-                'tenant_id' => session('tenant_id'),
-                'customer_id' => $customer->id,
-                'action' => 'unisolir',
-                'method' => 'manual',
-                'executed_by' => auth()->id(),
-                'success' => true,
-                'details' => "Unisolir via RADIUS - Router: {$router->name}",
-            ]);
-            return response()->json(['status' => 'success', 'message' => "{$customer->name} berhasil di-unisolir."]);
+            return response()->json(['message' => 'Profile created successfully']);
         }
-        return response()->json(['status' => 'error', 'message' => 'Gagal unisolir. Cek koneksi ke router.']);
+        return response()->json(['message' => 'Failed to create profile'], 500);
+    }
+
+    public function apiUpdateProfile(Request $request, Server $server, $id)
+    {
+        $data = $request->validate([
+            'groupname' => 'required|string',
+            'attribute' => 'required|string',
+            'op' => 'required|string',
+            'value' => 'required|string'
+        ]);
+
+        $this->radiusService->connectTo($server);
+        $success = $this->radiusService->updateProfile($id, $data);
+
+        if ($success) {
+            return response()->json(['message' => 'Profile updated successfully']);
+        }
+        return response()->json(['message' => 'Failed to update profile'], 500);
+    }
+
+    public function apiDestroyProfile(Server $server, $id)
+    {
+        $this->radiusService->connectTo($server);
+        $success = $this->radiusService->deleteProfile($id);
+
+        if ($success) {
+            return response()->json(['message' => 'Profile deleted successfully']);
+        }
+        return response()->json(['message' => 'Failed to delete profile'], 500);
     }
 }

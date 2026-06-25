@@ -29,19 +29,20 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-    Route::get('/app-gateway', fn () => view('app-gateway'))->name('app-gateway');
+    Route::get('/app-gateway', [\App\Http\Controllers\GatewayController::class, 'index'])->name('app-gateway');
     Route::get('/cust/dashboard', [DashboardController::class, 'index'])->name('cust.dashboard');
 
 
     // Keuangan (Finance)
-    Route::resource('reports/expenses', ExpenseController::class)->only(['index', 'store', 'destroy'])->middleware('permission:can_view_finance')->names('reports.expenses');
+    Route::resource('reports/expenses', ExpenseController::class)->only(['index', 'store'])->middleware('permission:can_view_finance')->names('reports.expenses');
+    Route::delete('reports/expenses/{expense}', [ExpenseController::class, 'destroy'])->middleware('permission:can_delete_finance')->name('reports.expenses.destroy');
 
 
 
 
     // 📦📦 Customers 📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦📦
     Route::post('/cust/customers/batch-destroy', [CustomerController::class, 'batchDestroy'])
-        ->name('cust.customers.batch-destroy');
+        ->middleware('permission:can_delete_customer')->name('cust.customers.batch-destroy');
     Route::get('/cust/customers/search-pppoe', [CustomerController::class, 'searchPppoeUsers'])
         ->name('cust.customers.search-pppoe');
     Route::get('/cust/customers/router-profiles/{router}', [CustomerController::class, 'getRouterProfiles'])
@@ -55,11 +56,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('/cust/customers/{customer}/restore', [CustomerController::class, 'restore'])
         ->name('cust.customers.restore')->withTrashed();
     Route::delete('/cust/customers/{customer}/force-delete', [CustomerController::class, 'forceDelete'])
-        ->name('cust.customers.force-delete')->withTrashed();
+        ->middleware('permission:can_delete_customer')->name('cust.customers.force-delete')->withTrashed();
     Route::post('/cust/customers/trashed/batch-restore', [CustomerController::class, 'batchRestore'])
         ->name('cust.customers.batch-restore');
     Route::post('/cust/customers/trashed/batch-force-delete', [CustomerController::class, 'batchForceDelete'])
-        ->name('cust.customers.batch-force-delete');
+        ->middleware('permission:can_delete_customer')->name('cust.customers.batch-force-delete');
         
     Route::get('/cust/customers', [CustomerController::class, 'index'])->name('cust.customers.index');
     Route::get('/cust/customers/create', [CustomerController::class, 'create'])
@@ -67,11 +68,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('/cust/customers', [CustomerController::class, 'store'])
         ->middleware('permission:can_input_customer')->name('cust.customers.store');
     Route::get('/cust/customers/{customer}/edit', [CustomerController::class, 'edit'])
-        ->name('cust.customers.edit');
+        ->middleware('permission:can_edit_customer')->name('cust.customers.edit');
     Route::put('/cust/customers/{customer}', [CustomerController::class, 'update'])
-        ->name('cust.customers.update');
+        ->middleware('permission:can_edit_customer')->name('cust.customers.update');
     Route::delete('/cust/customers/{customer}', [CustomerController::class, 'destroy'])
-        ->name('cust.customers.destroy');
+        ->middleware('permission:can_delete_customer')->name('cust.customers.destroy');
     Route::get('/cust/customers/{customer}', [CustomerController::class, 'show'])
         ->name('cust.customers.show');
 
@@ -89,13 +90,13 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('/cust/cuti/batch-restore', [CutiController::class, 'batchRestore'])
         ->middleware('permission:can_manage_cuti')->name('cust.cuti.batch-restore');
     Route::post('/cust/cuti/batch-destroy', [CutiController::class, 'batchDestroy'])
-        ->middleware('permission:can_manage_cuti')->name('cust.cuti.batch-destroy');
+        ->middleware('permission:can_delete_customer_cuti')->name('cust.cuti.batch-destroy');
     Route::post('/cust/cuti/{customer}/store', [CutiController::class, 'store'])
-        ->middleware('permission:can_manage_cuti')->name('cust.cuti.store');
+        ->middleware('permission:can_cuti')->name('cust.cuti.store');
     Route::post('/cust/cuti/{customer}/restore', [CutiController::class, 'restore'])
         ->middleware('permission:can_manage_cuti')->name('cust.cuti.restore');
     Route::delete('/cust/cuti/{customer}', [CutiController::class, 'destroy'])
-        ->middleware('permission:can_manage_cuti')->name('cust.cuti.destroy');
+        ->middleware('permission:can_delete_customer_cuti')->name('cust.cuti.destroy');
 
     // ── Payment API (AJAX) ────────────────────────
     Route::get('/api-web/payments/months/{customer}', [PaymentApiController::class, 'getMonths'])
@@ -105,13 +106,13 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('/api-web/payments/batch', [PaymentApiController::class, 'storeBatch'])
         ->middleware('permission:can_process_payment')->name('api.payments.batch');
     Route::get('/api-web/payments/wa-template/{customer}', [PaymentApiController::class, 'getWaTemplate'])
-        ->middleware('permission:can_process_payment')->name('api.payments.wa-template');
+        ->middleware('permission:can_send_wa_invoice')->name('api.payments.wa-template');
 
     // ── Income / Pendapatan ────────────────────────────────────────────────────────────
     Route::get('/reports/income', [\App\Http\Controllers\Web\IncomeController::class, 'index'])->name('reports.income.index');
     Route::get('/reports/income/{payment}/print', [\App\Http\Controllers\Web\IncomeController::class, 'printInvoice'])->name('reports.income.print');
     Route::post('/reports/income/{payment}/resend', [\App\Http\Controllers\Web\IncomeController::class, 'resendInvoice'])->name('reports.income.resend');
-    Route::post('/reports/income/{payment}/refund', [\App\Http\Controllers\Web\IncomeController::class, 'refund'])->name('reports.income.refund');
+    Route::post('/reports/income/{payment}/refund', [\App\Http\Controllers\Web\IncomeController::class, 'refund'])->middleware('permission:can_cancel_payment')->name('reports.income.refund');
     
     Route::get('/reports/other-incomes', [\App\Http\Controllers\Web\OtherIncomeController::class, 'index'])->name('reports.other-incomes.index');
     Route::post('/reports/other-incomes', [\App\Http\Controllers\Web\OtherIncomeController::class, 'store'])->name('reports.other-incomes.store');
@@ -167,9 +168,9 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/sales/saldo', [ReportController::class, 'saldo'])
         ->middleware('permission:can_view_finance')->name('sales.saldo');
     Route::post('/sales/saldo/{user}/add', [ReportController::class, 'addSaldo'])
-        ->middleware('permission:can_view_finance')->name('sales.saldo.add');
+        ->middleware('permission:can_manage_saldo')->name('sales.saldo.add');
     Route::post('/sales/saldo/{user}/deduct', [ReportController::class, 'deductSaldo'])
-        ->middleware('permission:can_view_finance')->name('sales.saldo.deduct');
+        ->middleware('permission:can_manage_saldo')->name('sales.saldo.deduct');
     Route::get('/sales/saldo/{user}/history', [ReportController::class, 'saldoHistory'])
         ->middleware('permission:can_view_finance')->name('sales.saldo.history');
 
@@ -225,15 +226,22 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     // ── Config Module ─────────────────────────────
     Route::prefix('config')->middleware('permission:can_view_dashboard_config')->group(function () {
         Route::get('/', [ConfigController::class, 'index'])->name('config.index');
-        Route::get('/users', [ConfigController::class, 'users'])->name('config.users');
-        Route::post('/users', [ConfigController::class, 'storeUser'])->name('config.users.store');
-        Route::put('/users/{targetUser}', [ConfigController::class, 'updateUser'])->name('config.users.update');
-        Route::post('/users/{targetUser}/toggle', [ConfigController::class, 'toggleUser'])->name('config.users.toggle');
-        Route::post('/users/{targetUser}/default-sales', [ConfigController::class, 'setDefaultSales'])->name('config.users.default_sales');
-        Route::get('/roles', [ConfigController::class, 'roles'])->name('config.roles');
-        Route::post('/roles', [ConfigController::class, 'storeRole'])->name('config.roles.store');
-        Route::put('/roles/{role}', [ConfigController::class, 'updateRole'])->name('config.roles.update');
-        Route::delete('/roles/{role}', [ConfigController::class, 'destroyRole'])->name('config.roles.destroy');
+        // User Management (guarded by can_manage_users)
+        Route::middleware('permission:can_manage_users')->group(function () {
+            Route::get('/users', [ConfigController::class, 'users'])->name('config.users');
+            Route::post('/users', [ConfigController::class, 'storeUser'])->name('config.users.store');
+            Route::put('/users/{targetUser}', [ConfigController::class, 'updateUser'])->name('config.users.update');
+            Route::post('/users/{targetUser}/toggle', [ConfigController::class, 'toggleUser'])->name('config.users.toggle');
+            Route::post('/users/{targetUser}/default-sales', [ConfigController::class, 'setDefaultSales'])->name('config.users.default_sales');
+        });
+
+        // Role Management (guarded by can_manage_roles)
+        Route::middleware('permission:can_manage_roles')->group(function () {
+            Route::get('/roles', [ConfigController::class, 'roles'])->name('config.roles');
+            Route::post('/roles', [ConfigController::class, 'storeRole'])->name('config.roles.store');
+            Route::put('/roles/{role}', [ConfigController::class, 'updateRole'])->name('config.roles.update');
+            Route::delete('/roles/{role}', [ConfigController::class, 'destroyRole'])->name('config.roles.destroy');
+        });
         Route::get('/profil', [ConfigController::class, 'profil'])->name('config.profil');
         Route::post('/profil', [ConfigController::class, 'updateProfil'])->name('config.profil.update');
         Route::get('/template', [ConfigController::class, 'template'])->name('config.template');
@@ -270,8 +278,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
             Route::post('/radius-server/{server}/test', [ConfigController::class, 'testRadiusServer'])->name('config.radius-server.test');
         });
 
-        Route::get('/backup', [ConfigController::class, 'backup'])->name('config.backup');
-        Route::get('/log-sistem', [ConfigController::class, 'logSistem'])->name('config.log-sistem');
+        Route::get('/backup', [ConfigController::class, 'backup'])->middleware('permission:can_backup_restore')->name('config.backup');
+        Route::get('/log-sistem', [ConfigController::class, 'logSistem'])->middleware('permission:can_view_audit_logs')->name('config.log-sistem');
         Route::get('/db-pusat', [ConfigController::class, 'dbPusat'])->name('config.db-pusat');
         Route::post('/db-pusat', [ConfigController::class, 'updateDbPusat'])->name('config.db-pusat.update');
     });
@@ -282,9 +290,9 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::prefix('map')->middleware('permission:can_view_dashboard_map')->group(function () {
         Route::get('/', [MapController::class, 'index'])->name('map.index');
         Route::post('/customer/{customer}/coordinate', [MapController::class, 'updateCoordinate'])
-            ->name('map.coordinate.update');
+            ->middleware('permission:can_config_map')->name('map.coordinate.update');
         Route::delete('/customer/{customer}/coordinate', [MapController::class, 'deleteCoordinate'])
-            ->name('map.coordinate.delete');
+            ->middleware('permission:can_config_map')->name('map.coordinate.delete');
         Route::get('/api/customers', [MapController::class, 'apiCustomers'])->name('map.api.customers');
         Route::get('/api/odps', [MapController::class, 'apiOdps'])->name('map.api.odps');
         Route::get('/api/odcs', [MapController::class, 'apiOdcs'])->name('map.api.odcs');
@@ -298,6 +306,14 @@ Route::middleware(['auth', 'tenant'])->group(function () {
             ->name('monitoring.active');
         Route::get('/router/{router}/resources-json', [MonitoringController::class, 'systemResources'])
             ->name('monitoring.resources');
+        Route::get('/router/{router}/secrets-json', [MonitoringController::class, 'secretsJson'])
+            ->name('monitoring.secrets.json');
+        Route::post('/router/{router}/secrets/add', [MonitoringController::class, 'addSecret'])
+            ->middleware('permission:can_manage_router')->name('monitoring.secrets.add');
+        Route::post('/router/{router}/secrets/update-profile', [MonitoringController::class, 'updateProfile'])
+            ->middleware('permission:can_manage_router')->name('monitoring.secrets.update-profile');
+        Route::post('/router/{router}/secrets/delete', [MonitoringController::class, 'deleteSecret'])
+            ->middleware('permission:can_manage_router')->name('monitoring.secrets.delete');
         Route::post('/router/{router}/sync', [MonitoringController::class, 'syncPppoe'])
             ->middleware('permission:can_manage_router')->name('monitoring.sync');
         Route::post('/router/{router}/isolir/{customer}', [MonitoringController::class, 'isolirCustomer'])
@@ -309,19 +325,31 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     // ── RADIUS Module ────────────────────────────
     Route::prefix('radius')->middleware('permission:can_view_radius')->group(function () {
         Route::get('/', [RadiusController::class, 'index'])->name('radius.index');
-        Route::get('/router/{router}/secrets', [RadiusController::class, 'secrets'])->name('radius.secrets');
-        Route::get('/router/{router}/profiles', [RadiusController::class, 'profiles'])->name('radius.profiles');
-        Route::post('/router/{router}/sync', [RadiusController::class, 'sync'])
-            ->middleware('permission:can_manage_router')->name('radius.sync');
-        Route::post('/router/{router}/isolir/{customer}', [RadiusController::class, 'isolir'])
-            ->middleware('permission:can_manage_router')->name('radius.isolir');
-        Route::post('/router/{router}/unisolir/{customer}', [RadiusController::class, 'unisolir'])
-            ->middleware('permission:can_manage_router')->name('radius.unisolir');
+        Route::get('/server/{server}', [RadiusController::class, 'serverDetail'])->name('radius.server');
+        
+        // Proxy endpoints for Frontend to call via Axios
+        Route::get('/api/server/{server}/config', [RadiusController::class, 'apiGetConfig'])->name('radius.api.config.get');
+        Route::get('/api/server/{server}/sessions', [RadiusController::class, 'apiGetSessions'])->name('radius.api.sessions.get');
+        Route::get('/api/server/{server}/users', [RadiusController::class, 'apiGetUsers'])->name('radius.api.users.get');
+        Route::post('/api/server/{server}/users', [RadiusController::class, 'apiStoreUser'])->name('radius.api.users.store');
+        Route::post('/api/server/{server}/users/batch-delete', [RadiusController::class, 'apiDestroyUsers'])->name('radius.api.users.batch-destroy');
+        Route::post('/api/server/{server}/users/{username}/disable', [RadiusController::class, 'apiDisableUser'])->name('radius.api.users.disable');
+        Route::post('/api/server/{server}/users/{username}/enable', [RadiusController::class, 'apiEnableUser'])->name('radius.api.users.enable');
+
+        Route::get('/api/server/{server}/profiles', [RadiusController::class, 'apiGetProfiles'])->name('radius.api.profiles.get');
+        Route::post('/api/server/{server}/profiles', [RadiusController::class, 'apiStoreProfile'])->name('radius.api.profiles.store');
+        Route::put('/api/server/{server}/profiles/{id}', [RadiusController::class, 'apiUpdateProfile'])->name('radius.api.profiles.update');
+        Route::delete('/api/server/{server}/profiles/{id}', [RadiusController::class, 'apiDestroyProfile'])->name('radius.api.profiles.destroy');
     });
 
     // ── ACS Module ───────────────────────────────
     Route::prefix('acs')->middleware('permission:can_view_acs')->group(function () {
         Route::get('/', [\App\Http\Controllers\Web\AcsController::class, 'index'])->name('acs.index');
+    });
+
+    // ── OLT Module ───────────────────────────────
+    Route::prefix('olt')->middleware('permission:can_view_dashboard_olt')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Web\OltController::class, 'index'])->name('olt.index');
     });
 });
 

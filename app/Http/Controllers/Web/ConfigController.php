@@ -211,7 +211,7 @@ class ConfigController extends Controller
 
     public function profil()
     {
-        $keys = ['company_nama', 'company_alamat', 'company_telepon', 'company_nomer_cs', 'company_email', 'company_website', 'company_logo', 'ppn_rate', 'bhp_uso_rate', 'admin_fee'];
+        $keys = ['company_id', 'company_nama', 'company_alamat', 'company_telepon', 'company_nomer_cs', 'company_email', 'company_website', 'company_logo', 'ppn_rate', 'bhp_uso_rate', 'admin_fee'];
         $configs = DB::table('billing_configs')
             ->where('tenant_id', session('tenant_id'))
             ->whereIn('key', $keys)
@@ -223,9 +223,10 @@ class ConfigController extends Controller
     {
         $request->validate([
             'company_logo' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
+            'company_id' => 'nullable|string|min:4',
         ]);
 
-        $allowedKeys = ['company_nama', 'company_alamat', 'company_telepon', 'company_nomer_cs', 'company_email', 'company_website', 'ppn_rate', 'bhp_uso_rate', 'admin_fee'];
+        $allowedKeys = ['company_id', 'company_nama', 'company_alamat', 'company_telepon', 'company_nomer_cs', 'company_email', 'company_website', 'ppn_rate', 'bhp_uso_rate', 'admin_fee'];
 
         foreach ($allowedKeys as $key) {
             if ($request->has($key)) {
@@ -865,7 +866,7 @@ class ConfigController extends Controller
 
     public function radiusServer()
     {
-        $servers = Server::whereIn('type', ['freeradius', 'daloradius_api', 'radiusdesk_api'])
+        $servers = Server::where('type', 'upluk_upluk_api')
             ->orderBy('name')
             ->get()
             ->map(function ($s) {
@@ -887,19 +888,14 @@ class ConfigController extends Controller
         if (request()->wantsJson()) {
             return response()->json(['status' => 'success', 'data' => $servers]);
         }
-        return Inertia::render('Settings/RadiusServer');
+        return Inertia::render('Settings/RadiusServer', compact('servers'));
     }
 
     public function storeRadiusServer(Request $request)
     {
         $data = $request->validate([
             'name' => 'required|string|max:100',
-            'type' => 'required|in:freeradius,daloradius_api,radiusdesk_api',
-            'host' => 'nullable|string|max:255',
-            'port' => 'nullable|integer|min:1|max:65535',
-            'db_name' => 'nullable|string|max:100',
-            'username' => 'nullable|string|max:100',
-            'db_password' => 'nullable|string',
+            'type' => 'required|in:upluk_upluk_api',
             'api_endpoint' => 'nullable|string|max:255',
             'api_token' => 'nullable|string',
         ]);
@@ -907,46 +903,32 @@ class ConfigController extends Controller
         $data['tenant_id'] = session('tenant_id');
         $data['is_active'] = true;
         
-        if ($data['type'] === 'freeradius') {
-            $data['db_username'] = $data['username'] ?? '';
-            $data['password'] = $data['db_password'] ?? 'none';
-        } else {
-            // Provide defaults for API so it doesn't violate NOT NULL constraints
-            $data['host'] = $data['api_endpoint'] ?? 'api';
-            $data['db_username'] = 'api_user';
-            $data['password'] = 'none';
-        }
+        // Provide defaults for API so it doesn't violate NOT NULL constraints
+        $data['host'] = $data['api_endpoint'] ?? 'api';
+        $data['username'] = 'api_user';
+        $data['db_username'] = 'api_user';
+        $data['db_password'] = 'none';
+        $data['password'] = 'none';
 
         Server::create($data);
-        return response()->json(['status' => 'success', 'message' => 'Server RADIUS berhasil ditambahkan.']);
+        return redirect()->back()->with('success', 'Server RADIUS berhasil ditambahkan.');
     }
 
     public function updateRadiusServer(Request $request, Server $server)
     {
         $data = $request->validate([
             'name' => 'required|string|max:100',
-            'type' => 'required|in:freeradius,daloradius_api,radiusdesk_api',
-            'host' => 'nullable|string|max:255',
-            'port' => 'nullable|integer|min:1|max:65535',
-            'db_name' => 'nullable|string|max:100',
-            'username' => 'nullable|string|max:100',
-            'db_password' => 'nullable|string',
+            'type' => 'required|in:upluk_upluk_api',
             'api_endpoint' => 'nullable|string|max:255',
             'api_token' => 'nullable|string',
         ]);
 
-        if (empty($data['db_password'])) unset($data['db_password']);
         if (empty($data['api_token'])) unset($data['api_token']);
 
-        if ($data['type'] === 'freeradius') {
-            $data['db_username'] = $data['username'] ?? '';
-            if (isset($data['db_password'])) $data['password'] = $data['db_password'];
-        } else {
-            $data['host'] = $data['api_endpoint'] ?? 'api';
-        }
+        $data['host'] = $data['api_endpoint'] ?? 'api';
 
         $server->update($data);
-        return response()->json(['status' => 'success', 'message' => 'Server RADIUS berhasil diperbarui.']);
+        return redirect()->back()->with('success', 'Server RADIUS berhasil diperbarui.');
     }
 
     public function destroyRadiusServer(Server $server)
@@ -954,21 +936,18 @@ class ConfigController extends Controller
         // Cek apakah ada router yang masih menggunakan server ini
         $routerCount = Router::where('radius_server_id', $server->id)->count();
         if ($routerCount > 0) {
-            return response()->json([
-                'status' => 'error',
-                'message' => "Tidak bisa hapus — masih digunakan oleh {$routerCount} router.",
-            ]);
+            return redirect()->back()->with('error', "Tidak bisa hapus — masih digunakan oleh {$routerCount} router.");
         }
 
         $server->delete();
-        return response()->json(['status' => 'success', 'message' => 'Server RADIUS berhasil dihapus.']);
+        return redirect()->back()->with('success', 'Server RADIUS berhasil dihapus.');
     }
 
     public function toggleRadiusServer(Server $server)
     {
         $server->update(['is_active' => !$server->is_active]);
         $status = $server->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        return response()->json(['status' => 'success', 'message' => "Server RADIUS berhasil {$status}."]);
+        return redirect()->back()->with('success', "Server RADIUS berhasil {$status}.");
     }
 
     public function testRadiusServer(Server $server)

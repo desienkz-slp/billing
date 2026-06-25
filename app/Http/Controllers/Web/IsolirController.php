@@ -59,13 +59,34 @@ class IsolirController extends Controller
         return Inertia::render('Cust/Isolir/Index', compact('capabilities', 'isolated', 'candidates', 'stats', 'filters', 'areas', 'tab'));
     }
 
-    public function isolate(Request $request, Customer $customer, \App\Services\MikroTik\MikroTikService $mikrotik, \App\Services\GeniAcsService $acs)
+    public function isolate(Request $request, Customer $customer, \App\Services\MikroTik\MikroTikService $mikrotik, \App\Services\GeniAcsService $acs, \App\Services\RadiusService $radiusService)
     {
-        if ($customer->router_id && $customer->username) {
+        // 1. If using Mikrotik (Local Auth)
+        if ($customer->router_id && $customer->username && !$customer->server_id) {
             $packageRouter = \DB::table('package_routers')->where('package_id', $customer->package_id)->where('router_id', $customer->router_id)->first();
             $isolirProfile = $packageRouter?->isolir_profile ?? 'isolir';
             
             $mikrotik->changeSecretProfile($customer->router, $customer->username, $isolirProfile);
+        }
+
+        // 2. If using RADIUS
+        if ($customer->server_id && $customer->username) {
+            $packageServer = \DB::table('package_servers')->where('package_id', $customer->package_id)->where('server_id', $customer->server_id)->first();
+            $isolirGroup = $packageServer?->radius_isolir_group ?? 'isolir';
+            
+            if ($customer->server) {
+                $radiusService->connectTo($customer->server);
+                $radiusService->updateUser($customer->username, null, $isolirGroup);
+            }
+
+            // Kick active session if Mikrotik router is known
+            if ($customer->router_id && $customer->router) {
+                $mikrotik->kickActiveSession($customer->router, $customer->username);
+            }
+        }
+
+        // Reboot via ACS if username exists
+        if ($customer->username) {
             $acs->rebootDevice($customer->username);
         }
 
@@ -73,56 +94,115 @@ class IsolirController extends Controller
         return back()->with('success', "{$customer->name} berhasil diisolir.");
     }
 
-    public function release(Request $request, Customer $customer, \App\Services\MikroTik\MikroTikService $mikrotik)
+    public function release(Request $request, Customer $customer, \App\Services\MikroTik\MikroTikService $mikrotik, \App\Services\GeniAcsService $acs, \App\Services\RadiusService $radiusService)
     {
-        if ($customer->router_id && $customer->username) {
+        // 1. If using Mikrotik (Local Auth)
+        if ($customer->router_id && $customer->username && !$customer->server_id) {
             $packageRouter = \DB::table('package_routers')->where('package_id', $customer->package_id)->where('router_id', $customer->router_id)->first();
             $normalProfile = $packageRouter?->pppoe_profile ?? 'default';
             
             $mikrotik->changeSecretProfile($customer->router, $customer->username, $normalProfile);
         }
 
+        // 2. If using RADIUS
+        if ($customer->server_id && $customer->username) {
+            $packageServer = \DB::table('package_servers')->where('package_id', $customer->package_id)->where('server_id', $customer->server_id)->first();
+            $normalGroup = $packageServer?->radius_group ?? 'default';
+            
+            if ($customer->server) {
+                $radiusService->connectTo($customer->server);
+                $radiusService->updateUser($customer->username, null, $normalGroup);
+            }
+
+            // Kick active session
+            if ($customer->router_id && $customer->router) {
+                $mikrotik->kickActiveSession($customer->router, $customer->username);
+            }
+        }
+
+        // Reboot via ACS if username exists
+        if ($customer->username) {
+            $acs->rebootDevice($customer->username);
+        }
+
         $customer->update(['is_isolated' => false, 'isolated_since' => null]);
         return back()->with('success', "{$customer->name} berhasil dilepas dari isolir.");
     }
 
-    public function batchIsolate(Request $request, \App\Services\MikroTik\MikroTikService $mikrotik, \App\Services\GeniAcsService $acs)
+    public function batchIsolate(Request $request, \App\Services\MikroTik\MikroTikService $mikrotik, \App\Services\GeniAcsService $acs, \App\Services\RadiusService $radiusService)
     {
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:customers,id',
         ]);
 
-        $customers = Customer::whereIn('id', $request->ids)->get();
+        $customers = Customer::with(['router', 'server'])->whereIn('id', $request->ids)->get();
         foreach ($customers as $customer) {
-            if ($customer->router_id && $customer->username) {
+            if ($customer->router_id && $customer->username && !$customer->server_id) {
                 $packageRouter = \DB::table('package_routers')->where('package_id', $customer->package_id)->where('router_id', $customer->router_id)->first();
                 $isolirProfile = $packageRouter?->isolir_profile ?? 'isolir';
                 
                 $mikrotik->changeSecretProfile($customer->router, $customer->username, $isolirProfile);
+            }
+
+            if ($customer->server_id && $customer->username) {
+                $packageServer = \DB::table('package_servers')->where('package_id', $customer->package_id)->where('server_id', $customer->server_id)->first();
+                $isolirGroup = $packageServer?->radius_isolir_group ?? 'isolir';
+                
+                if ($customer->server) {
+                    $radiusService->connectTo($customer->server);
+                    $radiusService->updateUser($customer->username, null, $isolirGroup);
+                }
+                
+                if ($customer->router_id && $customer->router) {
+                    $mikrotik->kickActiveSession($customer->router, $customer->username);
+                }
+            }
+
+            if ($customer->username) {
                 $acs->rebootDevice($customer->username);
             }
+
             $customer->update(['is_isolated' => true, 'isolated_since' => now()]);
         }
 
         return back()->with('success', count($customers) . ' pelanggan berhasil diisolir.');
     }
 
-    public function batchRelease(Request $request, \App\Services\MikroTik\MikroTikService $mikrotik)
+    public function batchRelease(Request $request, \App\Services\MikroTik\MikroTikService $mikrotik, \App\Services\GeniAcsService $acs, \App\Services\RadiusService $radiusService)
     {
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:customers,id',
         ]);
 
-        $customers = Customer::whereIn('id', $request->ids)->get();
+        $customers = Customer::with(['router', 'server'])->whereIn('id', $request->ids)->get();
         foreach ($customers as $customer) {
-            if ($customer->router_id && $customer->username) {
+            if ($customer->router_id && $customer->username && !$customer->server_id) {
                 $packageRouter = \DB::table('package_routers')->where('package_id', $customer->package_id)->where('router_id', $customer->router_id)->first();
                 $normalProfile = $packageRouter?->pppoe_profile ?? 'default';
                 
                 $mikrotik->changeSecretProfile($customer->router, $customer->username, $normalProfile);
             }
+
+            if ($customer->server_id && $customer->username) {
+                $packageServer = \DB::table('package_servers')->where('package_id', $customer->package_id)->where('server_id', $customer->server_id)->first();
+                $normalGroup = $packageServer?->radius_group ?? 'default';
+                
+                if ($customer->server) {
+                    $radiusService->connectTo($customer->server);
+                    $radiusService->updateUser($customer->username, null, $normalGroup);
+                }
+
+                if ($customer->router_id && $customer->router) {
+                    $mikrotik->kickActiveSession($customer->router, $customer->username);
+                }
+            }
+
+            if ($customer->username) {
+                $acs->rebootDevice($customer->username);
+            }
+
             $customer->update(['is_isolated' => false, 'isolated_since' => null]);
         }
 

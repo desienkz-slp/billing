@@ -115,6 +115,23 @@ class MikroTikService
     }
 
     /**
+     * Get PPPoE server interfaces (useful for finding which physical interface a user is on).
+     */
+    public function getPppoeServerInterfaces(Router $router): array
+    {
+        $API = $this->connect($router);
+        if (!$API) return [];
+
+        try {
+            $res = $API->comm('/interface/pppoe-server/print');
+            if (!is_array($res) || isset($res['!trap'])) return [];
+            return array_filter($res, 'is_array');
+        } finally {
+            $API->disconnect();
+        }
+    }
+
+    /**
      * Disable a PPPoE secret (isolir).
      */
     public function disableSecret(Router $router, string $secretName): bool
@@ -228,6 +245,24 @@ class MikroTikService
             }
         } catch (\Throwable $e) {
             // Non-critical
+        }
+    }
+
+    /**
+     * Kick an active PPP session directly (useful for RADIUS users).
+     */
+    public function kickActiveSession(Router $router, string $username): bool
+    {
+        $API = $this->connect($router);
+        if (!$API) return false;
+
+        try {
+            $this->disconnectActiveByName($API, $username);
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        } finally {
+            $API->disconnect();
         }
     }
 

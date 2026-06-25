@@ -110,8 +110,14 @@
                             </div>
                             <div class="p-6 space-y-4">
                                 <div>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nama Tenant (Singkat)</label>
+                                    <input v-model="form.name" type="text" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="LadaPala">
+                                    <p v-if="form.errors.name" class="mt-1 text-sm text-red-500">{{ form.errors.name }}</p>
+                                </div>
+                                <div>
                                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nama Perusahaan / ISP</label>
-                                    <input type="text" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="PT LadaPala Network">
+                                    <input v-model="form.company_name" type="text" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="PT LadaPala Network">
+                                    <p v-if="form.errors.company_name" class="mt-1 text-sm text-red-500">{{ form.errors.company_name }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">NPWP / NIB</label>
@@ -119,7 +125,8 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Alamat Lengkap</label>
-                                    <textarea rows="3" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Jl. Contoh No. 123..."></textarea>
+                                    <textarea v-model="form.company_address" rows="3" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Jl. Contoh No. 123..."></textarea>
+                                    <p v-if="form.errors.company_address" class="mt-1 text-sm text-red-500">{{ form.errors.company_address }}</p>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
@@ -141,18 +148,20 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nomor Telepon</label>
-                                    <input type="text" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="021-xxxxxxx">
+                                    <input v-model="form.company_phone" type="text" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="021-xxxxxxx">
+                                    <p v-if="form.errors.company_phone" class="mt-1 text-sm text-red-500">{{ form.errors.company_phone }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email Perusahaan</label>
                                     <input type="email" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="info@perusahaan.com">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Website</label>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Domain Khusus (Opsional)</label>
                                     <div class="mt-1 flex rounded-md shadow-sm">
                                         <span class="inline-flex items-center rounded-l-md border border-r-0 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-600 px-3 text-sm text-slate-500 dark:text-slate-300">https://</span>
-                                        <input type="text" class="block w-full flex-1 rounded-none rounded-r-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="www.domain.com">
+                                        <input v-model="form.domain" type="text" class="block w-full flex-1 rounded-none rounded-r-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="tenant.ladapala.com">
                                     </div>
+                                    <p v-if="form.errors.domain" class="mt-1 text-sm text-red-500">{{ form.errors.domain }}</p>
                                 </div>
                             </div>
                         </div>
@@ -170,12 +179,14 @@
                             </div>
                             <div class="p-6 space-y-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nama Lengkap</label>
-                                    <input type="text" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm" placeholder="John Doe">
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nama Lengkap Administrator</label>
+                                    <input v-model="form.admin_name" type="text" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm" placeholder="John Doe">
+                                    <p v-if="form.errors.admin_name" class="mt-1 text-sm text-red-500">{{ form.errors.admin_name }}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email Login</label>
-                                    <input type="email" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm" placeholder="admin@perusahaan.com">
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Username Login</label>
+                                    <input v-model="form.admin_username" type="text" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm" placeholder="admin_isp">
+                                    <p v-if="form.errors.admin_username" class="mt-1 text-sm text-red-500">{{ form.errors.admin_username }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nomor WhatsApp</label>
@@ -183,8 +194,9 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
-                                    <input type="password" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm" placeholder="••••••••">
-                                    <p class="mt-1 text-xs text-slate-500">Minimal 8 karakter.</p>
+                                    <input v-model="form.admin_password" type="password" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm" placeholder="••••••••">
+                                    <p v-if="form.errors.admin_password" class="mt-1 text-sm text-red-500">{{ form.errors.admin_password }}</p>
+                                    <p v-else class="mt-1 text-xs text-slate-500">Minimal 6 karakter.</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Role Sistem</label>
@@ -292,7 +304,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { usePage, Link } from '@inertiajs/vue3';
+import { usePage, Link, useForm } from '@inertiajs/vue3';
 import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
 
 const props = defineProps({
@@ -306,11 +318,29 @@ const pageTitle = computed(() => {
     return 'Kelola Tenant SaaS - LadaPala-Bill';
 });
 
+// Access shared company data
+const company = computed(() => usePage().props.company || {});
+
 // State for toggling form
 const showForm = ref(false);
 
+const form = useForm({
+    name: '',
+    domain: '',
+    company_name: company.value.name || '',
+    company_address: company.value.address || '',
+    company_phone: company.value.phone || '',
+    admin_name: '',
+    admin_username: '',
+    admin_password: '',
+});
+
 const submitForm = () => {
-    // Implementasi submit form ke backend
-    alert('Fungsi submit akan segera diimplementasikan!');
+    form.post(route('superadmin.tenants.store'), {
+        onSuccess: () => {
+            showForm.value = false;
+            form.reset();
+        }
+    });
 };
 </script>

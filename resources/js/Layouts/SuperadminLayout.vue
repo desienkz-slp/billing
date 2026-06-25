@@ -10,8 +10,15 @@
             <SuperadminSidebar :isOpen="isSidebarOpen" />
 
             <!-- Main Content Area -->
-            <div class="main-content flex flex-col h-screen pt-16 transition-all duration-300">
-                <main class="flex-1 overflow-y-auto m-2 flex flex-col relative">
+            <div class="main-content flex flex-col h-screen pt-16 transition-all duration-300 relative">
+                <!-- Global Watermark Background -->
+                <div class="pointer-events-none fixed inset-0 flex items-center justify-center opacity-[0.03] dark:opacity-[0.02] z-0 overflow-hidden" aria-hidden="true">
+                    <span class="text-[8vw] font-black uppercase tracking-widest text-slate-900 dark:text-white transform -rotate-12 whitespace-nowrap">
+                        {{ page.props.company?.name || 'upluk-upluk_dev' }}
+                    </span>
+                </div>
+
+                <main class="flex-1 overflow-y-auto m-2 flex flex-col relative z-10">
                     <div class="flex-1 flex flex-col min-h-0">
                         <PageTransition>
                             <slot />
@@ -23,7 +30,7 @@
 
         <!-- Footer -->
         <footer class="fixed bottom-0 left-0 w-full py-2 px-4 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700/50 bg-[var(--bg-body)] z-[60]">
-            &copy; 2026 upluk-upluk_dev version 2.0
+            &copy; {{ new Date().getFullYear() }} {{ page.props.company?.name || 'upluk-upluk_dev' }} &bull; versi 2.0
         </footer>
 
         <!-- Mobile overlay -->

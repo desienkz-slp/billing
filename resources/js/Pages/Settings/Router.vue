@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Kelola Router">
-        <div class="max-w-full h-full flex flex-col min-h-0 w-full mx-auto p-4 px-4 sm:px-6 lg:px-8">
+        <div class="h-full flex flex-col min-h-0 w-full p-2">
             <!-- Header -->
             <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 sm:px-0">
                 <div class="flex items-center">
@@ -270,6 +270,44 @@
                 </div>
             </div>
         </div>
+        <!-- Test Connection Modal -->
+        <div v-if="showTestModal" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" @click="!isTesting && (showTestModal = false)"></div>
+            <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                    <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-700 flex flex-col" @click.stop>
+                        <div class="p-6 text-center">
+                            <div v-if="isTesting" class="py-8">
+                                <svg class="animate-spin h-10 w-10 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <h3 class="text-lg font-medium text-slate-900 dark:text-white">Menguji Koneksi...</h3>
+                                <p class="text-sm text-slate-500 mt-1">Harap tunggu sebentar</p>
+                            </div>
+                            <div v-else>
+                                <div v-if="testResult?.status === 'success'" class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                </div>
+                                <div v-else class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </div>
+                                
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                                    {{ testResult?.status === 'success' ? 'Koneksi Berhasil' : 'Koneksi Gagal' }}
+                                </h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-6 break-words" v-html="testResult?.message"></p>
+                                
+                                <button @click="showTestModal = false" class="px-6 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors w-full">
+                                    Tutup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </AppLayout>
 </template>
 
@@ -278,6 +316,9 @@ import { ref, onMounted } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import axios from 'axios';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm } = useConfirm();
 
 const props = defineProps({
     routers: {
@@ -290,6 +331,10 @@ const props = defineProps({
 const isModalOpen = ref(false);
 const editingRouter = ref(null);
 const testingRouterId = ref(null);
+
+const showTestModal = ref(false);
+const isTesting = ref(false);
+const testResult = ref(null);
 
 const isConfigModalOpen = ref(false);
 const fetchingConfigId = ref(null);
@@ -374,8 +419,16 @@ const toggleRouterStatus = (r) => {
         .catch(() => alert('Terjadi kesalahan saat mengubah status router.'));
 };
 
-const deleteRouter = (r) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus router "${r.name}"? Semua data backup juga akan terhapus.`)) {
+const deleteRouter = async (r) => {
+    const isConfirmed = await confirm({
+        title: 'Hapus Router',
+        message: `Apakah Anda yakin ingin menghapus router "${r.name}"? Semua data backup juga akan terhapus.`,
+        confirmText: 'Ya, Hapus',
+        cancelText: 'Batal',
+        confirmColor: 'rose'
+    });
+
+    if (isConfirmed) {
         router.delete(`/config/router/${r.id}`, {
             preserveScroll: true,
         });
@@ -384,19 +437,23 @@ const deleteRouter = (r) => {
 
 const testConnection = (r) => {
     testingRouterId.value = r.id;
+    showTestModal.value = true;
+    isTesting.value = true;
+    testResult.value = null;
+
     axios.post(`/config/router/${r.id}/test`)
         .then(res => {
-            if (res.data.status === 'success') {
-                alert(res.data.message);
-            } else {
-                alert("Error: " + res.data.message);
-            }
+            testResult.value = res.data;
         })
         .catch(err => {
-            alert(err.response?.data?.message || 'Koneksi gagal/timeout.');
+            testResult.value = {
+                status: 'error',
+                message: err.response?.data?.message || 'Koneksi gagal/timeout.'
+            };
         })
         .finally(() => {
             testingRouterId.value = null;
+            isTesting.value = false;
         });
 };
 

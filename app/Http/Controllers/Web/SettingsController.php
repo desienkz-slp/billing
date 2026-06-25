@@ -118,14 +118,23 @@ class SettingsController extends Controller
             ->get();
 
         $servers = \App\Models\Server::where('is_active', true)
-            ->where('type', 'freeradius')
+            ->whereIn('type', ['freeradius', 'upluk_upluk_api'])
             ->orderBy('name')
             ->get();
 
-        $db_pusat_profiles = \Illuminate\Support\Facades\DB::table('db_pusat_profiles')
-            ->where('tenant_id', $tenant->id)
-            ->orderBy('name')
-            ->pluck('name');
+        $db_pusat_profiles = [];
+        $radiusServer = \App\Models\Server::whereIn('type', ['freeradius', 'upluk_upluk_api'])->where('is_active', true)->first();
+        if ($radiusServer) {
+            $radiusService = app(\App\Services\RadiusService::class);
+            $radiusService->connectTo($radiusServer);
+            if (method_exists($radiusService, 'listGroups')) {
+                $db_pusat_profiles = collect($radiusService->listGroups())->pluck('groupname')->unique()->values()->toArray();
+            } else {
+                try {
+                    $db_pusat_profiles = \App\Models\Radius\RadGroupReply::select('groupname')->distinct()->pluck('groupname')->toArray();
+                } catch (\Throwable $e) {}
+            }
+        }
 
         return Inertia::render('Settings/Packages', compact('capabilities', 'packages', 'routers', 'servers', 'db_pusat_profiles'));
     }
