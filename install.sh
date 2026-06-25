@@ -47,21 +47,23 @@ fi
 check_command composer || NEEDS_UPDATE=1
 check_command npm || NEEDS_UPDATE=1
 check_command psql || NEEDS_UPDATE=1
+check_command nginx || NEEDS_UPDATE=1
+check_command supervisorctl || NEEDS_UPDATE=1
 
 if [ $NEEDS_UPDATE -eq 1 ]; then
     echo "🚨 PERINGATAN: Server Anda tidak memiliki dependensi atau versinya terlalu lawas!"
-    echo "Sistem membutuhkan minimal: PHP 8.2+ dan Node.js 18+"
-    read -p "Apakah Anda ingin saya MENGHAPUS versi lama (jika ada) dan MENGINSTAL OTOMATIS versi terbaru? (hanya untuk Ubuntu/Debian) [y/N]: " install_deps
+    echo "Sistem membutuhkan minimal: PHP 8.2+, Node.js 18+, PostgreSQL, Nginx, dan Supervisor."
+    read -p "Apakah Anda ingin saya MENGHAPUS versi lama (jika ada) dan MENGINSTAL OTOMATIS seluruh dependensi yang dibutuhkan? (Ubuntu/Debian) [y/N]: " install_deps
     
     if [[ "$install_deps" == "y" || "$install_deps" == "Y" ]]; then
-        echo "Memulai pembaruan dependensi server. Mohon tunggu..."
+        echo "Memulai pembaruan dan instalasi penuh dependensi server. Mohon tunggu..."
         
         # Hapus versi lawas agar tidak bentrok
         apt-get purge -y "php*" nodejs npm 2>/dev/null
         apt-get autoremove -y 2>/dev/null
         
         apt-get update
-        apt-get install -y software-properties-common curl unzip
+        apt-get install -y software-properties-common curl unzip git
         
         # Tambahkan PPA untuk PHP 8.2
         add-apt-repository -y ppa:ondrej/php
@@ -76,6 +78,9 @@ if [ $NEEDS_UPDATE -eq 1 ]; then
         
         # Pastikan sistem menggunakan PHP 8.2 sebagai default
         update-alternatives --set php /usr/bin/php8.2
+        
+        # Instal Web Server dan Supervisor
+        apt-get install -y nginx supervisor
         
         # Instal PostgreSQL
         apt-get install -y postgresql postgresql-contrib
@@ -92,8 +97,10 @@ if [ $NEEDS_UPDATE -eq 1 ]; then
         # Pastikan service postgresql berjalan
         systemctl enable postgresql
         systemctl start postgresql
+        systemctl enable nginx
+        systemctl enable supervisor
         
-        echo "✅ Instalasi dependensi server selesai!"
+        echo "✅ Instalasi seluruh dependensi server selesai!"
     else
         echo "❌ Proses dibatalkan. Skrip tidak dapat dilanjutkan tanpa dependensi yang memenuhi syarat."
         exit 1
