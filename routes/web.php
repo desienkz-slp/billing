@@ -22,6 +22,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check() ? redirect(route('app-gateway', [], false)) : redirect(route('login', [], false)));
 
+Route::get('/debug-roles-123', function() {
+    return \App\Models\Role::get(['id', 'name', 'description']);
+});
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
@@ -91,13 +95,13 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('/cust/cuti/batch-restore', [CutiController::class, 'batchRestore'])
         ->middleware('permission:can_manage_cuti')->name('cust.cuti.batch-restore');
     Route::post('/cust/cuti/batch-destroy', [CutiController::class, 'batchDestroy'])
-        ->middleware('permission:can_delete_customer_cuti')->name('cust.cuti.batch-destroy');
+        ->middleware('permission:can_delete_customer')->name('cust.cuti.batch-destroy');
     Route::post('/cust/cuti/{customer}/store', [CutiController::class, 'store'])
         ->middleware('permission:can_cuti')->name('cust.cuti.store');
     Route::post('/cust/cuti/{customer}/restore', [CutiController::class, 'restore'])
         ->middleware('permission:can_manage_cuti')->name('cust.cuti.restore');
     Route::delete('/cust/cuti/{customer}', [CutiController::class, 'destroy'])
-        ->middleware('permission:can_delete_customer_cuti')->name('cust.cuti.destroy');
+        ->middleware('permission:can_delete_customer')->name('cust.cuti.destroy');
 
     // ── Payment API (AJAX) ────────────────────────
     Route::get('/api-web/payments/months/{customer}', [PaymentApiController::class, 'getMonths'])
@@ -113,11 +117,13 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/reports/income', [\App\Http\Controllers\Web\IncomeController::class, 'index'])->name('reports.income.index');
     Route::get('/reports/income/{payment}/print', [\App\Http\Controllers\Web\IncomeController::class, 'printInvoice'])->name('reports.income.print');
     Route::post('/reports/income/{payment}/resend', [\App\Http\Controllers\Web\IncomeController::class, 'resendInvoice'])->name('reports.income.resend');
-    Route::post('/reports/income/{payment}/refund', [\App\Http\Controllers\Web\IncomeController::class, 'refund'])->middleware('permission:can_cancel_payment')->name('reports.income.refund');
+    Route::post('/reports/income/{payment}/refund', [\App\Http\Controllers\Web\IncomeController::class, 'refund'])->middleware('permission:can_delete_finance')->name('reports.income.refund');
     
     Route::get('/reports/other-incomes', [\App\Http\Controllers\Web\OtherIncomeController::class, 'index'])->name('reports.other-incomes.index');
-    Route::post('/reports/other-incomes', [\App\Http\Controllers\Web\OtherIncomeController::class, 'store'])->name('reports.other-incomes.store');
-    Route::delete('/reports/other-incomes/{otherIncome}', [\App\Http\Controllers\Web\OtherIncomeController::class, 'destroy'])->name('reports.other-incomes.destroy');
+    Route::post('/reports/other-incomes', [\App\Http\Controllers\Web\OtherIncomeController::class, 'store'])
+        ->middleware('permission:can_manage_expenses')->name('reports.other-incomes.store');
+    Route::delete('/reports/other-incomes/{otherIncome}', [\App\Http\Controllers\Web\OtherIncomeController::class, 'destroy'])
+        ->middleware('permission:can_delete_finance')->name('reports.other-incomes.destroy');
 
     // ── Management Isolir ────────────────────────────
     Route::prefix('cust')->name('cust.')->group(function () {
@@ -135,25 +141,25 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // ── Reports (Laporan) ─────────────────────────
     Route::get('/reports/statistics', [StatisticController::class, 'index'])
-        ->middleware('permission:can_view_reports,can_view_menu_statistics')->name('reports.statistics');
+        ->middleware('permission:can_view_finance')->name('reports.statistics');
     Route::get('/reports/statistics/api', [StatisticController::class, 'apiData'])
-        ->middleware('permission:can_view_reports,can_view_menu_statistics')->name('reports.statistics.api');
+        ->middleware('permission:can_view_finance')->name('reports.statistics.api');
     Route::post('/reports/statistics/toggle-hide', [StatisticController::class, 'toggleHideMonth'])
-        ->middleware('permission:can_view_reports,can_view_menu_statistics')->name('reports.statistics.toggle_hide');
+        ->middleware('permission:can_view_finance')->name('reports.statistics.toggle_hide');
     Route::get('/reports/finance', [ReportController::class, 'finance'])
         ->middleware('permission:can_view_finance')->name('reports.finance');
     Route::get('/reports/detail-pendapatan', [ReportController::class, 'detailPendapatan'])
-        ->middleware('permission:can_view_reports')->name('reports.detail-pendapatan');
+        ->middleware('permission:can_view_finance')->name('reports.detail-pendapatan');
     Route::get('/reports/pengeluaran', [ReportController::class, 'pengeluaran'])
         ->middleware('permission:can_view_finance')->name('reports.pengeluaran');
     Route::post('/reports/pengeluaran', [ReportController::class, 'storePengeluaran'])
         ->middleware('permission:can_manage_expenses')->name('reports.pengeluaran.store');
     Route::get('/reports/tax', [ReportController::class, 'tax'])
-        ->middleware('permission:can_view_finance,can_view_menu_tax')->name('reports.tax');
+        ->middleware('permission:can_view_finance')->name('reports.tax');
     Route::get('/reports/total', [ReportController::class, 'total'])
-        ->middleware('permission:can_view_finance,can_view_menu_recap')->name('reports.total');
+        ->middleware('permission:can_view_finance')->name('reports.total');
     Route::get('/reports/cashflow', [ReportController::class, 'cashflow'])
-        ->middleware('permission:can_view_finance,can_view_menu_cashflow')->name('reports.cashflow');
+        ->middleware('permission:can_view_finance')->name('reports.cashflow');
     Route::get('/sales/fee', [ReportController::class, 'fee'])
         ->middleware('permission:can_view_finance,can_view_menu_fee')->name('sales.fee');
     Route::get('/sales/setoran', [ReportController::class, 'setoran'])
@@ -177,15 +183,15 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // ── Settings (Master Data) ────────────────────
     Route::get('/settings/users', [SettingsController::class, 'users'])
-        ->middleware('permission:can_manage_users')->name('settings.users');
+        ->middleware('permission:can_view_dashboard_config')->name('settings.users');
     Route::post('/settings/users', [SettingsController::class, 'storeUser'])
-        ->middleware('permission:can_manage_users')->name('settings.users.store');
+        ->middleware('permission:can_view_dashboard_config')->name('settings.users.store');
     Route::post('/settings/users/{targetUser}/toggle', [SettingsController::class, 'toggleUser'])
-        ->middleware('permission:can_manage_users')->name('settings.users.toggle');
+        ->middleware('permission:can_view_dashboard_config')->name('settings.users.toggle');
     Route::put('/settings/users/{targetUser}', [SettingsController::class, 'updateUser'])
-        ->middleware('permission:can_manage_users')->name('settings.users.update');
+        ->middleware('permission:can_view_dashboard_config')->name('settings.users.update');
     Route::post('/settings/users/{targetUser}/default-sales', [SettingsController::class, 'setDefaultSales'])
-        ->middleware('permission:can_manage_users')->name('settings.users.default_sales');
+        ->middleware('permission:can_view_dashboard_config')->name('settings.users.default_sales');
 
     Route::get('/settings/packages', [SettingsController::class, 'packages'])
         ->middleware('permission:can_manage_packages,can_view_menu_master_paket')->name('settings.packages');
@@ -199,45 +205,46 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         ->middleware('permission:can_manage_packages')->name('settings.packages.router-profiles');
 
     Route::get('/settings/areas', [SettingsController::class, 'areas'])
-        ->middleware('permission:can_manage_areas,can_view_menu_master_area')->name('settings.areas');
+        ->middleware('permission:can_manage_packages,can_view_menu_master_area')->name('settings.areas');
     Route::post('/settings/areas', [SettingsController::class, 'storeArea'])
-        ->middleware('permission:can_manage_areas')->name('settings.areas.store');
+        ->middleware('permission:can_manage_packages')->name('settings.areas.store');
 
     Route::get('/settings/odps', [SettingsController::class, 'odps'])
-        ->middleware('permission:can_manage_odp')->name('settings.odps');
+        ->middleware('permission:can_manage_packages')->name('settings.odps');
     Route::post('/settings/odps', [SettingsController::class, 'storeOdp'])
-        ->middleware('permission:can_manage_odp')->name('settings.odps.store');
+        ->middleware('permission:can_manage_packages')->name('settings.odps.store');
     Route::delete('/settings/odps/{odp}', [SettingsController::class, 'destroyOdp'])
-        ->middleware('permission:can_manage_odp')->name('settings.odps.destroy');
+        ->middleware('permission:can_manage_packages')->name('settings.odps.destroy');
 
     Route::get('/settings/odcs', [SettingsController::class, 'odcs'])
-        ->middleware('permission:can_manage_odp')->name('settings.odcs');
+        ->middleware('permission:can_manage_packages')->name('settings.odcs');
     Route::post('/settings/odcs', [SettingsController::class, 'storeOdc'])
-        ->middleware('permission:can_manage_odp')->name('settings.odcs.store');
+        ->middleware('permission:can_manage_packages')->name('settings.odcs.store');
     Route::put('/settings/odcs/{odc}', [SettingsController::class, 'updateOdc'])
-        ->middleware('permission:can_manage_odp')->name('settings.odcs.update');
+        ->middleware('permission:can_manage_packages')->name('settings.odcs.update');
     Route::delete('/settings/odcs/{odc}', [SettingsController::class, 'destroyOdc'])
-        ->middleware('permission:can_manage_odp')->name('settings.odcs.destroy');
+        ->middleware('permission:can_manage_packages')->name('settings.odcs.destroy');
 
     Route::get('/settings/template-tagihan', [SettingsController::class, 'templateTagihan'])
-        ->middleware('permission:can_edit_template')->name('settings.template-tagihan');
+        ->middleware('permission:can_manage_packages')->name('settings.template-tagihan');
     Route::get('/settings/template-nota', [SettingsController::class, 'templateNota'])
-        ->middleware('permission:can_edit_template')->name('settings.template-nota');
+        ->middleware('permission:can_manage_packages')->name('settings.template-nota');
 
     // ── Config Module ─────────────────────────────
     Route::prefix('config')->middleware('permission:can_view_dashboard_config')->group(function () {
         Route::get('/', [ConfigController::class, 'index'])->name('config.index');
-        // User Management (guarded by can_manage_users)
-        Route::middleware('permission:can_manage_users')->group(function () {
+        // User Management (guarded by can_view_dashboard_config)
+        Route::middleware('permission:can_view_dashboard_config')->group(function () {
             Route::get('/users', [ConfigController::class, 'users'])->name('config.users');
             Route::post('/users', [ConfigController::class, 'storeUser'])->name('config.users.store');
             Route::put('/users/{targetUser}', [ConfigController::class, 'updateUser'])->name('config.users.update');
             Route::post('/users/{targetUser}/toggle', [ConfigController::class, 'toggleUser'])->name('config.users.toggle');
             Route::post('/users/{targetUser}/default-sales', [ConfigController::class, 'setDefaultSales'])->name('config.users.default_sales');
+            Route::delete('/users/{targetUser}', [ConfigController::class, 'destroyUser'])->name('config.users.destroy');
         });
 
-        // Role Management (guarded by can_manage_roles)
-        Route::middleware('permission:can_manage_roles')->group(function () {
+        // Role Management (guarded by can_view_dashboard_config)
+        Route::middleware('permission:can_view_dashboard_config')->group(function () {
             Route::get('/roles', [ConfigController::class, 'roles'])->name('config.roles');
             Route::post('/roles', [ConfigController::class, 'storeRole'])->name('config.roles.store');
             Route::put('/roles/{role}', [ConfigController::class, 'updateRole'])->name('config.roles.update');
@@ -279,8 +286,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
             Route::post('/radius-server/{server}/test', [ConfigController::class, 'testRadiusServer'])->name('config.radius-server.test');
         });
 
-        Route::get('/backup', [ConfigController::class, 'backup'])->middleware('permission:can_backup_restore')->name('config.backup');
-        Route::get('/log-sistem', [ConfigController::class, 'logSistem'])->middleware('permission:can_view_audit_logs')->name('config.log-sistem');
+        Route::get('/backup', [ConfigController::class, 'backup'])->middleware('permission:can_view_dashboard_config')->name('config.backup');
+        Route::get('/log-sistem', [ConfigController::class, 'logSistem'])->middleware('permission:can_view_dashboard_config')->name('config.log-sistem');
         Route::get('/db-pusat', [ConfigController::class, 'dbPusat'])->name('config.db-pusat');
         Route::post('/db-pusat', [ConfigController::class, 'updateDbPusat'])->name('config.db-pusat.update');
     });

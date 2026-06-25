@@ -308,8 +308,7 @@ const defaultForm = {
     can_view_reports: false, can_view_finance: false, can_manage_expenses: false,
     can_manage_deposits: false, can_manage_saldo: false, can_delete_finance: false,
     can_manage_packages: false,
-    can_manage_users: false, can_manage_roles: false, can_view_audit_logs: false, can_backup_restore: false,
-    can_view_radius: false, can_view_acs: false, can_manage_radius: false, can_manage_router: false, can_send_wa_blast: false,
+    can_view_radius: false, can_view_acs: false, can_manage_radius: false, can_manage_router: false, 
     can_view_monitor: false, is_saldo_limited: false,
     // Sidebar Billing Menus
     can_view_menu_dashboard: false, can_view_menu_pelanggan: false, can_view_menu_pelanggan_cuti: false, can_view_menu_isolir: false,
@@ -487,17 +486,6 @@ const permissionGroups = [
         name: 'Master Data',
         permissions: [
             { key: 'can_manage_packages', label: 'Kelola Master Data (Paket, Area, ODP)', desc: 'Paket & Area: Hak penuh melakukan Create, Edit, Delete pada Paket, Area, dan ODP/ODC.' }
-        ]
-    },
-    {
-        id: 'system',
-        name: 'Lanjutan',
-        permissions: [
-            { key: 'can_manage_users', label: 'Kelola User', desc: 'Tambah/Edit User yang bisa login.' },
-            { key: 'can_manage_roles', label: 'Kelola Role Akses', desc: 'Halaman ini.' },
-            { key: 'can_view_audit_logs', label: 'Lihat Audit Log', desc: 'Riwayat sistem perbaikan, hapus, dll.' },
-            { key: 'can_backup_restore', label: 'Backup Data', desc: 'Backup database manual.' },
-            { key: 'can_send_wa_blast', label: 'Kirim WA Blast', desc: 'Broadcast ke banyak pelanggan.' },
         ]
     }
 ];
