@@ -58,10 +58,7 @@ class Role extends Model
         'can_send_wa_blast' => 'boolean',
         'can_config_map' => 'boolean',
         'can_view_monitor' => 'boolean',
-        'can_access_billing' => 'boolean',
-        'can_access_config' => 'boolean',
-        'can_access_db' => 'boolean',
-        'can_access_map' => 'boolean',
+        // Dashboard Modules (Legacy dropped)
         'can_view_dashboard_config' => 'boolean',
         'can_view_dashboard_map' => 'boolean',
         'can_view_dashboard_olt' => 'boolean',
