@@ -50,7 +50,7 @@ if [ $MISSING_DEPS -eq 1 ]; then
         
         echo "✅ Instalasi dependensi server selesai!"
     else
-        echo "❌ Proses dibatalkan. Skrip tidak dapat dilanjutkan tanpa PHP dan Composer."
+        echo "❌ Proses dibatalkan. Skrip tidak dapat dilanjutkan tanpa dependensi yang lengkap."
         exit 1
     fi
 fi
@@ -63,14 +63,16 @@ fi
 
 # Set APP_URL
 read -p "Masukkan URL/Domain aplikasi (contoh: http://192.168.1.10 atau https://billing.com): " app_url
-# Perbaikan: escaping karakter '/' untuk perintah sed
 app_url_escaped=$(echo "$app_url" | sed 's/\//\\\//g')
 sed -i "s/^APP_URL=.*/APP_URL=$app_url_escaped/" .env
 
 echo ""
 echo "[2] Pengaturan Database"
-echo "Apakah Anda ingin membuat database secara (1) Otomatis [PostgreSQL] atau (2) Manual?"
-read -p "Pilih [1/2]: " db_choice
+echo "Pilih mode konfigurasi database:"
+echo "1) Otomatis  (Membuat DB & User PostgreSQL lokal dengan nama acak)"
+echo "2) Manual    (Membuat DB & User PostgreSQL lokal dengan nama sesuai input Anda)"
+echo "3) Eksternal (Menggunakan Database yang sudah ada di server lain/lokal)"
+read -p "Pilih [1/2/3]: " db_choice
 
 if [ "$db_choice" == "1" ]; then
     # Otomatis PostgreSQL
@@ -81,35 +83,37 @@ if [ "$db_choice" == "1" ]; then
     db_pass=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16)
     
     echo "Membuat database $db_name..."
-    # Mengeksekusi perintah psql sebagai user postgres
     sudo -u postgres psql -c "CREATE USER $db_user WITH PASSWORD '$db_pass';"
     sudo -u postgres psql -c "CREATE DATABASE $db_name OWNER $db_user;"
     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $db_name TO $db_user;"
     
-    # Update .env
-    sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=pgsql/" .env
-    sed -i "s/^# DB_HOST=.*/DB_HOST=127.0.0.1/" .env
-    sed -i "s/^# DB_PORT=.*/DB_PORT=5432/" .env
-    sed -i "s/^# DB_DATABASE=.*/DB_DATABASE=$db_name/" .env
-    sed -i "s/^# DB_USERNAME=.*/DB_USERNAME=$db_user/" .env
-    sed -i "s/^# DB_PASSWORD=.*/DB_PASSWORD=$db_pass/" .env
-    
-    sed -i "s/^DB_HOST=.*/DB_HOST=127.0.0.1/" .env
-    sed -i "s/^DB_PORT=.*/DB_PORT=5432/" .env
-    sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$db_name/" .env
-    sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$db_user/" .env
-    sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$db_pass/" .env
+    db_conn="pgsql"
+    db_host="127.0.0.1"
+    db_port="5432"
+
+elif [ "$db_choice" == "2" ]; then
+    # Manual (Bikin DB lokal, tapi namanya input sendiri)
+    echo "Pilihan: Manual. Anda akan membuat database PostgreSQL lokal."
+    read -p "Masukkan Nama Database baru yang ingin dibuat: " db_name
+    read -p "Masukkan Username baru yang ingin dibuat: " db_user
+    read -p "Masukkan Password untuk user tersebut: " db_pass
+
+    echo "Membuat database $db_name..."
+    sudo -u postgres psql -c "CREATE USER $db_user WITH PASSWORD '$db_pass';"
+    sudo -u postgres psql -c "CREATE DATABASE $db_name OWNER $db_user;"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $db_name TO $db_user;"
+
+    db_conn="pgsql"
+    db_host="127.0.0.1"
+    db_port="5432"
 
 else
-    # Manual
-    echo "Pilihan: Manual. Silakan masukkan kredensial database Anda."
+    # Eksternal (Konek ke DB yang sudah eksis)
+    echo "Pilihan: Eksternal. Anda akan mengkoneksikan aplikasi ke database yang sudah ada."
     read -p "Masukkan Driver DB (pgsql/mysql/sqlite) [default: pgsql]: " db_conn
     db_conn=${db_conn:-pgsql}
     
-    if [ "$db_conn" == "sqlite" ]; then
-        sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/" .env
-        touch database/database.sqlite
-    else
+    if [ "$db_conn" != "sqlite" ]; then
         read -p "Masukkan Host DB [default: 127.0.0.1]: " db_host
         db_host=${db_host:-127.0.0.1}
         
@@ -124,22 +128,21 @@ else
         read -p "Masukkan Nama Database: " db_name
         read -p "Masukkan Username Database: " db_user
         read -p "Masukkan Password Database: " db_pass
-
-        # Hapus komentar jika ada
-        sed -i "s/^# DB_HOST=.*/DB_HOST=$db_host/" .env
-        sed -i "s/^# DB_PORT=.*/DB_PORT=$db_port/" .env
-        sed -i "s/^# DB_DATABASE=.*/DB_DATABASE=$db_name/" .env
-        sed -i "s/^# DB_USERNAME=.*/DB_USERNAME=$db_user/" .env
-        sed -i "s/^# DB_PASSWORD=.*/DB_PASSWORD=$db_pass/" .env
-
-        # Update values
-        sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=$db_conn/" .env
-        sed -i "s/^DB_HOST=.*/DB_HOST=$db_host/" .env
-        sed -i "s/^DB_PORT=.*/DB_PORT=$db_port/" .env
-        sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$db_name/" .env
-        sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$db_user/" .env
-        sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$db_pass/" .env
     fi
+fi
+
+# Update .env Database config
+if [ "$db_conn" == "sqlite" ]; then
+    sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/" .env
+    touch database/database.sqlite
+else
+    # Update values in .env
+    sed -i "s/^#\?\s*DB_CONNECTION=.*/DB_CONNECTION=$db_conn/" .env
+    sed -i "s/^#\?\s*DB_HOST=.*/DB_HOST=$db_host/" .env
+    sed -i "s/^#\?\s*DB_PORT=.*/DB_PORT=$db_port/" .env
+    sed -i "s/^#\?\s*DB_DATABASE=.*/DB_DATABASE=$db_name/" .env
+    sed -i "s/^#\?\s*DB_USERNAME=.*/DB_USERNAME=$db_user/" .env
+    sed -i "s/^#\?\s*DB_PASSWORD=.*/DB_PASSWORD=$db_pass/" .env
 fi
 
 echo ""
@@ -150,7 +153,6 @@ chown -R www-data:www-data storage bootstrap/cache 2>/dev/null
 echo "[4] Menginstal dependensi PHP (Composer)..."
 composer install --optimize-autoloader --no-dev
 
-# Di versi production, front-end umumnya sudah di-build, tapi kalau mau memastikan:
 # Cek apakah package.json ada
 if [ -f package.json ]; then
     echo "[5] Menginstal dependensi Frontend (NPM)..."
@@ -173,5 +175,15 @@ php artisan view:cache
 
 echo "==============================================="
 echo "   Instalasi Selesai! Sistem siap digunakan."
-echo "   Silakan akses di: $app_url"
+echo "==============================================="
+echo "URL Aplikasi : $app_url"
+echo "-----------------------------------------------"
+echo "KREDENSIAL DATABASE ANDA:"
+echo "DB Driver    : $db_conn"
+echo "DB Host      : $db_host:$db_port"
+echo "DB Name      : $db_name"
+echo "DB User      : $db_user"
+echo "DB Password  : $db_pass"
+echo "-----------------------------------------------"
+echo "PERHATIAN: Harap simpan data di atas dengan aman!"
 echo "==============================================="
