@@ -205,18 +205,17 @@ chown -R www-data:www-data storage bootstrap/cache 2>/dev/null
 echo "[4] Menginstal dependensi PHP (Composer)..."
 composer install --optimize-autoloader --no-dev
 
-# Cek apakah package.json ada
-if [ -f package.json ]; then
-    echo "[5] Menginstal dependensi Frontend (NPM)..."
-    npm install
-    npm run build
-fi
+# Hapus npm karena ini versi production yang sudah dibuild
+# (Frontend sudah terkompilasi di public/build/)
 
-echo "[6] Generate Application Key..."
+echo "[5] Generate Application Key..."
 php artisan key:generate --force
 
-echo "[7] Menjalankan Migrasi Database..."
+echo "[6] Menjalankan Migrasi Database..."
 php artisan migrate --force
+
+echo "[7] Membuat Akun Superadmin Default..."
+php artisan make:sysadmin
 
 echo "[8] Membersihkan Cache..."
 php artisan optimize:clear
@@ -225,10 +224,55 @@ php artisan event:cache
 php artisan route:cache
 php artisan view:cache
 
+echo "[9] Konfigurasi Nginx Web Server..."
+if [ -d "/etc/nginx/sites-available" ]; then
+    domain_stripped=$(echo "$app_url" | sed -e 's|^[^/]*//||' -e 's|/.*$||')
+    app_dir=$(pwd)
+    
+    cat <<EOF > /etc/nginx/sites-available/billing
+server {
+    listen 80;
+    server_name $domain_stripped;
+    root $app_dir/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php\$ {
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+EOF
+    ln -sf /etc/nginx/sites-available/billing /etc/nginx/sites-enabled/
+    rm -f /etc/nginx/sites-enabled/default
+    systemctl restart nginx
+    echo "Virtual Host Nginx berhasil dikonfigurasi untuk $domain_stripped di $app_dir/public"
+fi
+
 echo "==============================================="
 echo "   Instalasi Selesai! Sistem siap digunakan."
 echo "==============================================="
 echo "URL Aplikasi : $app_url"
+echo "Akun Default : sysadmin / sysadmin"
 echo "-----------------------------------------------"
 echo "KREDENSIAL DATABASE ANDA:"
 echo "DB Driver    : $db_conn"
