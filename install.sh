@@ -197,10 +197,6 @@ else
     sed -i "s/^#\?\s*DB_PASSWORD=.*/DB_PASSWORD=$db_pass/" .env
 fi
 
-echo ""
-echo "[3] Memperbarui hak akses direktori..."
-chmod -R 775 storage bootstrap/cache 2>/dev/null
-chown -R www-data:www-data storage bootstrap/cache 2>/dev/null
 
 echo "[4] Menginstal dependensi PHP (Composer)..."
 composer install --optimize-autoloader --no-dev
@@ -267,6 +263,11 @@ EOF
     systemctl restart nginx
     echo "Virtual Host Nginx berhasil dikonfigurasi untuk $domain_stripped di $app_dir/public"
 fi
+
+echo "[10] Memperbarui hak akses direktori..."
+chmod -R 775 storage bootstrap/cache 2>/dev/null
+chown -R www-data:www-data storage bootstrap/cache 2>/dev/null
+chown -R www-data:www-data /var/www/billing 2>/dev/null
 
 echo "==============================================="
 echo "   Instalasi Selesai! Sistem siap digunakan."
