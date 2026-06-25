@@ -16,34 +16,33 @@ sed -i "s|^APP_URL=.*|APP_URL=$app_url|" .env
 
 echo ""
 echo "[2] Pengaturan Database"
-echo "Apakah Anda ingin membuat database secara (1) Otomatis [MySQL/MariaDB] atau (2) Manual?"
+echo "Apakah Anda ingin membuat database secara (1) Otomatis [PostgreSQL] atau (2) Manual?"
 read -p "Pilih [1/2]: " db_choice
 
 if [ "$db_choice" == "1" ]; then
-    # Otomatis
-    echo "Pilihan: Otomatis. Saya akan membuatkan database dan user baru."
-    read -p "Masukkan password ROOT MySQL/MariaDB server Anda: " root_pass
+    # Otomatis PostgreSQL
+    echo "Pilihan: Otomatis. Saya akan membuatkan database dan user PostgreSQL baru."
     
     db_name="ladapala_$(date +%s)"
     db_user="user_$(date +%s)"
-    db_pass=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 12)
+    db_pass=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16)
     
     echo "Membuat database $db_name..."
-    mysql -u root -p"$root_pass" -e "CREATE DATABASE $db_name;"
-    mysql -u root -p"$root_pass" -e "CREATE USER '$db_user'@'localhost' IDENTIFIED BY '$db_pass';"
-    mysql -u root -p"$root_pass" -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user'@'localhost';"
-    mysql -u root -p"$root_pass" -e "FLUSH PRIVILEGES;"
+    # Mengeksekusi perintah psql sebagai user postgres
+    sudo -u postgres psql -c "CREATE USER $db_user WITH PASSWORD '$db_pass';"
+    sudo -u postgres psql -c "CREATE DATABASE $db_name OWNER $db_user;"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $db_name TO $db_user;"
     
     # Update .env
-    sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=mysql/" .env
+    sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=pgsql/" .env
     sed -i "s/^# DB_HOST=.*/DB_HOST=127.0.0.1/" .env
-    sed -i "s/^# DB_PORT=.*/DB_PORT=3306/" .env
+    sed -i "s/^# DB_PORT=.*/DB_PORT=5432/" .env
     sed -i "s/^# DB_DATABASE=.*/DB_DATABASE=$db_name/" .env
     sed -i "s/^# DB_USERNAME=.*/DB_USERNAME=$db_user/" .env
     sed -i "s/^# DB_PASSWORD=.*/DB_PASSWORD=$db_pass/" .env
     
     sed -i "s/^DB_HOST=.*/DB_HOST=127.0.0.1/" .env
-    sed -i "s/^DB_PORT=.*/DB_PORT=3306/" .env
+    sed -i "s/^DB_PORT=.*/DB_PORT=5432/" .env
     sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$db_name/" .env
     sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$db_user/" .env
     sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$db_pass/" .env
@@ -51,8 +50,8 @@ if [ "$db_choice" == "1" ]; then
 else
     # Manual
     echo "Pilihan: Manual. Silakan masukkan kredensial database Anda."
-    read -p "Masukkan Driver DB (mysql/pgsql/sqlite) [default: mysql]: " db_conn
-    db_conn=${db_conn:-mysql}
+    read -p "Masukkan Driver DB (pgsql/mysql/sqlite) [default: pgsql]: " db_conn
+    db_conn=${db_conn:-pgsql}
     
     if [ "$db_conn" == "sqlite" ]; then
         sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/" .env
@@ -60,8 +59,15 @@ else
     else
         read -p "Masukkan Host DB [default: 127.0.0.1]: " db_host
         db_host=${db_host:-127.0.0.1}
-        read -p "Masukkan Port DB [default: 3306]: " db_port
-        db_port=${db_port:-3306}
+        
+        default_port=5432
+        if [ "$db_conn" == "mysql" ]; then
+            default_port=3306
+        fi
+        
+        read -p "Masukkan Port DB [default: $default_port]: " db_port
+        db_port=${db_port:-$default_port}
+        
         read -p "Masukkan Nama Database: " db_name
         read -p "Masukkan Username Database: " db_user
         read -p "Masukkan Password Database: " db_pass
