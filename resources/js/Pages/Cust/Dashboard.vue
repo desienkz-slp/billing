@@ -109,7 +109,7 @@
 
             <!-- Toolbar (Search & Filter) -->
             <div class="mb-4">
-                <div class="flex items-center bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-700 p-1 shadow-sm w-full overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide">
+                <div class="flex items-center flex-wrap bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-700 p-1 shadow-sm w-full gap-y-1 relative z-20">
                     <!-- Per Page -->
                     <select v-model="formFilters.per_page" class="bg-transparent border-none text-sm text-slate-700 dark:text-slate-200 focus:ring-0 cursor-pointer py-1 pl-3 pr-7 min-w-max">
                         <option value="10">10</option>
