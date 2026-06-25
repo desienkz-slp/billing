@@ -419,7 +419,7 @@ const permissionGroups = [
             { key: 'can_view_all_customers', label: 'Lihat Semua Pelanggan', desc: 'Melihat seluruh pelanggan tanpa batas area/sales.' },
             { key: 'view_by_area', label: 'View by Area', desc: 'Hanya melihat pelanggan di Area tertentu.' },
             { key: 'view_by_sales', label: 'View by Sales', desc: 'Hanya melihat pelanggan dari tim Sales tertentu.' },
-            { key: 'view_own_only', label: 'View Own Only', desc: 'Hanya melihat pelanggan yang didaftarkannya sendiri.' }
+            { key: 'view_own_only', label: 'View Own Only', desc: 'Hanya melihat pelanggan yang dikoordinatori sendiri.' }
         ]
     },
     {
