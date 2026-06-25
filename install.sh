@@ -4,6 +4,57 @@ echo "==============================================="
 echo "   LadaPala-Bill Automated Production Setup"
 echo "==============================================="
 
+# Cek Root/Sudo privileges untuk instalasi otomatis
+if [ "$EUID" -ne 0 ]; then
+  echo "Peringatan: Anda tidak menjalankan skrip ini sebagai Root."
+  echo "Untuk instalasi dependensi secara otomatis, pastikan Anda menggunakan 'sudo ./install.sh'"
+  echo "==============================================="
+fi
+
+# Fungsi cek perintah (dependency)
+check_command() {
+    if ! command -v "$1" &> /dev/null; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+# Cek dependensi utama
+MISSING_DEPS=0
+check_command php || MISSING_DEPS=1
+check_command composer || MISSING_DEPS=1
+check_command npm || MISSING_DEPS=1
+check_command psql || MISSING_DEPS=1
+
+if [ $MISSING_DEPS -eq 1 ]; then
+    echo "🚨 PERINGATAN: Server Anda masih kosong! (PHP, Composer, NPM, atau PostgreSQL belum terpasang)."
+    read -p "Apakah Anda ingin saya MENGINSTAL OTOMATIS semua dependensi tersebut? (hanya untuk Ubuntu/Debian) [y/N]: " install_deps
+    
+    if [[ "$install_deps" == "y" || "$install_deps" == "Y" ]]; then
+        echo "Memulai instalasi dependensi server. Mohon tunggu..."
+        apt-get update
+        apt-get install -y php php-cli php-fpm php-pgsql php-mysql php-mbstring php-xml php-bcmath php-curl php-zip unzip curl
+        apt-get install -y postgresql postgresql-contrib
+        apt-get install -y npm
+        
+        # Install Composer jika tidak ada di repositori APT standar
+        if ! command -v composer &> /dev/null; then
+            curl -sS https://getcomposer.org/installer | php
+            mv composer.phar /usr/local/bin/composer
+        fi
+        
+        # Pastikan service postgresql berjalan
+        systemctl enable postgresql
+        systemctl start postgresql
+        
+        echo "✅ Instalasi dependensi server selesai!"
+    else
+        echo "❌ Proses dibatalkan. Skrip tidak dapat dilanjutkan tanpa PHP dan Composer."
+        exit 1
+    fi
+fi
+
 # 1. Copy .env
 if [ ! -f .env ]; then
     echo "[1] Membuat file .env otomatis..."
@@ -12,7 +63,9 @@ fi
 
 # Set APP_URL
 read -p "Masukkan URL/Domain aplikasi (contoh: http://192.168.1.10 atau https://billing.com): " app_url
-sed -i "s|^APP_URL=.*|APP_URL=$app_url|" .env
+# Perbaikan: escaping karakter '/' untuk perintah sed
+app_url_escaped=$(echo "$app_url" | sed 's/\//\\\//g')
+sed -i "s/^APP_URL=.*/APP_URL=$app_url_escaped/" .env
 
 echo ""
 echo "[2] Pengaturan Database"
