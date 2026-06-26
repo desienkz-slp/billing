@@ -154,17 +154,6 @@ class CustomerController extends Controller
             ->join('packages', 'customers.package_id', '=', 'packages.id')
             ->sum('packages.price');
 
-        $billingStart = $request->input('billing_start');
-        $billingEnd = $request->input('billing_end');
-        
-        $customerIdsFiltered = null;
-        if ($billingStart !== null || $billingEnd !== null) {
-            $customerQuery = Customer::query();
-            if ($billingStart !== null) $customerQuery->where('billing_date', '>=', $billingStart);
-            if ($billingEnd !== null) $customerQuery->where('billing_date', '<=', $billingEnd);
-            $customerIdsFiltered = $customerQuery->pluck('id')->toArray();
-        }
-
         // Belum Bayar (gabungan Jatuh Tempo + Deadline dari web)
         // Yaitu: tagihan bulan ini belum dibayar, BUKAN pelanggan telat, BUKAN pelanggan baru
         $belumBayarQuery = \App\Models\MonthlyBalance::where('period', $periodString)
@@ -172,24 +161,14 @@ class CustomerController extends Controller
             ->whereNotIn('customer_id', $telatCustomersIds)
             ->whereNotIn('customer_id', $baruCustomersIds);
             
-        if ($customerIdsFiltered !== null) $belumBayarQuery->whereIn('customer_id', $customerIdsFiltered);
-            
         $belumBayar = $belumBayarQuery->count();
         $rpBelumBayar = $belumBayarQuery->sum('balance');
         
         $telatBayarQuery = \App\Models\MonthlyBalance::where('period', '<', $periodString)
             ->where('status', '!=', 'paid');
             
-        if ($customerIdsFiltered !== null) $telatBayarQuery->whereIn('customer_id', $customerIdsFiltered);
-            
         $rpTelatBayar = $telatBayarQuery->sum('balance');
-        
-        // Count for telat_bayar needs to apply filter to the distinct customers
-        if ($customerIdsFiltered !== null) {
-            $telatBayar = collect($telatCustomersIds)->intersect($customerIdsFiltered)->count();
-        } else {
-            $telatBayar = count($telatCustomersIds);
-        }
+        $telatBayar = count($telatCustomersIds);
 
         // Lunas Bulan Ini (lunas bulan ini, BUKAN pelanggan telat, BUKAN pelanggan baru)
         $lunasBulanIniQuery = \App\Models\MonthlyBalance::where('period', $periodString)
@@ -197,16 +176,12 @@ class CustomerController extends Controller
             ->whereNotIn('customer_id', $telatCustomersIds)
             ->whereNotIn('customer_id', $baruCustomersIds);
             
-        if ($customerIdsFiltered !== null) $lunasBulanIniQuery->whereIn('customer_id', $customerIdsFiltered);
-            
         $lunasBulanIni = $lunasBulanIniQuery->count();
         $rpLunasBulanIni = $lunasBulanIniQuery->sum('paid_amount');
 
         // Transaksi Bulan Ini (jumlah payment yang dilakukan pada bulan tersebut)
         $transaksiQuery = \App\Models\Payment::whereBetween('payment_date', [$startDate, $endDate])
             ->where('status', '!=', 'cancelled');
-            
-        if ($customerIdsFiltered !== null) $transaksiQuery->whereIn('customer_id', $customerIdsFiltered);
             
         $transaksiBulanIni = $transaksiQuery->count();
         $rpTransaksiBulanIni = $transaksiQuery->sum('paid_amount');
