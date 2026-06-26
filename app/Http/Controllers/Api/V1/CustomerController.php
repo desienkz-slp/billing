@@ -426,6 +426,13 @@ class CustomerController extends Controller
             'send_wa' => $user ? $user->hasCapability('operational.whatsapp.send') : false,
         ];
 
+        return response()->json([
+            'status' => 'success',
+            'capabilities' => $capabilities,
+            'data' => $formatted
+        ]);
+    }
+
     /**
      * GET /api/v1/customers/dashboard-lunas-bulan-ini
      */
