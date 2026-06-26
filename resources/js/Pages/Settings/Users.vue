@@ -153,6 +153,28 @@
                                         <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
                                     </select>
                                     <p v-if="form.errors.role_id" class="mt-1 text-sm text-red-500">{{ form.errors.role_id }}</p>
+
+                                    <!-- View by Area Checkboxes -->
+                                    <div v-if="selectedRole?.view_by_area" class="mt-4 p-4 border border-indigo-100 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 dark:border-indigo-800/50">
+                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Pilih Area yang Dapat Dilihat</label>
+                                        <div class="max-h-40 overflow-y-auto space-y-2 pr-2">
+                                            <label v-for="area in areas" :key="area.id" class="flex items-center gap-3 cursor-pointer">
+                                                <input type="checkbox" :value="area.id" v-model="form.perms_view_area_ids" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 dark:border-slate-600 dark:bg-slate-700">
+                                                <span class="text-sm text-slate-700 dark:text-slate-300">{{ area.name }}</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- View by Sales Checkboxes -->
+                                    <div v-if="selectedRole?.view_by_sales" class="mt-4 p-4 border border-indigo-100 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 dark:border-indigo-800/50">
+                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Pilih Sales yang Dapat Dilihat</label>
+                                        <div class="max-h-40 overflow-y-auto space-y-2 pr-2">
+                                            <label v-for="sales in salesUsers" :key="sales.id" class="flex items-center gap-3 cursor-pointer">
+                                                <input type="checkbox" :value="sales.id" v-model="form.perms_view_sales_ids" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 dark:border-slate-600 dark:bg-slate-700">
+                                                <span class="text-sm text-slate-700 dark:text-slate-300">{{ sales.name }} ({{ sales.username }})</span>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Password <span class="text-slate-400 font-normal">{{ editingUser ? '(Kosongkan jika tidak diubah)' : '' }}</span></label>
@@ -191,13 +213,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
     users: Array,
-    roles: Array
+    roles: Array,
+    areas: Array,
+    salesUsers: Array
 });
 
 const isModalOpen = ref(false);
@@ -210,7 +234,13 @@ const form = useForm({
     phone: '',
     role_id: '',
     password: '',
-    is_default_sales: false
+    is_default_sales: false,
+    perms_view_area_ids: [],
+    perms_view_sales_ids: []
+});
+
+const selectedRole = computed(() => {
+    return props.roles.find(r => r.id === form.role_id) || null;
 });
 
 const getRoleColor = (roleName) => {
@@ -227,6 +257,8 @@ const openCreateModal = () => {
     form.reset();
     form.clearErrors();
     form.is_default_sales = false;
+    form.perms_view_area_ids = [];
+    form.perms_view_sales_ids = [];
     isModalOpen.value = true;
 };
 
@@ -241,6 +273,8 @@ const openEditModal = (user) => {
     form.role_id = user.role_id;
     form.password = ''; // empty password on edit
     form.is_default_sales = !!user.is_default_sales;
+    form.perms_view_area_ids = user.perms_view_area_ids || [];
+    form.perms_view_sales_ids = user.perms_view_sales_ids || [];
     isModalOpen.value = true;
 };
 
