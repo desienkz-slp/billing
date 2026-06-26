@@ -245,7 +245,11 @@ class CustomerController extends Controller
     public function dashboardSearch(Request $request): JsonResponse
     {
         $search = $request->input('search');
-        if (!$search || strlen($search) < 3) {
+        $billingStart = $request->input('billing_start');
+        $billingEnd = $request->input('billing_end');
+
+        // If no search and no billing date is selected, return empty
+        if ((!$search || strlen($search) < 3) && $billingStart === null && $billingEnd === null) {
             return response()->json(['status' => 'success', 'data' => []]);
         }
 
@@ -253,14 +257,20 @@ class CustomerController extends Controller
             ->where('status', 'active')
             ->where('is_on_leave', false);
 
-        $query->where(function ($q) use ($search) {
-            $q->where('name', 'ilike', "%{$search}%")
-                ->orWhere('username', 'ilike', "%{$search}%")
-                ->orWhere('phone', 'ilike', "%{$search}%")
-                ->orWhere('address', 'ilike', "%{$search}%");
-        });
+        if ($search && strlen($search) >= 3) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'ilike', "%{$search}%")
+                    ->orWhere('username', 'ilike', "%{$search}%")
+                    ->orWhere('phone', 'ilike', "%{$search}%")
+                    ->orWhere('address', 'ilike', "%{$search}%");
+            });
+        }
 
-        $customers = $query->limit(20)->get();
+        if ($billingStart !== null) $query->where('billing_date', '>=', $billingStart);
+        if ($billingEnd !== null) $query->where('billing_date', '<=', $billingEnd);
+
+        // Limit results to prevent massive payloads if they just select 1 date (though 1 date is usually small)
+        $customers = $query->limit(50)->get();
 
         $currentPeriod = now()->format('Y-m');
         $currentDay = now()->day;
@@ -296,12 +306,24 @@ class CustomerController extends Controller
                 'id' => $customer->id,
                 'name' => $customer->name,
                 'payment_status' => $statusStr,
-                'total_unpaid' => $totalUnpaid
+                'total_unpaid' => $totalUnpaid,
+                'phone' => $customer->phone,
+                'is_isolated' => $customer->is_isolated,
+                'is_on_leave' => $customer->is_on_leave
             ];
         });
 
+        $user = $request->user();
+        $capabilities = [
+            'view_customers' => $user ? $user->hasPermissionTo('billing.customers.view') : false,
+            'edit_customers' => $user ? $user->hasPermissionTo('billing.customers.edit') : false,
+            'create_payments' => $user ? $user->hasPermissionTo('billing.payments.create') : false,
+            'send_wa' => $user ? $user->hasPermissionTo('operational.whatsapp.send') : false, // Assuming this is the permission
+        ];
+
         return response()->json([
             'status' => 'success',
+            'capabilities' => $capabilities,
             'data' => $results
         ]);
     }
