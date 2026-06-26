@@ -33,6 +33,7 @@ Route::prefix('v1')->group(function () {
         Route::get('dashboard', [\App\Http\Controllers\Api\V1\DashboardController::class, 'index']);
 
         // === CUSTOMERS ===
+        Route::get('customers/dashboard-stats', [CustomerController::class, 'dashboardStats']);
         Route::middleware('permission:billing.customers.view')->group(function () {
             Route::get('customers', [CustomerController::class, 'index']);
             Route::get('customers/stats', [CustomerController::class, 'stats']);
