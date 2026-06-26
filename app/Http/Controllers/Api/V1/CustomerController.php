@@ -211,6 +211,15 @@ class CustomerController extends Controller
         $transaksiBulanIni = $transaksiQuery->count();
         $rpTransaksiBulanIni = $transaksiQuery->sum('paid_amount');
 
+        // Billing Projections
+        $billingProjections = Customer::where('status', 'active')
+            ->where('is_on_leave', false)
+            ->join('packages', 'customers.package_id', '=', 'packages.id')
+            ->groupBy('billing_date')
+            ->selectRaw('billing_date, SUM(packages.price) as total_price')
+            ->pluck('total_price', 'billing_date')
+            ->toArray();
+
         return response()->json([
             'status' => 'success',
             'data' => [
@@ -225,7 +234,75 @@ class CustomerController extends Controller
                 'rp_lunas_bulan_ini' => (int) $rpLunasBulanIni,
                 'transaksi_bulan_ini' => $transaksiBulanIni,
                 'rp_transaksi_bulan_ini' => (int) $rpTransaksiBulanIni,
+                'billing_projections' => $billingProjections
             ]
+        ]);
+    }
+
+    /**
+     * GET /api/v1/customers/dashboard-search
+     */
+    public function dashboardSearch(Request $request): JsonResponse
+    {
+        $search = $request->input('search');
+        if (!$search || strlen($search) < 3) {
+            return response()->json(['status' => 'success', 'data' => []]);
+        }
+
+        $query = Customer::with(['monthlyBalances', 'package'])
+            ->where('status', 'active')
+            ->where('is_on_leave', false);
+
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'ilike', "%{$search}%")
+                ->orWhere('username', 'ilike', "%{$search}%")
+                ->orWhere('phone', 'ilike', "%{$search}%")
+                ->orWhere('address', 'ilike', "%{$search}%");
+        });
+
+        $customers = $query->limit(20)->get();
+
+        $currentPeriod = now()->format('Y-m');
+        $currentDay = now()->day;
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        $results = $customers->map(function ($customer) use ($currentPeriod, $currentDay, $currentMonth, $currentYear) {
+            $statusStr = 'Unknown';
+            $isBaru = ($customer->registration_date && $customer->registration_date->month === $currentMonth) && ($customer->registration_date->year === $currentYear);
+            
+            $telatBalances = $customer->monthlyBalances->where('period', '<', $currentPeriod)->where('status', '!=', 'paid');
+            $isTelat = $telatBalances->isNotEmpty();
+            $currentBalance = $customer->monthlyBalances->where('period', $currentPeriod)->first();
+            
+            if ($isBaru) {
+                $statusStr = 'Baru';
+            } else if ($isTelat) {
+                $statusStr = 'Telat Bayar';
+            } else if ($currentBalance && $currentBalance->status === 'paid') {
+                $statusStr = 'Lunas';
+            } else {
+                if ($customer->billing_date < $currentDay) {
+                    $statusStr = 'Jatuh Tempo';
+                } else {
+                    $statusStr = 'Deadline';
+                }
+            }
+            
+            // Total unpaid is sum of balance for all unpaid bills
+            $totalUnpaid = $customer->monthlyBalances->where('status', '!=', 'paid')->sum('balance');
+            
+            return [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'payment_status' => $statusStr,
+                'total_unpaid' => $totalUnpaid
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $results
         ]);
     }
 }
