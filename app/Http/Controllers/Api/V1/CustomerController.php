@@ -308,8 +308,8 @@ class CustomerController extends Controller
                 'payment_status' => $statusStr,
                 'total_unpaid' => $totalUnpaid,
                 'phone' => $customer->phone,
-                'is_isolated' => $customer->is_isolated,
-                'is_on_leave' => $customer->is_on_leave
+                'is_isolated' => (bool) $customer->is_isolated,
+                'is_on_leave' => (bool) $customer->is_on_leave
             ];
         });
 
