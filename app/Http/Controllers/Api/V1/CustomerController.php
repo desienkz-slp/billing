@@ -275,7 +275,9 @@ class CustomerController extends Controller
             }
             
             // Total unpaid is sum of balance for all unpaid bills
-            $totalUnpaid = $customer->monthlyBalances->where('status', '!=', 'paid')->sum('balance');
+            $totalUnpaid = $customer->monthlyBalances->where('status', '!=', 'paid')->sum(function ($mb) use ($customer) {
+                return $mb->balance > 0 ? $mb->balance : $customer->getEffectivePrice();
+            });
             
             return [
                 'id' => $customer->id,
@@ -341,7 +343,9 @@ class CustomerController extends Controller
         $currentDay = now()->day;
 
         $formatted = $customers->map(function ($customer) use ($currentPeriod, $currentDay) {
-            $totalUnpaid = $customer->monthlyBalances->where('status', '!=', 'paid')->sum('balance');
+            $totalUnpaid = $customer->monthlyBalances->where('status', '!=', 'paid')->sum(function ($mb) use ($customer) {
+                return $mb->balance > 0 ? $mb->balance : $customer->getEffectivePrice();
+            });
             
             $statusStr = 'Belum Bayar';
             if ($customer->billing_date < $currentDay) {
@@ -402,7 +406,9 @@ class CustomerController extends Controller
         $currentDay = now()->day;
 
         $formatted = $customers->map(function ($customer) use ($currentPeriod, $currentDay) {
-            $totalUnpaid = $customer->monthlyBalances->where('status', '!=', 'paid')->sum('balance');
+            $totalUnpaid = $customer->monthlyBalances->where('status', '!=', 'paid')->sum(function ($mb) use ($customer) {
+                return $mb->balance > 0 ? $mb->balance : $customer->getEffectivePrice();
+            });
             
             $statusStr = 'Telat Bayar';
 
