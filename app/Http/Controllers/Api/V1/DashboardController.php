@@ -65,9 +65,16 @@ class DashboardController extends Controller
 
         $isolir = Customer::where('is_isolated', true)->count();
 
+        // Check if user has permission to collect money
+        $showWajibSetor = false;
+        if ($user->fee_persen > 0 || $user->fee_fix > 0 || $user->hasPermission('bayar') || $user->isSuperAdmin() || $user->isSystemAdmin()) {
+            $showWajibSetor = true;
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => [
+                'show_wajib_setor' => $showWajibSetor,
                 'wajib_setor' => $wajibSetor,
                 'total_payments' => $totalPayments,
                 'total_expenses' => $totalExpenses,
