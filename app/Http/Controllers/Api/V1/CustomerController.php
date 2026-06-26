@@ -315,10 +315,10 @@ class CustomerController extends Controller
 
         $user = $request->user();
         $capabilities = [
-            'view_customers' => $user ? $user->hasPermissionTo('billing.customers.view') : false,
-            'edit_customers' => $user ? $user->hasPermissionTo('billing.customers.edit') : false,
-            'create_payments' => $user ? $user->hasPermissionTo('billing.payments.create') : false,
-            'send_wa' => $user ? $user->hasPermissionTo('operational.whatsapp.send') : false, // Assuming this is the permission
+            'view_customers' => $user ? $user->hasCapability('billing.customers.view') : false,
+            'edit_customers' => $user ? $user->hasCapability('billing.customers.edit') : false,
+            'create_payments' => $user ? $user->hasCapability('billing.payments.create') : false,
+            'send_wa' => $user ? $user->hasCapability('operational.whatsapp.send') : false,
         ];
 
         return response()->json([
