@@ -171,7 +171,7 @@
                                 <th scope="col" class="px-2 py-3 w-10 text-center whitespace-nowrap">#</th>
                                 <th scope="col" class="px-3 py-3 text-center whitespace-nowrap">NAMA</th>
                                 <th scope="col" class="px-4 py-3 text-center whitespace-nowrap">WA</th>
-                                <th scope="col" class="px-4 py-3 text-center whitespace-nowrap">DAFTAR</th>
+                                <th scope="col" class="px-4 py-3 text-center whitespace-nowrap hidden xl:table-cell">DAFTAR</th>
                                 <th scope="col" class="px-4 py-3 text-center whitespace-nowrap">PAKET</th>
                                 <th scope="col" class="px-4 py-3 text-center whitespace-nowrap hidden xl:table-cell">AREA</th>
                                 <th scope="col" class="px-4 py-3 text-center whitespace-nowrap hidden xl:table-cell">ODP</th>
@@ -191,7 +191,7 @@
                                     <span v-if="isNewThisMonth(customer.registration_date)" class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300">Baru</span>
                                 </td>
                                 <td class="px-4 py-3 text-center text-xs sm:text-sm whitespace-nowrap">{{ customer.phone || '-' }}</td>
-                                <td class="px-4 py-3 text-center text-xs sm:text-sm whitespace-nowrap">{{ formatDate(customer.registration_date) }}</td>
+                                <td class="px-4 py-3 text-center text-xs sm:text-sm whitespace-nowrap hidden xl:table-cell">{{ formatDate(customer.registration_date) }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap">{{ customer.package?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap hidden xl:table-cell">{{ customer.area?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap hidden xl:table-cell">{{ customer.odp?.name || '-' }}</td>
