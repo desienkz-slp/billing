@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Kelola Role">
-        <div class="h-full flex flex-col min-h-0 w-full p-2">
+        <div class="flex flex-col w-full p-2">
             
             <!-- Page Header -->
             <div class="sm:flex sm:justify-between sm:items-center mb-8">
