@@ -156,18 +156,26 @@ class CustomerController extends Controller
 
         // Belum Bayar (gabungan Jatuh Tempo + Deadline dari web)
         // Yaitu: tagihan bulan ini belum dibayar, BUKAN pelanggan telat, BUKAN pelanggan baru
-        $belumBayarQuery = \App\Models\MonthlyBalance::where('period', $periodString)
+        $belumBayarBalances = \App\Models\MonthlyBalance::with('customer.package')
+            ->where('period', $periodString)
             ->where('status', '!=', 'paid')
             ->whereNotIn('customer_id', $telatCustomersIds)
-            ->whereNotIn('customer_id', $baruCustomersIds);
+            ->whereNotIn('customer_id', $baruCustomersIds)
+            ->get();
             
-        $belumBayar = $belumBayarQuery->count();
-        $rpBelumBayar = $belumBayarQuery->sum('balance');
+        $belumBayar = $belumBayarBalances->count();
+        $rpBelumBayar = $belumBayarBalances->sum(function ($mb) {
+            return $mb->balance > 0 ? $mb->balance : ($mb->customer ? $mb->customer->getEffectivePrice() : 0);
+        });
         
-        $telatBayarQuery = \App\Models\MonthlyBalance::where('period', '<', $periodString)
-            ->where('status', '!=', 'paid');
+        $telatBayarBalances = \App\Models\MonthlyBalance::with('customer.package')
+            ->where('period', '<', $periodString)
+            ->where('status', '!=', 'paid')
+            ->get();
             
-        $rpTelatBayar = $telatBayarQuery->sum('balance');
+        $rpTelatBayar = $telatBayarBalances->sum(function ($mb) {
+            return $mb->balance > 0 ? $mb->balance : ($mb->customer ? $mb->customer->getEffectivePrice() : 0);
+        });
         $telatBayar = count($telatCustomersIds);
 
         // Lunas Bulan Ini (lunas bulan ini, BUKAN pelanggan telat, BUKAN pelanggan baru)
