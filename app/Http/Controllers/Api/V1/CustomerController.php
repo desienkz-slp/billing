@@ -563,4 +563,22 @@ class CustomerController extends Controller
             'data' => $formatted
         ]);
     }
+
+    /**
+     * GET /api/v1/customers/{customer}/payment-options
+     */
+    public function paymentOptions(\App\Models\Customer $customer): JsonResponse
+    {
+        $service = new \App\Services\PaymentService();
+        $options = $service->getPaymentMonths($customer);
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'customer_id' => $customer->id,
+                'customer_name' => $customer->name,
+                'months' => $options
+            ]
+        ]);
+    }
 }
