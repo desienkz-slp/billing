@@ -50,6 +50,14 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:billing.customers.create');
         Route::put('customers/{customer}', [CustomerController::class, 'update'])
             ->middleware('permission:billing.customers.edit');
+        
+        Route::middleware('permission:billing.customers.edit')->group(function () {
+            Route::post('customers/{customer}/isolate', [CustomerController::class, 'isolate']);
+            Route::post('customers/{customer}/unisolate', [CustomerController::class, 'release']);
+            Route::post('customers/{customer}/leave', [CustomerController::class, 'setLeave']);
+            Route::post('customers/{customer}/unleave', [CustomerController::class, 'removeLeave']);
+        });
+
         Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])
             ->middleware('permission:billing.customers.delete');
 
