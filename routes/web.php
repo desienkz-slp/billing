@@ -69,6 +69,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         
     Route::get('/cust/customers/export', [CustomerController::class, 'export'])->name('cust.customers.export');
     Route::get('/cust/customers/import-template', [CustomerController::class, 'importTemplate'])->name('cust.customers.import-template');
+    Route::post('/cust/customers/import-preview', [CustomerController::class, 'importPreview'])->name('cust.customers.import-preview');
     Route::post('/cust/customers/import', [CustomerController::class, 'import'])->name('cust.customers.import');
     Route::get('/cust/customers', [CustomerController::class, 'index'])->name('cust.customers.index');
     Route::get('/cust/customers/create', [CustomerController::class, 'create'])
