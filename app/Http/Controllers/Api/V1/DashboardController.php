@@ -38,12 +38,12 @@ class DashboardController extends Controller
 
         // Total pengeluaran
         $totalExpenses = Expense::where('created_by', $user->id)
-            ->whereBetween('date', [$startDate, $endDate])
+            ->whereBetween('expense_date', [$startDate, $endDate])
             ->sum('amount');
 
         // Total Setoran
-        $totalSetoran = Setoran::where('sales_id', $user->id)
-            ->whereBetween('date', [$startDate, $endDate])
+        $totalSetoran = \App\Models\Deposit::where('sales_id', $user->id)
+            ->whereBetween('deposit_date', [$startDate, $endDate])
             ->sum('amount');
 
         // Sederhanakan kalkulasi Wajib Setor:
