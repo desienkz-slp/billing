@@ -1,0 +1,8 @@
+<?php
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-27 01:21:30              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Http\Controllers\Api\V1; use App\Http\Controllers\Controller; use App\Http\Resources\AreaResource; use App\Models\Area; use Illuminate\Http\JsonResponse; use Illuminate\Http\Request; class AreaController extends Controller { public function index() { return AreaResource::collection(Area::withCount('customers')->orderBy('name')->get()); } public function store(Request $DVgdY): JsonResponse { goto hUsJk; e4ulH: return (new AreaResource($sq0eq))->response()->setStatusCode(201); goto Bq7To; hUsJk: $UStHU = $DVgdY->validate(['name' => 'required|string|max:100', 'description' => 'nullable|string|max:500']); goto PKeyo; PKeyo: $sq0eq = Area::create($UStHU); goto e4ulH; Bq7To: } public function show(Area $sq0eq): AreaResource { return new AreaResource($sq0eq->loadCount('customers')); } public function update(Request $DVgdY, Area $sq0eq): AreaResource { goto Fd7Z7; Fd7Z7: $UStHU = $DVgdY->validate(['name' => 'required|string|max:100', 'description' => 'nullable|string|max:500']); goto dbe9A; dbe9A: $sq0eq->update($UStHU); goto RWnQ9; RWnQ9: return new AreaResource($sq0eq); goto hnP5R; hnP5R: } public function destroy(Area $sq0eq): JsonResponse { goto fh2J6; N4j6h: $sq0eq->delete(); goto KvkJ7; KvkJ7: return response()->json(['message' => 'Area berhasil dihapus.']); goto Z8aiS; fh2J6: if ($sq0eq->customers()->count() > 0) { return response()->json(['message' => 'Area masih digunakan pelanggan.'], 422); } goto N4j6h; Z8aiS: } }

@@ -1,8 +1,0 @@
-<?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 10:49:52              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- namespace App\Services; use App\Models\Server; use Illuminate\Support\Facades\Http; use Illuminate\Support\Facades\Log; class GeniAcsService { public function rebootDevice(string $ghCfR): bool { goto aOzvM; RY3Rf: try { $ZijlW = Http::withBasicAuth($c2I8d->username, $c2I8d->getDecryptedPassword())->get($PQ3KB, ['query' => $aU3Kf]); if ($ZijlW->successful()) { goto BRemp; BRemp: $nTBnf = $ZijlW->json(); goto SNZiJ; MUIim: return $S_EvM->successful(); goto AGlDc; A3Vlv: $uffW1 = $nTBnf[0]['_id']; goto eZzZ5; SNZiJ: if (empty($nTBnf)) { return false; } goto A3Vlv; TYtFl: $S_EvM = Http::withBasicAuth($c2I8d->username, $c2I8d->getDecryptedPassword())->post($NVOPX, ['name' => 'reboot']); goto MUIim; eZzZ5: $NVOPX = "http://{$bAvfi}:{$kR9WK}/devices/" . urlencode($uffW1) . "/tasks"; goto TYtFl; AGlDc: } } catch (\Throwable $a_tGM) { Log::error("GeniACS Reboot Failed: " . $a_tGM->getMessage()); } goto qpAzK; pHRnZ: $kR9WK = $c2I8d->port ?? 7557; goto AOiwX; qpAzK: return false; goto EcFJW; EI79e: $aU3Kf = '{"$or": [{"VirtualParameters.pppoe_username": "' . $ghCfR . '"}, {"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username": "' . $ghCfR . '"}]}'; goto RY3Rf; AOiwX: $PQ3KB = "http://{$bAvfi}:{$kR9WK}/devices"; goto EI79e; TJbXx: $bAvfi = rtrim($c2I8d->host, '/'); goto pHRnZ; aOzvM: $c2I8d = Server::where('type', 'geniacs')->first(); goto azvpb; azvpb: if (!$c2I8d) { return false; } goto TJbXx; EcFJW: } }

@@ -1,8 +1,0 @@
-<?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 11:29:45              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- namespace App\Http\Controllers\Api\V1; use App\Http\Controllers\Controller; use App\Http\Resources\AreaResource; use App\Models\Area; use Illuminate\Http\JsonResponse; use Illuminate\Http\Request; class AreaController extends Controller { public function index() { return AreaResource::collection(Area::withCount('customers')->orderBy('name')->get()); } public function store(Request $u9qhv): JsonResponse { goto jN6GB; CUNpc: return (new AreaResource($d7I4w))->response()->setStatusCode(201); goto dFEMa; jN6GB: $dlF3_ = $u9qhv->validate(['name' => 'required|string|max:100', 'description' => 'nullable|string|max:500']); goto fZOa2; fZOa2: $d7I4w = Area::create($dlF3_); goto CUNpc; dFEMa: } public function show(Area $d7I4w): AreaResource { return new AreaResource($d7I4w->loadCount('customers')); } public function update(Request $u9qhv, Area $d7I4w): AreaResource { goto IW50a; YlH_J: $d7I4w->update($dlF3_); goto gE_5J; gE_5J: return new AreaResource($d7I4w); goto n179a; IW50a: $dlF3_ = $u9qhv->validate(['name' => 'required|string|max:100', 'description' => 'nullable|string|max:500']); goto YlH_J; n179a: } public function destroy(Area $d7I4w): JsonResponse { goto LuFYq; zzjV8: return response()->json(['message' => 'Area berhasil dihapus.']); goto ymibZ; jyxRV: $d7I4w->delete(); goto zzjV8; LuFYq: if ($d7I4w->customers()->count() > 0) { return response()->json(['message' => 'Area masih digunakan pelanggan.'], 422); } goto jyxRV; ymibZ: } }
