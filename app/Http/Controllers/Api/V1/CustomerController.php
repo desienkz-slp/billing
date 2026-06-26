@@ -376,4 +376,60 @@ class CustomerController extends Controller
             'data' => $formatted
         ]);
     }
+
+    /**
+     * GET /api/v1/customers/dashboard-telat-bayar
+     */
+    public function dashboardTelatBayar(Request $request): JsonResponse
+    {
+        $month = $request->input('month', date('m'));
+        $year = $request->input('year', date('Y'));
+        
+        $periodString = "{$year}-" . str_pad($month, 2, '0', STR_PAD_LEFT);
+
+        $telatCustomersIds = \App\Models\MonthlyBalance::whereHas('customer')
+            ->where('period', '<', $periodString)
+            ->where('status', '!=', 'paid')
+            ->pluck('customer_id')
+            ->unique()
+            ->toArray();
+
+        $customers = Customer::with(['monthlyBalances', 'package'])
+            ->whereIn('id', $telatCustomersIds)
+            ->get();
+
+        $currentPeriod = now()->format('Y-m');
+        $currentDay = now()->day;
+
+        $formatted = $customers->map(function ($customer) use ($currentPeriod, $currentDay) {
+            $totalUnpaid = $customer->monthlyBalances->where('status', '!=', 'paid')->sum('balance');
+            
+            $statusStr = 'Telat Bayar';
+
+            return [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'payment_status' => $statusStr,
+                'total_unpaid' => $totalUnpaid,
+                'phone' => $customer->phone,
+                'is_isolated' => (bool) $customer->is_isolated,
+                'is_on_leave' => (bool) $customer->is_on_leave,
+                'billing_date' => $customer->billing_date
+            ];
+        });
+
+        $user = $request->user();
+        $capabilities = [
+            'view_customers' => $user ? $user->hasCapability('billing.customers.view') : false,
+            'edit_customers' => $user ? $user->hasCapability('billing.customers.edit') : false,
+            'create_payments' => $user ? $user->hasCapability('billing.payments.create') : false,
+            'send_wa' => $user ? $user->hasCapability('operational.whatsapp.send') : false,
+        ];
+
+        return response()->json([
+            'status' => 'success',
+            'capabilities' => $capabilities,
+            'data' => $formatted
+        ]);
+    }
 }

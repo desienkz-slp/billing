@@ -36,6 +36,7 @@ Route::prefix('v1')->group(function () {
         Route::get('customers/dashboard-stats', [CustomerController::class, 'dashboardStats']);
         Route::get('customers/dashboard-search', [CustomerController::class, 'dashboardSearch']);
         Route::get('customers/dashboard-belum-bayar', [CustomerController::class, 'dashboardBelumBayar']);
+        Route::get('customers/dashboard-telat-bayar', [CustomerController::class, 'dashboardTelatBayar']);
         Route::middleware('permission:billing.customers.view')->group(function () {
             Route::get('customers', [CustomerController::class, 'index']);
             Route::get('customers/stats', [CustomerController::class, 'stats']);
