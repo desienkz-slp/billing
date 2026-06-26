@@ -44,8 +44,8 @@ Route::prefix('v1')->group(function () {
         Route::middleware('permission:billing.customers.view')->group(function () {
             Route::get('customers', [CustomerController::class, 'index']);
             Route::get('customers/stats', [CustomerController::class, 'stats']);
-            Route::get('customers/{customer}', [CustomerController::class, 'show']);
         });
+        Route::get('customers/{customer}', [CustomerController::class, 'show']);
         Route::post('customers', [CustomerController::class, 'store'])
             ->middleware('permission:billing.customers.create');
         Route::put('customers/{customer}', [CustomerController::class, 'update'])
