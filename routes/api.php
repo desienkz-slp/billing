@@ -1,8 +1,81 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-25 11:23:32              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
+
+use App\Http\Controllers\Api\V1\AreaController;
+use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\CustomerController;
+use App\Http\Controllers\Api\V1\PackageController;
+use App\Http\Controllers\Api\V1\PaymentController;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes — /api/v1/*
+|--------------------------------------------------------------------------
 */
- use App\Http\Controllers\Api\V1\AreaController; use App\Http\Controllers\Api\V1\AuthController; use App\Http\Controllers\Api\V1\CustomerController; use App\Http\Controllers\Api\V1\PackageController; use App\Http\Controllers\Api\V1\PaymentController; use Illuminate\Support\Facades\Route; Route::prefix('v1')->group(function () { goto aVg5i; YFlxq: Route::post('login', [AuthController::class, 'login']); goto fIPmx; aVg5i: Route::get('/', fn() => response()->json(['app' => 'LadaPala-Bill API', 'version' => '1.0.0', 'status' => 'ok'])); goto YFlxq; fIPmx: Route::middleware(['auth:sanctum', 'tenant'])->group(function () { goto RRCAs; dX9FR: Route::get('tracking/live', [\App\Http\Controllers\Api\V1\TrackingController::class, 'liveLocations']); goto R6qCF; Jr5Cm: Route::put('customers/{customer}', [CustomerController::class, 'update'])->middleware('permission:billing.customers.edit'); goto jf7WY; VUclF: Route::apiResource('areas', AreaController::class)->middleware('permission:master.areas.manage'); goto vcKR8; GDz18: Route::post('tracking/update', [\App\Http\Controllers\Api\V1\TrackingController::class, 'updateLocation']); goto dX9FR; jf7WY: Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->middleware('permission:billing.customers.delete'); goto i7p4z; c1OK5: Route::post('payments', [PaymentController::class, 'store'])->middleware('permission:billing.payments.create'); goto pkA7y; iHquw: Route::apiResource('invoices', \App\Http\Controllers\Api\V1\InvoiceController::class); goto GDz18; nopDB: Route::get('me', [AuthController::class, 'me']); goto I33tC; sizRt: Route::apiResource('odps', \App\Http\Controllers\Api\V1\OdpController::class); goto C__10; R6qCF: Route::post('auth/fcm-token', [AuthController::class, 'updateFcmToken']); goto PbbqF; pkA7y: Route::post('payments/{payment}/cancel', [PaymentController::class, 'cancel'])->middleware('permission:billing.payments.cancel'); goto TuKGc; C__10: Route::apiResource('odcs', \App\Http\Controllers\Api\V1\OdcController::class); goto Y1YKL; vcKR8: Route::apiResource('routers', \App\Http\Controllers\Api\V1\RouterController::class); goto sizRt; TGstL: Route::post('customers', [CustomerController::class, 'store'])->middleware('permission:billing.customers.create'); goto Jr5Cm; Y1YKL: Route::apiResource('expenses', \App\Http\Controllers\Api\V1\ExpenseController::class); goto iHquw; RRCAs: Route::post('logout', [AuthController::class, 'logout']); goto nopDB; TuKGc: Route::apiResource('packages', PackageController::class)->middleware('permission:master.packages.manage'); goto VUclF; i7p4z: Route::middleware('permission:billing.payments.view')->group(function () { goto P1c0C; P1c0C: Route::get('payments', [PaymentController::class, 'index']); goto apmYq; apmYq: Route::get('payments/summary', [PaymentController::class, 'summary']); goto ulIMk; ulIMk: Route::get('payments/{payment}', [PaymentController::class, 'show']); goto YFHju; YFHju: }); goto c1OK5; PbbqF: Route::get('payments/{payment}/print-data', [PaymentController::class, 'printData']); goto oaaKk; I33tC: Route::middleware('permission:billing.customers.view')->group(function () { goto j7Pz0; oyrTg: Route::get('customers/stats', [CustomerController::class, 'stats']); goto jF6Zl; jF6Zl: Route::get('customers/{customer}', [CustomerController::class, 'show']); goto OkoZE; j7Pz0: Route::get('customers', [CustomerController::class, 'index']); goto oyrTg; OkoZE: }); goto TGstL; oaaKk: }); goto xh4in; xh4in: });
+
+Route::prefix('v1')->group(function () {
+
+    // Public API info
+    Route::get('/', fn () => response()->json([
+        'app' => 'LadaPala-Bill API',
+        'version' => '1.0.0',
+        'status' => 'ok',
+    ]));
+
+    // Auth (guest)
+    Route::post('login', [AuthController::class, 'login']);
+
+    // Protected routes
+    Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
+        // Auth
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('me', [AuthController::class, 'me']);
+
+        // === CUSTOMERS ===
+        Route::middleware('permission:billing.customers.view')->group(function () {
+            Route::get('customers', [CustomerController::class, 'index']);
+            Route::get('customers/stats', [CustomerController::class, 'stats']);
+            Route::get('customers/{customer}', [CustomerController::class, 'show']);
+        });
+        Route::post('customers', [CustomerController::class, 'store'])
+            ->middleware('permission:billing.customers.create');
+        Route::put('customers/{customer}', [CustomerController::class, 'update'])
+            ->middleware('permission:billing.customers.edit');
+        Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])
+            ->middleware('permission:billing.customers.delete');
+
+        // === PAYMENTS ===
+        Route::middleware('permission:billing.payments.view')->group(function () {
+            Route::get('payments', [PaymentController::class, 'index']);
+            Route::get('payments/summary', [PaymentController::class, 'summary']);
+            Route::get('payments/{payment}', [PaymentController::class, 'show']);
+        });
+        Route::post('payments', [PaymentController::class, 'store'])
+            ->middleware('permission:billing.payments.create');
+        Route::post('payments/{payment}/cancel', [PaymentController::class, 'cancel'])
+            ->middleware('permission:billing.payments.cancel');
+
+        // === MASTER DATA ===
+        Route::apiResource('packages', PackageController::class)
+            ->middleware('permission:master.packages.manage');
+        Route::apiResource('areas', AreaController::class)
+            ->middleware('permission:master.areas.manage');
+            
+        Route::apiResource('routers', \App\Http\Controllers\Api\V1\RouterController::class);
+        Route::apiResource('odps', \App\Http\Controllers\Api\V1\OdpController::class);
+        Route::apiResource('odcs', \App\Http\Controllers\Api\V1\OdcController::class);
+        Route::apiResource('expenses', \App\Http\Controllers\Api\V1\ExpenseController::class);
+        Route::apiResource('invoices', \App\Http\Controllers\Api\V1\InvoiceController::class);
+
+        // === TRACKING & NOTIFICATIONS ===
+        Route::post('tracking/update', [\App\Http\Controllers\Api\V1\TrackingController::class, 'updateLocation']);
+        Route::get('tracking/live', [\App\Http\Controllers\Api\V1\TrackingController::class, 'liveLocations']);
+        
+        Route::post('auth/fcm-token', [AuthController::class, 'updateFcmToken']);
+        
+        // === PRINTER ===
+        Route::get('payments/{payment}/print-data', [PaymentController::class, 'printData']);
+
+        // Phase 3+ endpoints will be added here
+    });
+});

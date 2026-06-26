@@ -67,6 +67,9 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('/cust/customers/trashed/batch-force-delete', [CustomerController::class, 'batchForceDelete'])
         ->middleware('permission:can_delete_customer')->name('cust.customers.batch-force-delete');
         
+    Route::get('/cust/customers/export', [CustomerController::class, 'export'])->name('cust.customers.export');
+    Route::get('/cust/customers/import-template', [CustomerController::class, 'importTemplate'])->name('cust.customers.import-template');
+    Route::post('/cust/customers/import', [CustomerController::class, 'import'])->name('cust.customers.import');
     Route::get('/cust/customers', [CustomerController::class, 'index'])->name('cust.customers.index');
     Route::get('/cust/customers/create', [CustomerController::class, 'create'])
         ->middleware('permission:can_input_customer')->name('cust.customers.create');
