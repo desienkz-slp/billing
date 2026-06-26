@@ -11,6 +11,13 @@ if [ "$EUID" -ne 0 ]; then
   echo "==============================================="
 fi
 
+echo "Memperbarui kode aplikasi dari repositori..."
+git fetch
+git reset --hard origin/master
+git pull origin master
+echo "Kode berhasil diperbarui!"
+
+
 # Fungsi cek perintah (dependency)
 check_command() {
     if ! command -v "$1" &> /dev/null; then
