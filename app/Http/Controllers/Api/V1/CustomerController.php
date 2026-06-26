@@ -309,7 +309,8 @@ class CustomerController extends Controller
                 'total_unpaid' => $totalUnpaid,
                 'phone' => $customer->phone,
                 'is_isolated' => (bool) $customer->is_isolated,
-                'is_on_leave' => (bool) $customer->is_on_leave
+                'is_on_leave' => (bool) $customer->is_on_leave,
+                'billing_date' => $customer->billing_date
             ];
         });
 
