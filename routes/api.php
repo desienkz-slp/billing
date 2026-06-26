@@ -30,6 +30,7 @@ Route::prefix('v1')->group(function () {
         // Auth
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
+        Route::get('dashboard', [\App\Http\Controllers\Api\V1\DashboardController::class, 'index']);
 
         // === CUSTOMERS ===
         Route::middleware('permission:billing.customers.view')->group(function () {
