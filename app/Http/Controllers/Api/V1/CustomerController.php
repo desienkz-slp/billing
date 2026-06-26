@@ -133,40 +133,71 @@ class CustomerController extends Controller
         // Total Pelanggan (semua)
         $totalPelanggan = Customer::count();
 
-        // Pelanggan Baru di bulan ini
-        $pelangganBaru = Customer::whereMonth('registration_date', $month)
+        // 1. Dapatkan IDs untuk "Telat" (punya tagihan bulan-bulan sebelumnya yang belum dibayar)
+        $telatCustomersIds = \App\Models\MonthlyBalance::whereHas('customer')
+            ->where('period', '<', $periodString)
+            ->where('status', '!=', 'paid')
+            ->pluck('customer_id')
+            ->unique()
+            ->toArray();
+
+        // 2. Dapatkan IDs untuk "Baru" (daftar di bulan yang difilter)
+        $baruCustomersIds = Customer::whereMonth('registration_date', $month)
             ->whereYear('registration_date', $year)
-            ->count();
+            ->pluck('id')
+            ->toArray();
 
-        // Belum Bayar (unpaid bulan ini)
-        $belumBayar = \App\Models\MonthlyBalance::where('period', $periodString)
-            ->where('status', 'unpaid')
-            ->count();
+        $pelangganBaru = count($baruCustomersIds);
+        $telatBayar = count($telatCustomersIds);
 
-        // Telat Bayar (unpaid bulan-bulan sebelumnya)
-        $telatBayar = \App\Models\MonthlyBalance::where('period', '<', $periodString)
-            ->where('status', 'unpaid')
-            ->count();
+        $rpPelanggan = Customer::where('customers.status', 'active')
+            ->join('packages', 'customers.package_id', '=', 'packages.id')
+            ->sum('packages.price');
 
-        // Lunas Bulan Ini
-        $lunasBulanIni = \App\Models\MonthlyBalance::where('period', $periodString)
+        // Belum Bayar (gabungan Jatuh Tempo + Deadline dari web)
+        // Yaitu: tagihan bulan ini belum dibayar, BUKAN pelanggan telat, BUKAN pelanggan baru
+        $belumBayarQuery = \App\Models\MonthlyBalance::where('period', $periodString)
+            ->where('status', '!=', 'paid')
+            ->whereNotIn('customer_id', $telatCustomersIds)
+            ->whereNotIn('customer_id', $baruCustomersIds);
+            
+        $belumBayar = $belumBayarQuery->count();
+        $rpBelumBayar = $belumBayarQuery->sum('balance');
+        
+        $rpTelatBayar = \App\Models\MonthlyBalance::where('period', '<', $periodString)
+            ->where('status', '!=', 'paid')
+            ->sum('balance');
+
+        // Lunas Bulan Ini (lunas bulan ini, BUKAN pelanggan telat, BUKAN pelanggan baru)
+        $lunasBulanIniQuery = \App\Models\MonthlyBalance::where('period', $periodString)
             ->where('status', 'paid')
-            ->count();
+            ->whereNotIn('customer_id', $telatCustomersIds)
+            ->whereNotIn('customer_id', $baruCustomersIds);
+            
+        $lunasBulanIni = $lunasBulanIniQuery->count();
+        $rpLunasBulanIni = $lunasBulanIniQuery->sum('paid_amount');
 
         // Transaksi Bulan Ini (jumlah payment yang dilakukan pada bulan tersebut)
-        $transaksiBulanIni = \App\Models\Payment::whereBetween('payment_date', [$startDate, $endDate])
-            ->where('status', '!=', 'cancelled')
-            ->count();
+        $transaksiQuery = \App\Models\Payment::whereBetween('payment_date', [$startDate, $endDate])
+            ->where('status', '!=', 'cancelled');
+            
+        $transaksiBulanIni = $transaksiQuery->count();
+        $rpTransaksiBulanIni = $transaksiQuery->sum('paid_amount');
 
         return response()->json([
             'status' => 'success',
             'data' => [
                 'total_pelanggan' => $totalPelanggan,
+                'rp_pelanggan' => (int) $rpPelanggan,
                 'pelanggan_baru' => $pelangganBaru,
                 'belum_bayar' => $belumBayar,
+                'rp_belum_bayar' => (int) $rpBelumBayar,
                 'telat_bayar' => $telatBayar,
+                'rp_telat_bayar' => (int) $rpTelatBayar,
                 'lunas_bulan_ini' => $lunasBulanIni,
+                'rp_lunas_bulan_ini' => (int) $rpLunasBulanIni,
                 'transaksi_bulan_ini' => $transaksiBulanIni,
+                'rp_transaksi_bulan_ini' => (int) $rpTransaksiBulanIni,
             ]
         ]);
     }
