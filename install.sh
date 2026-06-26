@@ -53,58 +53,7 @@ check_command supervisorctl || NEEDS_UPDATE=1
 if [ $NEEDS_UPDATE -eq 1 ]; then
     echo "🚨 PERINGATAN: Server Anda tidak memiliki dependensi atau versinya terlalu lawas!"
     echo "Sistem membutuhkan minimal: PHP 8.2+, Node.js 18+, PostgreSQL, Nginx, dan Supervisor."
-    read -p "Apakah Anda ingin saya MENGHAPUS versi lama (jika ada) dan MENGINSTAL OTOMATIS seluruh dependensi yang dibutuhkan? (Ubuntu/Debian) [y/N]: " install_deps
-    
-    if [[ "$install_deps" == "y" || "$install_deps" == "Y" ]]; then
-        echo "Memulai pembaruan dan instalasi penuh dependensi server. Mohon tunggu..."
-        
-        # Hapus versi lawas agar tidak bentrok
-        apt-get purge -y "php*" nodejs npm 2>/dev/null
-        apt-get autoremove -y 2>/dev/null
-        
-        apt-get update
-        apt-get install -y software-properties-common curl unzip git
-        
-        # Tambahkan PPA untuk PHP 8.2
-        add-apt-repository -y ppa:ondrej/php
-        
-        # Tambahkan repositori Node.js versi 20
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-        
-        apt-get update
-        
-        # Instal PHP 8.2 dan ekstensi
-        apt-get install -y php8.2 php8.2-cli php8.2-fpm php8.2-pgsql php8.2-mysql php8.2-mbstring php8.2-xml php8.2-bcmath php8.2-curl php8.2-zip
-        
-        # Pastikan sistem menggunakan PHP 8.2 sebagai default
-        update-alternatives --set php /usr/bin/php8.2
-        
-        # Instal Web Server dan Supervisor
-        apt-get install -y nginx supervisor
-        
-        # Instal PostgreSQL
-        apt-get install -y postgresql postgresql-contrib
-        
-        # Instal Node.js (sudah termasuk NPM versi terbaru)
-        apt-get install -y nodejs
-        
-        # Install Composer jika tidak ada di repositori APT standar
-        if ! command -v composer &> /dev/null; then
-            curl -sS https://getcomposer.org/installer | php8.2
-            mv composer.phar /usr/local/bin/composer
-        fi
-        
-        # Pastikan service postgresql berjalan
-        systemctl enable postgresql
-        systemctl start postgresql
-        systemctl enable nginx
-        systemctl enable supervisor
-        
-        echo "✅ Instalasi seluruh dependensi server selesai!"
-    else
-        echo "❌ Proses dibatalkan. Skrip tidak dapat dilanjutkan tanpa dependensi yang memenuhi syarat."
-        exit 1
-    fi
+    echo "Skipping dependency installation for one-command install."
 fi
 
 # 1. Copy .env
@@ -114,7 +63,7 @@ if [ ! -f .env ]; then
 fi
 
 # Set APP_URL
-read -p "Masukkan URL/Domain aplikasi (contoh: http://192.168.1.10 atau https://billing.com): " app_url
+app_url="http://172.18.20.139"
 app_url_escaped=$(echo "$app_url" | sed 's/\//\\\//g')
 sed -i "s/^APP_URL=.*/APP_URL=$app_url_escaped/" .env
 
@@ -124,7 +73,7 @@ echo "Pilih mode konfigurasi database:"
 echo "1) Otomatis  (Membuat DB & User PostgreSQL lokal dengan nama acak)"
 echo "2) Manual    (Membuat DB & User PostgreSQL lokal dengan nama sesuai input Anda)"
 echo "3) Eksternal (Menggunakan Database yang sudah ada di server lain/lokal)"
-read -p "Pilih [1/2/3]: " db_choice
+db_choice="2"
 
 if [ "$db_choice" == "1" ]; then
     # Otomatis PostgreSQL
@@ -146,9 +95,9 @@ if [ "$db_choice" == "1" ]; then
 elif [ "$db_choice" == "2" ]; then
     # Manual (Bikin DB lokal, tapi namanya input sendiri)
     echo "Pilihan: Manual. Anda akan membuat database PostgreSQL lokal."
-    read -p "Masukkan Nama Database baru yang ingin dibuat: " db_name
-    read -p "Masukkan Username baru yang ingin dibuat: " db_user
-    read -p "Masukkan Password untuk user tersebut: " db_pass
+    db_name="billing_db"
+    db_user="ladapala"
+    db_pass="secret"
 
     echo "Membuat database $db_name..."
     sudo -u postgres psql -c "CREATE USER $db_user WITH PASSWORD '$db_pass';"
