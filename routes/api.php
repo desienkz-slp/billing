@@ -39,10 +39,12 @@ Route::prefix('v1')->group(function () {
         Route::get('customers/dashboard-telat-bayar', [CustomerController::class, 'dashboardTelatBayar']);
         Route::get('customers/dashboard-lunas-bulan-ini', [CustomerController::class, 'dashboardLunasBulanIni']);
         Route::get('customers/dashboard-transaksi-bulan-ini', [CustomerController::class, 'dashboardTransaksiBulanIni']);
+        Route::get('customers/{customer}/payment-options', [CustomerController::class, 'paymentOptions'])
+            ->middleware('permission:billing.payments.create');
+            
         Route::middleware('permission:billing.customers.view')->group(function () {
             Route::get('customers', [CustomerController::class, 'index']);
             Route::get('customers/stats', [CustomerController::class, 'stats']);
-            Route::get('customers/{customer}/payment-options', [CustomerController::class, 'paymentOptions']);
             Route::get('customers/{customer}', [CustomerController::class, 'show']);
         });
         Route::post('customers', [CustomerController::class, 'store'])
