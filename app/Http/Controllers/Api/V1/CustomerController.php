@@ -41,6 +41,12 @@ class CustomerController extends Controller
         if ($request->has('is_isolated')) {
             $query->where('is_isolated', $request->boolean('is_isolated'));
         }
+        if ($request->has('registered_month')) {
+            $query->whereMonth('registration_date', $request->get('registered_month'));
+        }
+        if ($request->has('registered_year')) {
+            $query->whereYear('registration_date', $request->get('registered_year'));
+        }
 
         $sortBy = $request->get('sort_by', 'name');
         $sortDir = $request->get('sort_dir', 'asc');
