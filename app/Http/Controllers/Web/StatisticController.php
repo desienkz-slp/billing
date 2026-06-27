@@ -69,18 +69,18 @@ class StatisticController extends Controller
 
             case 'payment_summary':
                 $payToday = Payment::where('tenant_id', $tenantId)->whereDate('payment_date', $today)->sum('amount')
-                          + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereDate('date', $today)->sum('amount');
+                          + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereDate('income_date', $today)->sum('amount');
                 
                 $payMonthQ = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$mStart, $mEnd]);
                 $payMonth = $payMonthQ->sum('amount') 
-                          + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('date', [$mStart, $mEnd])->sum('amount');
+                          + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('income_date', [$mStart, $mEnd])->sum('amount');
                 $txnMonth = $payMonthQ->count();
                 
                 $payLastMonth = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$pmStart, $pmEnd])->sum('amount')
-                              + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('date', [$pmStart, $pmEnd])->sum('amount');
+                              + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('income_date', [$pmStart, $pmEnd])->sum('amount');
                 
                 $payYearly = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$yrStart, $yrEnd])->sum('amount')
-                           + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('date', [$yrStart, $yrEnd])->sum('amount');
+                           + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('income_date', [$yrStart, $yrEnd])->sum('amount');
                 
                 $unpaidBalance = MonthlyBalance::where('tenant_id', $tenantId)->where('balance', '>', 0);
                 $unpaidCount = $unpaidBalance->distinct('customer_id')->count('customer_id');
@@ -117,8 +117,8 @@ class StatisticController extends Controller
                 $endDaily = Carbon::today()->endOfDay();
                 $payments = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$startDaily, $endDaily])
                     ->selectRaw('DATE(payment_date) as tgl, SUM(amount) as total')->groupBy('tgl')->get()->keyBy('tgl');
-                $others = \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('date', [$startDaily, $endDaily])
-                    ->selectRaw('DATE(date) as tgl, SUM(amount) as total')->groupBy('tgl')->get()->keyBy('tgl');
+                $others = \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('income_date', [$startDaily, $endDaily])
+                    ->selectRaw('DATE(income_date) as tgl, SUM(amount) as total')->groupBy('tgl')->get()->keyBy('tgl');
                 
                 $daily = [];
                 for ($i = 29; $i >= 0; $i--) {
@@ -134,8 +134,8 @@ class StatisticController extends Controller
                 $startMonthly = Carbon::now()->subMonths(11)->startOfMonth();
                 $payments = Payment::where('tenant_id', $tenantId)->where('payment_date', '>=', $startMonthly)
                     ->selectRaw('to_char(payment_date, \'YYYY-MM\') as bln, SUM(amount) as total')->groupBy('bln')->get()->keyBy('bln');
-                $others = \App\Models\OtherIncome::where('tenant_id', $tenantId)->where('date', '>=', $startMonthly)
-                    ->selectRaw('to_char(date, \'YYYY-MM\') as bln, SUM(amount) as total')->groupBy('bln')->get()->keyBy('bln');
+                $others = \App\Models\OtherIncome::where('tenant_id', $tenantId)->where('income_date', '>=', $startMonthly)
+                    ->selectRaw('to_char(income_date, \'YYYY-MM\') as bln, SUM(amount) as total')->groupBy('bln')->get()->keyBy('bln');
                 
                 $monthly = [];
                 for ($i = 0; $i < 12; $i++) {
@@ -204,7 +204,7 @@ class StatisticController extends Controller
                     ->where('customers.tenant_id', $tenantId)
                     ->where('customers.status', 'active')
                     ->where('customers.is_isolated', false)
-                    ->select(DB::raw('COALESCE(areas.name, "Tanpa Area") as area_name'), DB::raw('COUNT(customers.id) as c'))
+                    ->select(DB::raw('COALESCE(areas.name, \'Tanpa Area\') as area_name'), DB::raw('COUNT(customers.id) as c'))
                     ->groupBy('area_name')
                     ->orderByDesc('c')
                     ->limit(10)
@@ -261,7 +261,7 @@ class StatisticController extends Controller
             case 'net_revenue_detail':
                 $mrr = Customer::where('tenant_id', $tenantId)->where('status', 'active')->where('is_isolated', false)->with('package')->get()->sum(function ($c) { return $c->custom_price ?? $c->package?->price ?? 0; });
                 $kotor = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$mStart, $mEnd])->sum('amount')
-                       + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('date', [$mStart, $mEnd])->sum('amount');
+                       + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('income_date', [$mStart, $mEnd])->sum('amount');
                 $fee_sales = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$mStart, $mEnd])->sum('sales_fee_amount');
                 $fee_kolektor = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$mStart, $mEnd])->sum('collector_fee_amount');
                 
@@ -291,7 +291,7 @@ class StatisticController extends Controller
                 // Handled via net_revenue_detail basically, but let's implement outstanding and avg_days
                 $mrr = Customer::where('tenant_id', $tenantId)->where('status', 'active')->where('is_isolated', false)->with('package')->get()->sum(function ($c) { return $c->custom_price ?? $c->package?->price ?? 0; });
                 $kotor = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$mStart, $mEnd])->sum('amount')
-                       + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('date', [$mStart, $mEnd])->sum('amount');
+                       + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('income_date', [$mStart, $mEnd])->sum('amount');
                 
                 $totalOut = MonthlyBalance::where('tenant_id', $tenantId)->where('balance', '>', 0)->sum('balance');
                 
@@ -367,7 +367,7 @@ class StatisticController extends Controller
                     ->leftJoin('areas', 'customers.area_id', '=', 'areas.id')
                     ->where('payments.tenant_id', $tenantId)
                     ->whereBetween('payments.payment_date', [$mStart, $mEnd])
-                    ->select(DB::raw('COALESCE(areas.name, "Tanpa Area") as area_name'), DB::raw('SUM(payments.amount) as revenue'), DB::raw('COUNT(DISTINCT payments.customer_id) as cust_count'))
+                    ->select(DB::raw('COALESCE(areas.name, \'Tanpa Area\') as area_name'), DB::raw('SUM(payments.amount) as revenue'), DB::raw('COUNT(DISTINCT payments.customer_id) as cust_count'))
                     ->groupBy('area_name')
                     ->orderByDesc('revenue')
                     ->limit(15)
@@ -380,7 +380,7 @@ class StatisticController extends Controller
                     ->leftJoin('packages', 'customers.package_id', '=', 'packages.id')
                     ->where('payments.tenant_id', $tenantId)
                     ->whereBetween('payments.payment_date', [$mStart, $mEnd])
-                    ->select(DB::raw('COALESCE(packages.name, "Tanpa Paket") as paket_name'), DB::raw('SUM(payments.amount) as revenue'), DB::raw('COUNT(DISTINCT payments.customer_id) as cust_count'))
+                    ->select(DB::raw('COALESCE(packages.name, \'Tanpa Paket\') as paket_name'), DB::raw('SUM(payments.amount) as revenue'), DB::raw('COUNT(DISTINCT payments.customer_id) as cust_count'))
                     ->groupBy('paket_name')
                     ->orderByDesc('revenue')
                     ->limit(15)
@@ -394,7 +394,7 @@ class StatisticController extends Controller
                     $m = $start->copy()->addMonths($i);
                     $period = $m->format('Y-m');
                     $rev = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$m->copy()->startOfMonth(), $m->copy()->endOfMonth()])->sum('amount')
-                         + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('date', [$m->copy()->startOfMonth(), $m->copy()->endOfMonth()])->sum('amount');
+                         + \App\Models\OtherIncome::where('tenant_id', $tenantId)->whereBetween('income_date', [$m->copy()->startOfMonth(), $m->copy()->endOfMonth()])->sum('amount');
                     $exp = Expense::where('tenant_id', $tenantId)->where('status', 'active')->whereBetween('expense_date', [$m->copy()->startOfMonth(), $m->copy()->endOfMonth()])->sum('amount');
                     $fees = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$m->copy()->startOfMonth(), $m->copy()->endOfMonth()])->sum(DB::raw('sales_fee_amount + collector_fee_amount'));
                     $expTotal = $exp + $fees;
