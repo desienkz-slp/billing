@@ -1,7 +1,7 @@
 <template>
     <AppLayout :title="pageTitle">
         <div class="p-6">
-            <div class="max-w-full h-full flex flex-col min-h-0 w-full mx-auto">
+            <div class="max-w-full flex flex-col w-full mx-auto">
                 <div class="mb-6 flex items-center justify-between">
                     <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Edit Pelanggan: {{ customer.name }}</h1>
                     <button @click="goBack" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700">

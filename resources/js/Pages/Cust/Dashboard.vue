@@ -1,13 +1,21 @@
 <template>
     <AppLayout :title="pageTitle">
-        <div class="px-2 py-1 w-full max-w-full h-full flex flex-col min-h-0 w-full mx-auto">
+        <div class="px-2 py-1 w-full max-w-full flex flex-col w-full mx-auto">
             <!-- Header -->
             <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 sm:px-0 mt-1">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-indigo-600 dark:text-indigo-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                    </svg>
-                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Dashboard</h1>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 sm:w-7 sm:h-7 text-indigo-600 dark:text-indigo-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Dashboard</h1>
+                    </div>
+                    
+                    <input 
+                        type="month" 
+                        v-model="selectedMonth" 
+                        class="rounded-xl border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-blue-500 dark:text-white transition-shadow px-4 py-2" 
+                    />
                 </div>
                 
                 <!-- Wajib Setor Highlight -->
@@ -109,7 +117,7 @@
 
             <!-- Toolbar (Search & Filter) -->
             <div class="mb-4">
-                <div class="flex items-center bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-700 p-1 shadow-sm w-full overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide">
+                <div class="flex items-center flex-wrap bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-700 p-1 shadow-sm w-full gap-y-1 relative z-20">
                     <!-- Per Page -->
                     <select v-model="formFilters.per_page" class="bg-transparent border-none text-sm text-slate-700 dark:text-slate-200 focus:ring-0 cursor-pointer py-1 pl-3 pr-7 min-w-max">
                         <option value="10">10</option>
@@ -139,8 +147,16 @@
                         <option value="isolated">Isolated</option>
                     </select>
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 shrink-0 mx-1"></div>
+                    <!-- Billing Calendar Range Picker -->
+                    <div class="px-2 border-r border-slate-200 dark:border-slate-700">
+                        <BillingCalendarFilter 
+                            :modelValue="{ start: formFilters.billing_start, end: formFilters.billing_end }"
+                            @update:modelValue="val => { formFilters.billing_start = val.start; formFilters.billing_end = val.end }"
+                            :projections="billing_projections"
+                        />
+                    </div>
                     <!-- Search -->
-                    <div class="relative min-w-[120px] w-full">
+                    <div class="relative min-w-[120px] flex-1">
                         <input 
                             v-model="formFilters.search" 
                             type="text" 
@@ -163,7 +179,7 @@
                                 <th scope="col" class="px-2 py-3 w-10 text-center whitespace-nowrap">#</th>
                                 <th scope="col" class="px-3 py-3 text-center whitespace-nowrap">NAMA</th>
                                 <th scope="col" class="px-4 py-3 text-center whitespace-nowrap">WA</th>
-                                <th scope="col" class="px-4 py-3 text-center whitespace-nowrap">DAFTAR</th>
+                                <th scope="col" class="px-4 py-3 text-center whitespace-nowrap hidden xl:table-cell">DAFTAR</th>
                                 <th scope="col" class="px-4 py-3 text-center whitespace-nowrap">PAKET</th>
                                 <th scope="col" class="px-4 py-3 text-center whitespace-nowrap hidden xl:table-cell">AREA</th>
                                 <th scope="col" class="px-4 py-3 text-center whitespace-nowrap hidden xl:table-cell">ODP</th>
@@ -183,7 +199,7 @@
                                     <span v-if="isNewThisMonth(customer.registration_date)" class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300">Baru</span>
                                 </td>
                                 <td class="px-4 py-3 text-center text-xs sm:text-sm whitespace-nowrap">{{ customer.phone || '-' }}</td>
-                                <td class="px-4 py-3 text-center text-xs sm:text-sm whitespace-nowrap">{{ formatDate(customer.registration_date) }}</td>
+                                <td class="px-4 py-3 text-center text-xs sm:text-sm whitespace-nowrap hidden xl:table-cell">{{ formatDate(customer.registration_date) }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap">{{ customer.package?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap hidden xl:table-cell">{{ customer.area?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap hidden xl:table-cell">{{ customer.odp?.name || '-' }}</td>
@@ -288,18 +304,18 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import PaymentModal from '@/Pages/Cust/Customers/Components/PaymentModal.vue';
 import WaModal from '@/Pages/Cust/Customers/Components/WaModal.vue';
+import BillingCalendarFilter from '@/Components/BillingCalendarFilter.vue';
 
 const props = defineProps({
-    capabilities: {
-        type: Array,
-        default: () => [],
-    },
+    capabilities: Array,
     stats: Object,
     customers: Object,
     areas: Array,
     packages: Array,
     users: Array,
     filters: Object,
+    billing_projections: Object,
+    month: String,
 });
 
 const can = (capability) => props.capabilities.includes(capability);
@@ -317,21 +333,38 @@ const formFilters = ref({
     sales_id: props.filters?.sales_id || '',
     per_page: props.filters?.per_page || '10',
     status: props.filters?.status || '',
+    billing_start: props.filters?.billing_start || '',
+    billing_end: props.filters?.billing_end || '',
 });
+
+const getCurrentMonth = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const selectedMonth = ref(props.month || getCurrentMonth());
 
 let searchTimeout;
 watch(formFilters, (newValues) => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-        router.get(route('cust.dashboard'), { ...newValues, kpi_filter: activeKpi.value }, { preserveState: true, replace: true });
+        router.get(route('cust.dashboard'), { ...newValues, kpi_filter: activeKpi.value, month: selectedMonth.value }, { preserveState: true, replace: true });
     }, 300);
 }, { deep: true });
+
+watch(selectedMonth, (newVal) => {
+    router.get(
+        route('cust.dashboard'),
+        { ...formFilters.value, kpi_filter: activeKpi.value, month: newVal },
+        { preserveState: true, preserveScroll: true }
+    );
+});
 
 const filterKpi = (kpi) => {
     activeKpi.value = activeKpi.value === kpi ? '' : kpi;
     router.get(
         route('cust.dashboard'),
-        { ...formFilters.value, kpi_filter: activeKpi.value },
+        { ...formFilters.value, kpi_filter: activeKpi.value, month: selectedMonth.value },
         { preserveState: true, preserveScroll: true }
     );
 };
@@ -340,6 +373,7 @@ const goToPage = (url) => {
     router.get(url, {
         ...formFilters.value,
         kpi_filter: activeKpi.value,
+        month: selectedMonth.value,
     }, { preserveState: true });
 };
 

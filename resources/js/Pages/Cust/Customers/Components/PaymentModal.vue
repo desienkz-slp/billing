@@ -136,6 +136,10 @@
             </p>
 
             <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button @click="printThermal" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    Cetak Struk (58mm)
+                </button>
                 <button @click="printA5Invoice" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                     Cetak Invoice A5
@@ -152,12 +156,65 @@
             </div>
         </div>
 
+        <!-- Komponen Invoice 58mm (Hidden, only for printing) -->
+        <div id="print-thermal" class="hidden">
+            <div style="width: 58mm; max-width: 100%; font-family: monospace; font-size: 12px; margin: 0 auto; padding: 5px; box-sizing: border-box; overflow-wrap: break-word; color: #000; background: #fff;">
+                <div style="text-align: center;">
+                    <img v-if="$page.props.companyProfile?.company_logo" :src="$page.props.companyProfile.company_logo" alt="Logo" style="display: block; max-width: 50px; margin: 0 auto 5px auto; object-fit: contain;">
+                    <h3 style="margin: 0; font-size: 14px; font-weight: bold;">{{ $page.props.companyProfile?.company_nama ?? 'NETORA' }}</h3>
+                    <p style="margin: 0 0 10px 0; font-size: 10px;">{{ $page.props.companyProfile?.company_alamat ?? '-' }}<br>{{ $page.props.companyProfile?.company_telepon ?? '-' }}</p>
+                </div>
+                <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+                
+                <div style="text-align: left; margin: 10px 0; font-size: 11px;">
+                    <div style="display: flex; justify-content: space-between;"><span>No:</span> <span>{{ 'INV-' + form.tgl_bayar.replace(/-/g, '') + '-' + customer?.id }}</span></div>
+                    <div style="display: flex; justify-content: space-between;"><span>Tgl:</span> <span>{{ form.tgl_bayar }}</span></div>
+                    <div style="display: flex; justify-content: space-between;"><span>Ksr:</span> <span>Admin</span></div>
+                </div>
+                <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+                
+                <div style="text-align: left; margin: 10px 0; font-size: 11px;">
+                    <div><span>Nama  :</span> <strong>{{ customer?.name }}</strong></div>
+                    <div><span>Alamat:</span> <span style="font-size: 10px;">{{ customer?.address || '-' }}</span></div>
+                    <div><span>Telp  :</span> <span>{{ customer?.phone || '-' }}</span></div>
+                    <div style="margin-top: 5px;"><span>Prd:</span> <span>{{ form.bulan_bayar.map(b => formatMonth(b)).join(', ') }}</span></div>
+                    <div><span>Paket :</span> <span>{{ customer?.package?.name || '-' }}</span></div>
+                </div>
+                <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+                
+                <div style="text-align: left; margin: 10px 0; font-size: 11px;">
+                    <div style="font-weight: bold; margin-bottom: 2px;">Detail Biaya:</div>
+                    <div style="display: flex; justify-content: space-between;"><span>Langganan</span> <span>{{ formatRupiah(baseTagihan) }}</span></div>
+                    <div v-if="form.diskon > 0" style="display: flex; justify-content: space-between;"><span>Diskon</span> <span>-{{ formatRupiah(form.diskon) }}</span></div>
+                    <div v-if="customerData.pakai_bhp" style="display: flex; justify-content: space-between;"><span>BHP USO ({{ customerData.bhp_uso_rate }}%)</span> <span>{{ formatRupiah(bhpTagihan) }}</span></div>
+                    <div v-if="customerData.pakai_ppn" style="display: flex; justify-content: space-between;"><span>PPN ({{ customerData.ppn_rate }}%)</span> <span>{{ formatRupiah(ppnTagihan) }}</span></div>
+                    <div v-if="customerData.pakai_admin" style="display: flex; justify-content: space-between;"><span>Biaya Tambahan (Admin)</span> <span>{{ formatRupiah(adminTagihan) }}</span></div>
+                </div>
+                <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+                
+                <div style="display: flex; justify-content: space-between; margin: 10px 0; font-weight: bold; font-size: 14px;">
+                    <span>TOTAL</span>
+                    <span>{{ formatRupiah(form.paid_amount) }}</span>
+                </div>
+                <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+                
+                <div style="text-align: center;">
+                    <p style="margin-top: 10px; font-size: 10px;">Terima kasih atas pembayaran Anda.<br>Simpan struk ini sbg bukti sah.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Komponen Invoice A5 (Hidden, only for printing) -->
         <div id="print-invoice" class="hidden">
-            <div class="invoice-container p-8 max-w-[148mm] bg-white mx-auto border" style="font-family: sans-serif; color: #000;">
-                <div class="text-center border-b-2 border-black pb-4 mb-4">
-                    <h1 class="text-2xl font-bold uppercase tracking-wider">BUKTI PEMBAYARAN</h1>
-                    <p class="text-sm text-gray-600">Terima kasih atas pembayaran Anda</p>
+            <div class="invoice-container p-8 max-w-[210mm] bg-white mx-auto border" style="font-family: sans-serif; color: #000;">
+                <div class="flex items-center gap-4 border-b-2 border-black pb-4 mb-4">
+                    <img v-if="$page.props.companyProfile?.company_logo" :src="$page.props.companyProfile.company_logo" class="h-16 w-16 object-cover" />
+                    <div class="flex-1 text-center">
+                        <h1 class="text-2xl font-bold uppercase tracking-wider">BUKTI PEMBAYARAN</h1>
+                        <p class="text-sm font-bold">{{ $page.props.companyProfile?.company_nama ?? 'NETORA' }}</p>
+                        <p class="text-xs text-gray-600">{{ $page.props.companyProfile?.company_alamat ?? '' }}</p>
+                    </div>
+                    <div class="w-16"></div> <!-- Balancer for centering -->
                 </div>
                 
                 <div class="flex justify-between text-sm mb-6">
@@ -358,8 +415,33 @@ const submitPayment = async () => {
     }
 };
 
+const printThermal = () => {
+    document.getElementById('print-style').innerHTML = `
+        @media print {
+            body * { visibility: hidden; }
+            #print-thermal, #print-thermal * { visibility: visible; display: block !important; }
+            #print-thermal { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+            @page { size: 58mm auto; margin: 0; }
+        }
+    `;
+    const printContent = document.getElementById('print-thermal').innerHTML;
+    const originalContent = document.body.innerHTML;
+    document.body.innerHTML = printContent;
+    window.print();
+    document.body.innerHTML = originalContent;
+    window.location.reload();
+};
+
 const printA5Invoice = () => {
     // Inject print styles and trigger print
+    document.getElementById('print-style').innerHTML = `
+        @media print {
+            body * { visibility: hidden; }
+            #print-invoice, #print-invoice * { visibility: visible; display: block !important; }
+            #print-invoice { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+            @page { size: A5 landscape; margin: 0; }
+        }
+    `;
     const printContent = document.getElementById('print-invoice').innerHTML;
     const originalContent = document.body.innerHTML;
 
@@ -387,26 +469,6 @@ const sendInvoiceWA = () => {
 };
 </script>
 
-<style>
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    #print-invoice, #print-invoice * {
-        visibility: visible;
-        display: block !important;
-    }
-    #print-invoice {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-    }
-    @page {
-        size: A5 landscape;
-        margin: 0;
-    }
-}
+<style id="print-style">
+/* Default print style is injected via JS before print */
 </style>

@@ -1,78 +1,8 @@
 <?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-/**
- * Laravel framework tables: cache, jobs, failed_jobs.
- */
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('cache', function (Blueprint $table) {
-            $table->string('key')->primary();
-            $table->mediumText('value');
-            $table->integer('expiration');
-        });
-
-        Schema::create('cache_locks', function (Blueprint $table) {
-            $table->string('key')->primary();
-            $table->string('owner');
-            $table->integer('expiration');
-        });
-
-        Schema::create('jobs', function (Blueprint $table) {
-            $table->id();
-            $table->string('queue')->index();
-            $table->longText('payload');
-            $table->unsignedTinyInteger('attempts');
-            $table->unsignedInteger('reserved_at')->nullable();
-            $table->unsignedInteger('available_at');
-            $table->unsignedInteger('created_at');
-        });
-
-        Schema::create('job_batches', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->string('name');
-            $table->integer('total_jobs');
-            $table->integer('pending_jobs');
-            $table->integer('failed_jobs');
-            $table->longText('failed_job_ids');
-            $table->mediumText('options')->nullable();
-            $table->integer('cancelled_at')->nullable();
-            $table->integer('created_at');
-            $table->integer('finished_at')->nullable();
-        });
-
-        Schema::create('failed_jobs', function (Blueprint $table) {
-            $table->id();
-            $table->string('uuid')->unique();
-            $table->text('connection');
-            $table->text('queue');
-            $table->longText('payload');
-            $table->longText('exception');
-            $table->timestamp('failed_at')->useCurrent();
-        });
-
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('type');
-            $table->morphs('notifiable');
-            $table->text('data');
-            $table->timestamp('read_at')->nullable();
-            $table->timestamps();
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('notifications');
-        Schema::dropIfExists('failed_jobs');
-        Schema::dropIfExists('job_batches');
-        Schema::dropIfExists('jobs');
-        Schema::dropIfExists('cache_locks');
-        Schema::dropIfExists('cache');
-    }
-};
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:38              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { goto Fslz0; DHA3O: Schema::create('notifications', function (Blueprint $EUOFn) { goto iEWol; iEWol: $EUOFn->uuid('id')->primary(); goto sz4S5; n_KmH: $EUOFn->morphs('notifiable'); goto pz19F; sz4S5: $EUOFn->string('type'); goto n_KmH; cut7s: $EUOFn->timestamps(); goto icMkG; pz19F: $EUOFn->text('data'); goto Qkc14; Qkc14: $EUOFn->timestamp('read_at')->nullable(); goto cut7s; icMkG: }); goto SZvUi; Fslz0: Schema::create('cache', function (Blueprint $EUOFn) { goto TqwlO; TqwlO: $EUOFn->string('key')->primary(); goto qY1_x; qY1_x: $EUOFn->mediumText('value'); goto VGxXB; VGxXB: $EUOFn->integer('expiration'); goto vmi6h; vmi6h: }); goto kSZ5k; kSZ5k: Schema::create('cache_locks', function (Blueprint $EUOFn) { goto s1TGt; s1TGt: $EUOFn->string('key')->primary(); goto ESnLb; ESnLb: $EUOFn->string('owner'); goto bVj_X; bVj_X: $EUOFn->integer('expiration'); goto y3JnA; y3JnA: }); goto vVvwV; vVvwV: Schema::create('jobs', function (Blueprint $EUOFn) { goto oH7Z7; PhPNU: $EUOFn->string('queue')->index(); goto jbV4W; nT5tC: $EUOFn->unsignedInteger('reserved_at')->nullable(); goto vpN23; oH7Z7: $EUOFn->id(); goto PhPNU; Yx2RJ: $EUOFn->unsignedInteger('created_at'); goto te1F5; jbV4W: $EUOFn->longText('payload'); goto KJjQ4; KJjQ4: $EUOFn->unsignedTinyInteger('attempts'); goto nT5tC; vpN23: $EUOFn->unsignedInteger('available_at'); goto Yx2RJ; te1F5: }); goto TTv9b; TTv9b: Schema::create('job_batches', function (Blueprint $EUOFn) { goto cdD_q; vT_AU: $EUOFn->mediumText('options')->nullable(); goto kgIMM; fHFjv: $EUOFn->integer('failed_jobs'); goto ClTRF; iLXpu: $EUOFn->integer('created_at'); goto rUZnB; BNsh5: $EUOFn->integer('total_jobs'); goto P5B1x; cdD_q: $EUOFn->string('id')->primary(); goto LDihI; P5B1x: $EUOFn->integer('pending_jobs'); goto fHFjv; LDihI: $EUOFn->string('name'); goto BNsh5; ClTRF: $EUOFn->longText('failed_job_ids'); goto vT_AU; kgIMM: $EUOFn->integer('cancelled_at')->nullable(); goto iLXpu; rUZnB: $EUOFn->integer('finished_at')->nullable(); goto lNMH1; lNMH1: }); goto aXepB; aXepB: Schema::create('failed_jobs', function (Blueprint $EUOFn) { goto vaJHa; Zfuap: $EUOFn->text('queue'); goto GyYDV; GyYDV: $EUOFn->longText('payload'); goto cG3iS; NX66H: $EUOFn->text('connection'); goto Zfuap; yokNR: $EUOFn->timestamp('failed_at')->useCurrent(); goto Gn6bX; cG3iS: $EUOFn->longText('exception'); goto yokNR; vaJHa: $EUOFn->id(); goto BzjNr; BzjNr: $EUOFn->string('uuid')->unique(); goto NX66H; Gn6bX: }); goto DHA3O; SZvUi: } public function down(): void { goto ixYeo; yXBK2: Schema::dropIfExists('cache'); goto GWwcN; XyZHI: Schema::dropIfExists('cache_locks'); goto yXBK2; wMSQO: Schema::dropIfExists('job_batches'); goto zwbeW; a0vLI: Schema::dropIfExists('failed_jobs'); goto wMSQO; ixYeo: Schema::dropIfExists('notifications'); goto a0vLI; zwbeW: Schema::dropIfExists('jobs'); goto XyZHI; GWwcN: } };

@@ -3,20 +3,15 @@
         
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
             <div class="flex justify-center text-indigo-600 dark:text-indigo-400">
-                <svg viewBox="0 0 24 24" class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
+                <img src="/logo-netora.png?v=3" alt="NETORA" class="w-48 h-48 object-contain drop-shadow-sm" />
             </div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-white">
-                LadaPala-Bill
-            </h2>
-            <p class="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
-                Sistem Billing ISP Professional
+            <p class="-mt-4 text-center text-sm font-medium text-slate-600 dark:text-slate-400">
+                NETORA billing system
             </p>
         </div>
 
         <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="bg-white dark:bg-slate-800 py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-slate-100 dark:border-slate-700">
+            <div class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-white/20 dark:border-slate-700">
                 
                 <div v-if="$page.props.flash?.error" class="rounded-md bg-red-50 dark:bg-red-900/30 p-4 mb-6">
                     <div class="flex">
@@ -73,13 +68,13 @@
                     </div>
 
                     <div>
-                        <Button type="submit" class="w-full" :disabled="form.processing">
+                        <button type="submit" class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-xl shadow-md transition-all flex items-center justify-center whitespace-nowrap" :disabled="form.processing">
                             <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                             {{ form.processing ? 'Masuk...' : 'Masuk ke Dashboard' }}
-                        </Button>
+                        </button>
                     </div>
                 </form>
             </div>

@@ -1,52 +1,8 @@
 <?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        // Tambah kolom ke customers
-        Schema::table('customers', function (Blueprint $table) {
-            $table->decimal('fee_persen', 5, 2)->default(0)->after('custom_price');
-            $table->decimal('fee_fix', 12, 2)->default(0)->after('fee_persen');
-            $table->unsignedBigInteger('created_by')->nullable()->after('metadata');
-            $table->string('leave_reason')->nullable()->after('leave_end');
-
-            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
-            $table->index(['tenant_id', 'sales_id']);
-        });
-
-        // Tambah kolom ke users
-        Schema::table('users', function (Blueprint $table) {
-            $table->decimal('fee_persen', 5, 2)->default(0)->after('is_active');
-            $table->decimal('fee_fix', 12, 2)->default(0)->after('fee_persen');
-            $table->decimal('deposit_balance', 12, 2)->default(0)->after('fee_fix');
-            $table->string('deposit_periode', 7)->nullable()->after('deposit_balance');
-            $table->jsonb('perms_view_area_ids')->nullable()->after('deposit_periode');
-            $table->jsonb('perms_view_sales_ids')->nullable()->after('perms_view_area_ids');
-        });
-
-        // Tambah kolom ke payments (fee tracking)
-        Schema::table('payments', function (Blueprint $table) {
-            $table->decimal('fee_amount', 12, 2)->default(0)->after('paid_amount');
-            $table->decimal('company_amount', 12, 2)->default(0)->after('fee_amount');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('payments', function (Blueprint $table) {
-            $table->dropColumn(['fee_amount', 'company_amount']);
-        });
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['fee_persen', 'fee_fix', 'deposit_balance', 'deposit_periode', 'perms_view_area_ids', 'perms_view_sales_ids']);
-        });
-        Schema::table('customers', function (Blueprint $table) {
-            $table->dropForeign(['created_by']);
-            $table->dropColumn(['fee_persen', 'fee_fix', 'created_by', 'leave_reason']);
-        });
-    }
-};
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:38              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { goto gxIzG; Zpqxb: Schema::table('payments', function (Blueprint $EUOFn) { $EUOFn->decimal('fee_amount', 12, 2)->default(0)->after('paid_amount'); $EUOFn->decimal('company_amount', 12, 2)->default(0)->after('fee_amount'); }); goto ZLI9q; gxIzG: Schema::table('customers', function (Blueprint $EUOFn) { goto QM0hO; QM0hO: $EUOFn->decimal('fee_persen', 5, 2)->default(0)->after('custom_price'); goto KLGtv; XbJrz: $EUOFn->foreign('created_by')->references('id')->on('users')->nullOnDelete(); goto h_P6N; KLGtv: $EUOFn->decimal('fee_fix', 12, 2)->default(0)->after('fee_persen'); goto f7gzY; h_P6N: $EUOFn->index(['tenant_id', 'sales_id']); goto ZVbXL; IY5DT: $EUOFn->string('leave_reason')->nullable()->after('leave_end'); goto XbJrz; f7gzY: $EUOFn->unsignedBigInteger('created_by')->nullable()->after('metadata'); goto IY5DT; ZVbXL: }); goto SfWSh; SfWSh: Schema::table('users', function (Blueprint $EUOFn) { goto fW8Sk; fW8Sk: $EUOFn->decimal('fee_persen', 5, 2)->default(0)->after('is_active'); goto FFw7i; BWHi7: $EUOFn->decimal('deposit_balance', 12, 2)->default(0)->after('fee_fix'); goto JB5gg; BhAzf: $EUOFn->jsonb('perms_view_area_ids')->nullable()->after('deposit_periode'); goto IPxo4; IPxo4: $EUOFn->jsonb('perms_view_sales_ids')->nullable()->after('perms_view_area_ids'); goto uu5o1; FFw7i: $EUOFn->decimal('fee_fix', 12, 2)->default(0)->after('fee_persen'); goto BWHi7; JB5gg: $EUOFn->string('deposit_periode', 7)->nullable()->after('deposit_balance'); goto BhAzf; uu5o1: }); goto Zpqxb; ZLI9q: } public function down(): void { goto KNvVi; KNvVi: Schema::table('payments', function (Blueprint $EUOFn) { $EUOFn->dropColumn(['fee_amount', 'company_amount']); }); goto ynxKy; ynxKy: Schema::table('users', function (Blueprint $EUOFn) { $EUOFn->dropColumn(['fee_persen', 'fee_fix', 'deposit_balance', 'deposit_periode', 'perms_view_area_ids', 'perms_view_sales_ids']); }); goto qHyTi; qHyTi: Schema::table('customers', function (Blueprint $EUOFn) { $EUOFn->dropForeign(['created_by']); $EUOFn->dropColumn(['fee_persen', 'fee_fix', 'created_by', 'leave_reason']); }); goto JpFaj; JpFaj: } };

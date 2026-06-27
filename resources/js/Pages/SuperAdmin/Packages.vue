@@ -159,7 +159,7 @@
             </div>
 
             <!-- Form View -->
-            <div v-else class="max-w-full h-full flex flex-col min-h-0 w-full mx-auto">
+            <div v-else class="max-w-full flex flex-col w-full mx-auto">
                 <div class="bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
                     <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                         <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white flex items-center">

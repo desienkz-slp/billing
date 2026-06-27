@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="pageTitle">
-        <div class="h-full flex flex-col min-h-0 w-full p-2">
+        <div class="flex flex-col w-full p-2">
             <!-- Header -->
             <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 sm:px-0">
                 <div class="flex items-center">
@@ -45,7 +45,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">ID Perusahaan</label>
-                                <input v-model="form.company_id" type="text" class="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 bg-slate-50 dark:text-white dark:bg-slate-900/50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all font-mono uppercase" placeholder="Contoh: LADA">
+                                <input v-model="form.company_id" @input="form.company_id = form.company_id.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 6)" maxlength="6" type="text" class="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 bg-slate-50 dark:text-white dark:bg-slate-900/50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all font-mono" placeholder="Contoh: lada12">
                                 <p v-if="form.errors.company_id" class="mt-1 text-xs text-red-500">{{ form.errors.company_id }}</p>
                             </div>
                         </div>

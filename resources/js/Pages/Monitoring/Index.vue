@@ -88,7 +88,7 @@ const formatOfflineDuration = (dateString) => {
 <template>
     <AppLayout :title="pageTitle" :hideSidebar="true">
         <div class="min-h-full font-sans text-slate-800 dark:text-white">
-            <div class="w-full px-4 py-4 h-full flex flex-col">
+            <div class="w-full px-4 py-4 flex flex-col">
 
                 <!-- Status Live Header -->
                 <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md shadow-lg p-3 mb-2">

@@ -1,106 +1,12 @@
 <?php
-
-namespace App\Console\Commands;
-
-use App\Models\Customer;
-use App\Models\CustomerCoordinate;
-use Illuminate\Console\Command;
-
-class GenerateCustomerCoordinates extends Command
-{
-    protected $signature = 'customers:generate-coordinates
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:34              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Console\Commands; use App\Models\Customer; use App\Models\CustomerCoordinate; use Illuminate\Console\Command; class GenerateCustomerCoordinates extends Command { protected $signature = 'customers:generate-coordinates
                             {--base-lat=-8.145000 : Base latitude}
                             {--base-lng=112.285000 : Base longitude}
                             {--spacing=0.0025 : Spacing between customers (degrees)}
-                            {--cols=4 : Number of columns in grid}';
-
-    protected $description = 'Generate dummy coordinates for customers in Desa Jatitengah, Selopuro, Blitar';
-
-    public function handle()
-    {
-        $baseLat = (float) $this->option('base-lat');
-        $baseLng = (float) $this->option('base-lng');
-        $spacing = (float) $this->option('spacing');
-        $cols = (int) $this->option('cols');
-
-        $customers = Customer::all();
-
-        if ($customers->isEmpty()) {
-            $this->error('No customers found.');
-            return 1;
-        }
-
-        $this->info("Generating coordinates for {$customers->count()} customers...");
-        $this->info("Location: Desa Jatitengah, Selopuro, Blitar");
-        $this->info("Spacing: ~" . round($spacing * 111, 1) . " km (~" . round($spacing * 111000, 0) . " meters)");
-
-        $row = 0;
-        $col = 0;
-        $created = 0;
-        $updated = 0;
-
-        $progressBar = $this->output->createProgressBar($customers->count());
-        $progressBar->start();
-
-        foreach ($customers as $customer) {
-            // Calculate grid position
-            $lat = $baseLat + ($row * $spacing);
-            $lng = $baseLng + ($col * $spacing);
-
-            // Add random variation (-50m to +50m)
-            $lat += (mt_rand(-5, 5) / 10000);
-            $lng += (mt_rand(-5, 5) / 10000);
-
-            // Round to 7 decimal places
-            $lat = round($lat, 7);
-            $lng = round($lng, 7);
-
-            // Check if coordinate already exists
-            $exists = CustomerCoordinate::where('customer_id', $customer->id)->exists();
-
-            // Create or update coordinate
-            CustomerCoordinate::updateOrCreate(
-                ['customer_id' => $customer->id],
-                [
-                    'tenant_id' => $customer->tenant_id,
-                    'latitude' => $lat,
-                    'longitude' => $lng,
-                ]
-            );
-
-            if ($exists) {
-                $updated++;
-            } else {
-                $created++;
-            }
-
-            // Move to next grid position
-            $col++;
-            if ($col >= $cols) {
-                $col = 0;
-                $row++;
-            }
-
-            $progressBar->advance();
-        }
-
-        $progressBar->finish();
-        $this->newLine(2);
-
-        $this->info("✅ Coordinates generated successfully!");
-        $this->table(
-            ['Metric', 'Count'],
-            [
-                ['Created', $created],
-                ['Updated', $updated],
-                ['Total', $customers->count()],
-            ]
-        );
-
-        $this->info("Coordinate range:");
-        $this->line("  Latitude:  {$baseLat} to " . round($baseLat + ($row * $spacing), 4));
-        $this->line("  Longitude: {$baseLng} to " . round($baseLng + ($cols * $spacing), 4));
-
-        return 0;
-    }
-}
+                            {--cols=4 : Number of columns in grid}'; protected $description = 'Generate dummy coordinates for customers in Desa Jatitengah, Selopuro, Blitar'; public function handle() { goto sJ_cr; Nzbqu: $N4q4v->finish(); goto Ht6wI; sJ_cr: $JuZXp = (float) $this->option('base-lat'); goto ifdX9; Z8PRj: $this->info("Spacing: ~" . round($FqfBs * 111, 1) . " km (~" . round($FqfBs * 111000, 0) . " meters)"); goto QK_Qg; dUELt: $N4q4v->start(); goto T9ra8; spwF1: $this->line("  Latitude:  {$JuZXp} to " . round($JuZXp + $OcqYk * $FqfBs, 4)); goto Ez2c3; Q3BR_: $N4q4v = $this->output->createProgressBar($RQQSe->count()); goto dUELt; VCjwe: $this->table(['Metric', 'Count'], [['Created', $Cp31b], ['Updated', $dq24O], ['Total', $RQQSe->count()]]); goto lclkQ; fS3e0: $RQQSe = Customer::all(); goto P2UU7; WW4qq: $this->info("✅ Coordinates generated successfully!"); goto VCjwe; ifdX9: $rpibv = (float) $this->option('base-lng'); goto jRdxu; Qdc24: $DG3tN = (int) $this->option('cols'); goto fS3e0; F76pz: $YxcPx = 0; goto KVeKv; EqLM0: $dq24O = 0; goto Q3BR_; QK_Qg: $OcqYk = 0; goto F76pz; jaNj3: $this->info("Generating coordinates for {$RQQSe->count()} customers..."); goto BKwCi; Ht6wI: $this->newLine(2); goto WW4qq; BKwCi: $this->info("Location: Desa Jatitengah, Selopuro, Blitar"); goto Z8PRj; Ez2c3: $this->line("  Longitude: {$rpibv} to " . round($rpibv + $DG3tN * $FqfBs, 4)); goto BpCie; jRdxu: $FqfBs = (float) $this->option('spacing'); goto Qdc24; P2UU7: if ($RQQSe->isEmpty()) { $this->error('No customers found.'); return 1; } goto jaNj3; KVeKv: $Cp31b = 0; goto EqLM0; lclkQ: $this->info("Coordinate range:"); goto spwF1; T9ra8: foreach ($RQQSe as $ODChU) { goto GZF5O; a0U_N: $iNfWo += mt_rand(-5, 5) / 10000; goto oYv6S; oYv6S: $l3cCu = round($l3cCu, 7); goto WON1v; AJmYE: CustomerCoordinate::updateOrCreate(['customer_id' => $ODChU->id], ['tenant_id' => $ODChU->tenant_id, 'latitude' => $l3cCu, 'longitude' => $iNfWo]); goto M12Cj; W0AsT: $l3cCu += mt_rand(-5, 5) / 10000; goto a0U_N; vSVY9: $c5fT0 = CustomerCoordinate::where('customer_id', $ODChU->id)->exists(); goto AJmYE; cUslF: $N4q4v->advance(); goto lFLUN; GZF5O: $l3cCu = $JuZXp + $OcqYk * $FqfBs; goto Vi_8f; M12Cj: if ($c5fT0) { $dq24O++; } else { $Cp31b++; } goto AQejD; AQejD: $YxcPx++; goto Vdt10; Vdt10: if ($YxcPx >= $DG3tN) { $YxcPx = 0; $OcqYk++; } goto cUslF; Vi_8f: $iNfWo = $rpibv + $YxcPx * $FqfBs; goto W0AsT; WON1v: $iNfWo = round($iNfWo, 7); goto vSVY9; lFLUN: } goto Nzbqu; BpCie: return 0; goto vTrT8; vTrT8: } }

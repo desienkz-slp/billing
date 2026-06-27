@@ -1,46 +1,8 @@
 <?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-/**
- * ODC - Optical Distribution Cabinet.
- * Level di atas ODP dalam hierarki jaringan FTTH:
- * OLT → ODC → ODP → Customer
- */
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('odcs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('area_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('name', 100);
-            $table->string('location')->nullable();
-            $table->integer('capacity')->default(96);       // jumlah port splitter
-            $table->integer('used')->default(0);             // port terpakai
-            $table->decimal('latitude', 10, 7)->nullable();
-            $table->decimal('longitude', 10, 7)->nullable();
-            $table->string('description')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-
-            $table->index(['tenant_id', 'area_id']);
-        });
-
-        // Add odc_id to odps table (ODP belongs to ODC)
-        Schema::table('odps', function (Blueprint $table) {
-            $table->foreignId('odc_id')->nullable()->after('area_id')->constrained('odcs')->nullOnDelete();
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('odps', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('odc_id');
-        });
-        Schema::dropIfExists('odcs');
-    }
-};
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:38              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::create('odcs', function (Blueprint $EUOFn) { goto DFghA; KTU8X: $EUOFn->string('name', 100); goto pxCRi; h5K_e: $EUOFn->decimal('latitude', 10, 7)->nullable(); goto esPBh; HJgwK: $EUOFn->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto MmivV; DFghA: $EUOFn->id(); goto HJgwK; uyYrd: $EUOFn->timestamps(); goto TK5zI; fqA5_: $EUOFn->integer('capacity')->default(96); goto IjYwY; IjYwY: $EUOFn->integer('used')->default(0); goto h5K_e; esPBh: $EUOFn->decimal('longitude', 10, 7)->nullable(); goto BrTGp; BrTGp: $EUOFn->string('description')->nullable(); goto tmlHJ; MmivV: $EUOFn->foreignId('area_id')->nullable()->constrained()->nullOnDelete(); goto KTU8X; tmlHJ: $EUOFn->boolean('is_active')->default(true); goto uyYrd; TK5zI: $EUOFn->index(['tenant_id', 'area_id']); goto KTk_U; pxCRi: $EUOFn->string('location')->nullable(); goto fqA5_; KTk_U: }); Schema::table('odps', function (Blueprint $EUOFn) { $EUOFn->foreignId('odc_id')->nullable()->after('area_id')->constrained('odcs')->nullOnDelete(); }); } public function down(): void { Schema::table('odps', function (Blueprint $EUOFn) { $EUOFn->dropConstrainedForeignId('odc_id'); }); Schema::dropIfExists('odcs'); } };

@@ -1,22 +1,8 @@
 <?php
-
-namespace App\Http\Resources;
-
-use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
-
-class PackageResource extends JsonResource
-{
-    public function toArray(Request $request): array
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'speed' => $this->speed,
-            'price' => $this->price,
-            'price_formatted' => 'Rp ' . number_format($this->price, 0, ',', '.'),
-            'description' => $this->description,
-            'is_active' => $this->is_active,
-        ];
-    }
-}
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:35              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Http\Resources; use Illuminate\Http\Request; use Illuminate\Http\Resources\Json\JsonResource; class PackageResource extends JsonResource { public function toArray(Request $CaBx1): array { return ['id' => $this->id, 'name' => $this->name, 'speed' => $this->speed, 'price' => $this->price, 'price_formatted' => 'Rp ' . number_format($this->price, 0, ',', '.'), 'description' => $this->description, 'is_active' => $this->is_active]; } }

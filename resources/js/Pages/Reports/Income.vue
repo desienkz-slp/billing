@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Data Pendapatan (Income)">
-        <div class="p-2 w-full max-w-full w-full mx-auto flex flex-col h-full">
+        <div class="p-2 w-full max-w-full w-full mx-auto flex flex-col">
             <!-- Header Section -->
             <div class="mb-4 flex flex-col gap-4 px-4 sm:px-0">
                 <!-- Top Row: Title & Actions -->

@@ -30,6 +30,13 @@
                             <input v-model="form.phone" type="text" class="w-full rounded-lg border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 dark:text-white transition-shadow" placeholder="+6281234567890" />
                         </div>
 
+                        <!-- Email -->
+                        <div class="space-y-1">
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
+                            <input v-model="form.email" type="email" class="w-full rounded-lg border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 dark:text-white transition-shadow" placeholder="email@contoh.com" />
+                            <p v-if="form.errors.email" class="text-sm text-red-500">{{ form.errors.email }}</p>
+                        </div>
+
                         <!-- Tgl Tagihan & Isolir -->
                         <div class="grid grid-cols-2 gap-4">
                             <div class="space-y-1">
@@ -335,6 +342,7 @@ const form = useForm({
     auto_wa_tagihan: true,
     sync_db_pusat: true,
     name: props.customer?.name || '',
+    email: props.customer?.email || '',
     phone: props.customer?.phone || '+62',
     billing_date: props.customer?.billing_date || 1,
     tgl_isolir: props.customer?.tgl_isolir || 1,

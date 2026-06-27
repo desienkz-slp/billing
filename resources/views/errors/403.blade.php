@@ -1,4 +1,11 @@
-@extends('layouts.app')
+<?php
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-27 04:10:42              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ds('layouts.app')
 @section('title', 'Akses Ditolak')
 
 @section('content')
@@ -10,7 +17,7 @@
         <p style="color:var(--text-muted);font-size:14px;line-height:1.6;margin-bottom:24px;">
             {{ $exception->getMessage() ?: 'Anda tidak memiliki izin untuk mengakses halaman ini. Hubungi administrator untuk mendapatkan akses.' }}
         </p>
-        <a href="{{ route('dashboard') }}" style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;background:var(--accent);color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;transition:all .2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+        <a href="{{ url('/') }}" style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;background:var(--accent);color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;transition:all .2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Kembali ke Dashboard
         </a>

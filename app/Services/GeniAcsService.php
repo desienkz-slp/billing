@@ -1,53 +1,8 @@
 <?php
-
-namespace App\Services;
-
-use App\Models\Server;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-
-class GeniAcsService
-{
-    public function rebootDevice(string $pppoeUsername): bool
-    {
-        $server = Server::where('type', 'geniacs')->first();
-        if (!$server) {
-            return false;
-        }
-
-        $host = rtrim($server->host, '/');
-        $port = $server->port ?? 7557; // Default NBI port
-        $url = "http://{$host}:{$port}/devices";
-
-        // Query device by VirtualParameters.pppoe_username OR InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username
-        // As user suggested, check wan ppp user or virtual parameter
-        $query = '{"$or": [{"VirtualParameters.pppoe_username": "'.$pppoeUsername.'"}, {"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username": "'.$pppoeUsername.'"}]}';
-
-        try {
-            $response = Http::withBasicAuth($server->username, $server->getDecryptedPassword())
-                ->get($url, ['query' => $query]);
-
-            if ($response->successful()) {
-                $devices = $response->json();
-                if (empty($devices)) {
-                    return false; // Not found
-                }
-
-                $deviceId = $devices[0]['_id'];
-
-                // Send reboot task
-                $taskUrl = "http://{$host}:{$port}/devices/" . urlencode($deviceId) . "/tasks";
-                $taskResponse = Http::withBasicAuth($server->username, $server->getDecryptedPassword())
-                    ->post($taskUrl, [
-                        'name' => 'reboot'
-                    ]);
-
-                return $taskResponse->successful();
-            }
-        } catch (\Throwable $e) {
-            Log::error("GeniACS Reboot Failed: " . $e->getMessage());
-        }
-
-        return false;
-    }
-}
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:36              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Services; use App\Models\Server; use Illuminate\Support\Facades\Http; use Illuminate\Support\Facades\Log; class GeniAcsService { public function rebootDevice(string $L6hCZ): bool { goto JeGSa; s0sXY: try { $MJBpf = Http::withBasicAuth($I8WAD->username, $I8WAD->getDecryptedPassword())->get($ndC2F, ['query' => $Oa5s4]); if ($MJBpf->successful()) { goto DN4a4; Aoyq7: $cb_tI = $If920[0]['_id']; goto QMCx_; B4Mh6: if (empty($If920)) { return false; } goto Aoyq7; nS_iM: return $qi2N_->successful(); goto iB8p7; QMCx_: $OTOkV = "http://{$b6kXF}:{$x7A2x}/devices/" . urlencode($cb_tI) . "/tasks"; goto Du4r0; DN4a4: $If920 = $MJBpf->json(); goto B4Mh6; Du4r0: $qi2N_ = Http::withBasicAuth($I8WAD->username, $I8WAD->getDecryptedPassword())->post($OTOkV, ['name' => 'reboot']); goto nS_iM; iB8p7: } } catch (\Throwable $Ge4VM) { Log::error("GeniACS Reboot Failed: " . $Ge4VM->getMessage()); } goto BQGOj; UyG3N: $b6kXF = rtrim($I8WAD->host, '/'); goto n_MJC; FHSEd: $ndC2F = "http://{$b6kXF}:{$x7A2x}/devices"; goto CpmPR; BQGOj: return false; goto BeGYq; q8VCI: if (!$I8WAD) { return false; } goto UyG3N; n_MJC: $x7A2x = $I8WAD->port ?? 7557; goto FHSEd; CpmPR: $Oa5s4 = '{"$or": [{"VirtualParameters.pppoe_username": "' . $L6hCZ . '"}, {"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username": "' . $L6hCZ . '"}]}'; goto s0sXY; JeGSa: $I8WAD = Server::where('type', 'geniacs')->first(); goto q8VCI; BeGYq: } }

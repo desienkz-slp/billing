@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Kelola GenieACS Server">
-        <div class="h-full flex flex-col min-h-0 w-full p-2">
+        <div class="flex flex-col w-full p-2">
             <!-- Header -->
             <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 sm:px-0">
                 <div class="flex items-center">

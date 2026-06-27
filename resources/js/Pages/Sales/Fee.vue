@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Laporan Fee">
-        <div class="p-2 w-full max-w-full h-full flex flex-col min-h-0 w-full mx-auto">
+        <div class="p-2 w-full max-w-full flex flex-col w-full mx-auto">
             <!-- Header Section -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>

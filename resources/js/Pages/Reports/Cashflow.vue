@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="pageTitle">
-        <div class="px-2 py-1 w-full max-w-full h-full flex flex-col min-h-[calc(100vh-100px)] mx-auto">
+        <div class="px-2 py-1 w-full max-w-full flex flex-col min-h-[calc(100vh-100px)] mx-auto">
             
             <!-- Header & Filter -->
             <div class="mb-6 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/20 dark:border-slate-700 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">

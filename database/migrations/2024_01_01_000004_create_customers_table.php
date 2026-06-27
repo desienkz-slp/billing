@@ -1,75 +1,8 @@
 <?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('customers', function (Blueprint $table) {
-            $table->id();
-            $table->uuid('uuid')->unique();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('area_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('package_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('router_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('server_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('odp_id')->nullable()->constrained()->nullOnDelete();
-            $table->unsignedBigInteger('sales_id')->nullable();
-
-            $table->string('customer_id_display', 50)->nullable();
-            $table->string('name');
-            $table->string('username', 100)->nullable();
-            $table->text('password_pppoe')->nullable();
-            $table->string('phone', 20)->nullable();
-            $table->text('address')->nullable();
-            $table->string('nik', 20)->nullable();
-            $table->date('registration_date')->nullable();
-            $table->integer('billing_date')->default(1);
-            $table->integer('custom_price')->nullable();
-            $table->string('odp_port', 20)->nullable();
-
-            // Status
-            $table->string('status', 30)->default('active');
-            $table->boolean('is_isolated')->default(false);
-            $table->date('isolated_since')->nullable();
-            $table->boolean('is_on_leave')->default(false);
-            $table->date('leave_start')->nullable();
-            $table->date('leave_end')->nullable();
-
-            // Metadata
-            $table->text('notes')->nullable();
-            $table->jsonb('metadata')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-
-            $table->index(['tenant_id', 'status']);
-            $table->index(['tenant_id', 'area_id']);
-            $table->index(['tenant_id', 'package_id']);
-            $table->index(['tenant_id', 'is_isolated']);
-            $table->unique(['tenant_id', 'username']);
-
-            $table->foreign('sales_id')->references('id')->on('users')->nullOnDelete();
-        });
-
-        Schema::create('customer_coordinates', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
-            $table->decimal('latitude', 10, 7);
-            $table->decimal('longitude', 10, 7);
-            $table->timestamps();
-
-            $table->unique('customer_id');
-            $table->index('tenant_id');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('customer_coordinates');
-        Schema::dropIfExists('customers');
-    }
-};
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:38              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::create('customers', function (Blueprint $EUOFn) { goto Vp4dQ; p1d0P: $EUOFn->string('odp_port', 20)->nullable(); goto D6CnQ; WjAZb: $EUOFn->foreignId('package_id')->nullable()->constrained()->nullOnDelete(); goto W8pvw; zA_yy: $EUOFn->date('leave_end')->nullable(); goto vXvLT; NP0_G: $EUOFn->foreignId('area_id')->nullable()->constrained()->nullOnDelete(); goto WjAZb; zU0LA: $EUOFn->softDeletes(); goto TgNQq; McJUT: $EUOFn->foreign('sales_id')->references('id')->on('users')->nullOnDelete(); goto TqI3i; vXvLT: $EUOFn->text('notes')->nullable(); goto odpFR; W8pvw: $EUOFn->foreignId('router_id')->nullable()->constrained()->nullOnDelete(); goto rYVQe; Z3Bsp: $EUOFn->text('address')->nullable(); goto VcmGL; Z47RK: $EUOFn->index(['tenant_id', 'package_id']); goto m_qvu; vkIis: $EUOFn->uuid('uuid')->unique(); goto JdG8n; TgNQq: $EUOFn->index(['tenant_id', 'status']); goto hRRQe; FJCcg: $EUOFn->integer('billing_date')->default(1); goto bgpW5; SCkPc: $EUOFn->date('isolated_since')->nullable(); goto YMg5Y; YMg5Y: $EUOFn->boolean('is_on_leave')->default(false); goto e6rw7; yTQ54: $EUOFn->string('username', 100)->nullable(); goto y_orq; xXjqz: $EUOFn->string('customer_id_display', 50)->nullable(); goto pEJdE; D6CnQ: $EUOFn->string('status', 30)->default('active'); goto jzKl1; wu0uG: $EUOFn->timestamps(); goto zU0LA; bgpW5: $EUOFn->integer('custom_price')->nullable(); goto p1d0P; odpFR: $EUOFn->jsonb('metadata')->nullable(); goto wu0uG; m_qvu: $EUOFn->index(['tenant_id', 'is_isolated']); goto zOXGF; hRRQe: $EUOFn->index(['tenant_id', 'area_id']); goto Z47RK; VcmGL: $EUOFn->string('nik', 20)->nullable(); goto LUtZW; LUtZW: $EUOFn->date('registration_date')->nullable(); goto FJCcg; rYVQe: $EUOFn->foreignId('server_id')->nullable()->constrained()->nullOnDelete(); goto W5dhe; jzKl1: $EUOFn->boolean('is_isolated')->default(false); goto SCkPc; Vp4dQ: $EUOFn->id(); goto vkIis; e6rw7: $EUOFn->date('leave_start')->nullable(); goto zA_yy; GOX4o: $EUOFn->string('phone', 20)->nullable(); goto Z3Bsp; zOXGF: $EUOFn->unique(['tenant_id', 'username']); goto McJUT; JdG8n: $EUOFn->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto NP0_G; UBHdk: $EUOFn->unsignedBigInteger('sales_id')->nullable(); goto xXjqz; y_orq: $EUOFn->text('password_pppoe')->nullable(); goto GOX4o; W5dhe: $EUOFn->foreignId('odp_id')->nullable()->constrained()->nullOnDelete(); goto UBHdk; pEJdE: $EUOFn->string('name'); goto yTQ54; TqI3i: }); Schema::create('customer_coordinates', function (Blueprint $EUOFn) { goto x7PGO; x7PGO: $EUOFn->id(); goto OMQBA; oWkJu: $EUOFn->timestamps(); goto JKppN; U3YTr: $EUOFn->index('tenant_id'); goto Las4H; YIuR9: $EUOFn->decimal('latitude', 10, 7); goto hfnC7; OMQBA: $EUOFn->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto tdk9M; hfnC7: $EUOFn->decimal('longitude', 10, 7); goto oWkJu; tdk9M: $EUOFn->foreignId('customer_id')->constrained()->cascadeOnDelete(); goto YIuR9; JKppN: $EUOFn->unique('customer_id'); goto U3YTr; Las4H: }); } public function down(): void { Schema::dropIfExists('customer_coordinates'); Schema::dropIfExists('customers'); } };

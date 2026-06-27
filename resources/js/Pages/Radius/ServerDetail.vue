@@ -1,6 +1,6 @@
 <template>
   <AppLayout :title="serverIdentity ? `${server.name} (${serverIdentity})` : (server.name || 'RADIUS Dashboard')" :hideSidebar="true">
-    <div class="w-full h-full p-2 flex flex-col">
+    <div class="w-full p-2 flex flex-col">
 
       <!-- Main Glassmorphism Card -->
       <div class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/20 dark:border-slate-700 shadow-xl rounded-2xl overflow-hidden flex flex-col flex-1 min-h-[500px]">

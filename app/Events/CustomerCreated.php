@@ -1,28 +1,8 @@
 <?php
-
-namespace App\Events;
-
-use App\Models\Customer;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
-
-class CustomerCreated
-{
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    public $customer;
-    public $shouldSyncPppoe;
-
-    /**
-     * Create a new event instance.
-     *
-     * @param Customer $customer
-     * @param bool $shouldSyncPppoe
-     */
-    public function __construct(Customer $customer, bool $shouldSyncPppoe = false)
-    {
-        $this->customer = $customer;
-        $this->shouldSyncPppoe = $shouldSyncPppoe;
-    }
-}
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:34              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Events; use App\Models\Customer; use Illuminate\Broadcasting\InteractsWithSockets; use Illuminate\Foundation\Events\Dispatchable; use Illuminate\Queue\SerializesModels; class CustomerCreated { use Dispatchable, InteractsWithSockets, SerializesModels; public $customer; public $shouldSyncPppoe; public function __construct(Customer $ODChU, bool $Sn2s1 = false) { $this->customer = $ODChU; $this->shouldSyncPppoe = $Sn2s1; } }

@@ -1,50 +1,8 @@
 <?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('tenants', function (Blueprint $table) {
-            $table->id();
-            $table->uuid('uuid')->unique();
-            $table->string('name');
-            $table->string('slug')->unique();
-            $table->string('domain')->nullable()->unique();
-            $table->jsonb('company_profile')->nullable();
-            $table->jsonb('billing_config')->nullable();
-            $table->string('timezone', 50)->default('Asia/Jakarta');
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-
-            $table->index('slug');
-            $table->index('is_active');
-        });
-
-        Schema::create('tenant_subscriptions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->string('plan', 50);
-            $table->string('license_key')->unique();
-            $table->integer('max_customers')->default(50);
-            $table->jsonb('features')->nullable();
-            $table->timestamp('starts_at');
-            $table->timestamp('expires_at');
-            $table->timestamp('grace_until')->nullable();
-            $table->string('status', 20)->default('active');
-            $table->timestamps();
-
-            $table->index(['tenant_id', 'status']);
-            $table->index('expires_at');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('tenant_subscriptions');
-        Schema::dropIfExists('tenants');
-    }
-};
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:38              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::create('tenants', function (Blueprint $EUOFn) { goto i33p0; Rws1n: $EUOFn->index('is_active'); goto reiQb; pydRv: $EUOFn->index('slug'); goto Rws1n; fbN3_: $EUOFn->timestamps(); goto pydRv; NQNlJ: $EUOFn->string('domain')->nullable()->unique(); goto zFCB1; i33p0: $EUOFn->id(); goto bv34p; oMexF: $EUOFn->boolean('is_active')->default(true); goto fbN3_; Ovole: $EUOFn->string('timezone', 50)->default('Asia/Jakarta'); goto oMexF; zFCB1: $EUOFn->jsonb('company_profile')->nullable(); goto cUWKi; YTJ6z: $EUOFn->string('slug')->unique(); goto NQNlJ; cUWKi: $EUOFn->jsonb('billing_config')->nullable(); goto Ovole; bv34p: $EUOFn->uuid('uuid')->unique(); goto TNPSv; TNPSv: $EUOFn->string('name'); goto YTJ6z; reiQb: }); Schema::create('tenant_subscriptions', function (Blueprint $EUOFn) { goto rXfv5; X_mQv: $EUOFn->jsonb('features')->nullable(); goto wOn67; ClIUu: $EUOFn->timestamps(); goto T6qof; T6qof: $EUOFn->index(['tenant_id', 'status']); goto rzchD; BWN3w: $EUOFn->timestamp('expires_at'); goto H7AN1; rXfv5: $EUOFn->id(); goto uligB; IDQDJ: $EUOFn->string('license_key')->unique(); goto kRKna; uligB: $EUOFn->foreignId('tenant_id')->constrained()->cascadeOnDelete(); goto dHXRu; ZAHMJ: $EUOFn->string('status', 20)->default('active'); goto ClIUu; wOn67: $EUOFn->timestamp('starts_at'); goto BWN3w; kRKna: $EUOFn->integer('max_customers')->default(50); goto X_mQv; rzchD: $EUOFn->index('expires_at'); goto kDxAF; dHXRu: $EUOFn->string('plan', 50); goto IDQDJ; H7AN1: $EUOFn->timestamp('grace_until')->nullable(); goto ZAHMJ; kDxAF: }); } public function down(): void { Schema::dropIfExists('tenant_subscriptions'); Schema::dropIfExists('tenants'); } };

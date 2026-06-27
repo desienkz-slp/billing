@@ -1,25 +1,8 @@
 <?php
-
-namespace App\Models\Radius;
-
-use Illuminate\Database\Eloquent\Model;
-
-/**
- * RadGroupReply — Atribut balasan per group.
- *
- * Contoh: groupname=paket-10m, attribute=Mikrotik-Rate-Limit, op=:=, value=10M/10M
- * Ini adalah cara FreeRADIUS mengatur bandwidth per paket.
- */
-class RadGroupReply extends Model
-{
-    protected $connection = 'radius';
-    protected $table = 'radgroupreply';
-    public $timestamps = false;
-
-    protected $fillable = [
-        'groupname',
-        'attribute',
-        'op',
-        'value',
-    ];
-}
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:36              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Models\Radius; use Illuminate\Database\Eloquent\Model; class RadGroupReply extends Model { protected $connection = 'radius'; protected $table = 'radgroupreply'; public $timestamps = false; protected $fillable = ['groupname', 'attribute', 'op', 'value']; }

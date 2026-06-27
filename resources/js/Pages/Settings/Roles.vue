@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Kelola Role">
-        <div class="h-full flex flex-col min-h-0 w-full p-2">
+        <div class="flex flex-col w-full p-2">
             
             <!-- Page Header -->
             <div class="sm:flex sm:justify-between sm:items-center mb-8">
@@ -79,6 +79,7 @@
                     <!-- Horizontal Tab Bar -->
                     <div class="flex overflow-x-auto bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 shrink-0 custom-scrollbar">
                         <button v-for="tab in permissionGroups" :key="tab.id" @click="activeTab = tab.id"
+                            v-show="!['sidebar_billing', 'operasional', 'accounting', 'master'].includes(tab.id) || form.can_view_dashboard"
                             class="px-5 py-3 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 border-b-2"
                             :class="activeTab === tab.id ? 'text-blue-600 dark:text-blue-400 border-blue-600 bg-white dark:bg-slate-700' : 'text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50'">
                             {{ tab.name }}
@@ -154,8 +155,8 @@
                             </div>
                         </div>
 
-                        <!-- Tab: Fee / Komisi -->
-                        <div v-show="activeTab === 'fee'" class="space-y-6 max-w-2xl">
+                        <!-- Komisi & Limit Saldo (Merged into Accounting) -->
+                        <div v-show="activeTab === 'accounting'" class="space-y-6 max-w-2xl mt-8 pt-8 border-t-2 border-slate-200 dark:border-slate-700">
                             <h4 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">Pengaturan Komisi</h4>
                             <p class="text-sm text-slate-500 dark:text-slate-400">Atur komisi (fee) yang akan diterima oleh pengguna dengan role ini (biasanya untuk Role Agen/Sales/Mitra).</p>
                             
@@ -301,19 +302,19 @@ const defaultForm = {
     can_access_mobile: true,
     can_view_dashboard: false, can_view_dashboard_config: false, can_view_dashboard_map: false, can_view_dashboard_olt: false,
     can_input_customer: false, can_edit_customer: false, can_delete_customer: false,
-    can_import_export_customer: false, can_view_all_customers: false, can_delete_customer_cuti: false,
-    view_by_area: false, view_by_sales: false, view_own_only: false,
-    can_process_payment: false, can_send_wa_invoice: false, can_cancel_payment: false, can_view_payment_history: false,
+    can_view_all_customers: false, view_by_area: false, view_by_sales: false, view_own_only: false,
+    can_process_payment: false, can_send_wa_invoice: false,
     can_manage_isolir: false, can_cuti: false, can_manage_cuti: false,
     can_view_reports: false, can_view_finance: false, can_manage_expenses: false,
     can_manage_deposits: false, can_manage_saldo: false, can_delete_finance: false,
-    can_use_deposit: false,
-    can_manage_packages: false, can_manage_areas: false, can_manage_odp: false,
-    can_manage_servers: false,
-    can_manage_users: false, can_manage_roles: false, can_view_audit_logs: false,
-    can_backup_restore: false,
-    can_view_radius: false, can_view_acs: false, can_manage_radius: false, can_manage_router: false, can_manage_olt: false, can_manage_acs: false, can_send_wa_blast: false,
-    can_config_map: false, can_view_monitor: false, is_saldo_limited: false
+    can_manage_packages: false,
+    can_view_radius: false, can_view_acs: false, can_manage_radius: false, can_manage_router: false, 
+    can_view_monitor: false, is_saldo_limited: false,
+    // Sidebar Billing Menus
+    can_view_menu_dashboard: false, can_view_menu_pelanggan: false, can_view_menu_pelanggan_cuti: false, can_view_menu_isolir: false,
+    can_view_menu_income: false, can_view_menu_other_in: false, can_view_menu_expenses: false, 
+    can_view_menu_fee: false, can_view_menu_setoran: false, can_view_menu_saldo: false,
+    can_view_menu_mitra: false, can_view_menu_master_paket: false, can_view_menu_master_area: false
 };
 
 const form = useForm({ ...defaultForm });
@@ -411,8 +412,18 @@ const permissionGroups = [
         permissions: [] // handled separately in template
     },
     {
-        id: 'dashboard',
-        name: 'Dashboard & Tampilan',
+        id: 'view',
+        name: 'View',
+        permissions: [
+            { key: 'can_view_all_customers', label: 'Lihat Semua Pelanggan', desc: 'Melihat seluruh pelanggan tanpa batas area/sales.' },
+            { key: 'view_by_area', label: 'View by Area', desc: 'Hanya melihat pelanggan di Area tertentu.' },
+            { key: 'view_by_sales', label: 'View by Sales', desc: 'Hanya melihat pelanggan dari tim Sales tertentu.' },
+            { key: 'view_own_only', label: 'View Own Only', desc: 'Hanya melihat pelanggan yang dikoordinatori sendiri.' }
+        ]
+    },
+    {
+        id: 'gateway',
+        name: 'Gateway',
         permissions: [
             { key: 'can_view_dashboard', label: 'Akses Modul Billing', desc: 'Bisa melihat halaman dashboard dan modul billing.' },
             { key: 'can_view_dashboard_config', label: 'Akses Modul Config', desc: 'Bisa masuk ke dalam modul konfigurasi.' },
@@ -424,63 +435,57 @@ const permissionGroups = [
         ]
     },
     {
-        id: 'customer',
-        name: 'Pelanggan & Visibilitas',
+        id: 'sidebar_billing',
+        name: 'Billing',
         permissions: [
-            { key: 'can_input_customer', label: 'Tambah Pelanggan', desc: 'Mendaftarkan pelanggan baru.' },
-            { key: 'can_edit_customer', label: 'Edit Pelanggan', desc: 'Mengubah profil pelanggan.' },
-            { key: 'can_delete_customer', label: 'Hapus Pelanggan', desc: 'Menghapus data pelanggan.' },
-            { key: 'can_delete_customer_cuti', label: 'Hapus Pelanggan Cuti', desc: 'Menghapus data pelanggan yang berstatus cuti.' },
-            { key: 'can_view_all_customers', label: 'Lihat Semua Pelanggan', desc: 'Bebas dari batasan area atau sales.' },
-            { key: 'can_import_export_customer', label: 'Import & Export Excel', desc: 'Hak impor dan ekspor data pelanggan massal.' },
+            { key: 'can_view_menu_dashboard', label: 'Dashboard', desc: 'Menu Utama: Dashboard' },
+            { key: 'can_view_menu_pelanggan', label: 'Pelanggan', desc: 'Menu Utama: Pelanggan' },
+            { key: 'can_view_menu_pelanggan_cuti', label: 'Pelanggan Cuti', desc: 'Menu Utama: Pelanggan Cuti' },
+            { key: 'can_view_menu_isolir', label: 'Isolir', desc: 'Menu Utama: Isolir' },
+            { key: 'can_view_menu_income', label: 'Income', desc: 'Menu Laporan: Income' },
+            { key: 'can_view_menu_other_in', label: 'Other-IN', desc: 'Menu Laporan: Other-IN' },
+            { key: 'can_view_menu_expenses', label: 'Expenses', desc: 'Menu Laporan: Expenses' },
+            { key: 'can_view_menu_fee', label: 'Fee', desc: 'Menu Laporan Sales: Fee' },
+            { key: 'can_view_menu_setoran', label: 'Setoran', desc: 'Menu Laporan Sales: Setoran' },
+            { key: 'can_view_menu_saldo', label: 'Saldo', desc: 'Menu Laporan Sales: Saldo' },
+            { key: 'can_view_menu_mitra', label: 'Mitra', desc: 'Menu Laporan Sales: Mitra' },
+            { key: 'can_view_menu_master_paket', label: 'Master Paket', desc: 'Menu Master: Master Paket' },
+            { key: 'can_view_menu_master_area', label: 'Master Area', desc: 'Menu Master: Master Area' },
         ]
     },
     {
-        id: 'billing',
-        name: 'Tagihan & Keuangan',
+        id: 'operasional',
+        name: 'Operasional',
         permissions: [
-            { key: 'can_process_payment', label: 'Proses Pembayaran', desc: 'Menerima pembayaran tagihan masuk.' },
-            { key: 'can_send_wa_invoice', label: 'WA Tagihan', desc: 'Kirim notifikasi tagihan/kuitansi via WA.' },
-            { key: 'can_cancel_payment', label: 'Batal Pembayaran', desc: 'Membatalkan / void kuitansi.' },
-            { key: 'can_view_payment_history', label: 'Riwayat Transaksi', desc: 'Melihat daftar histori bayar pelanggan.' },
-            { key: 'can_manage_isolir', label: 'Aksi Isolir / Unisolir', desc: 'Blokir/Buka pelanggan secara manual.' },
-            { key: 'can_cuti', label: 'Proses Cuti', desc: 'Mengajukan atau memproses cuti pelanggan.' },
-            { key: 'can_view_finance', label: 'Menu Keuangan', desc: 'Bisa mengakses sub-menu keuangan.' },
-            { key: 'can_view_reports', label: 'Laporan Keuangan', desc: 'Melihat laporan laba, rugi, rekap pendapatan.' },
-            { key: 'can_manage_expenses', label: 'Pengeluaran', desc: 'Mencatat pengeluaran operasional.' },
-            { key: 'can_manage_deposits', label: 'Setoran', desc: 'Manajemen uang setoran agen/kolektor.' },
-            { key: 'can_manage_saldo', label: 'Kelola Saldo', desc: 'Kewenangan mengelola saldo deposit langsung.' },
-            { key: 'can_delete_finance', label: 'Hapus Data Keuangan', desc: 'Akses menghapus entri finansial.' },
+            // Dashboard
+            { key: 'can_process_payment', label: 'Bayar Tagihan', desc: 'Aksi Dashboard: Menerima pembayaran pelanggan.' },
+            { key: 'can_send_wa_invoice', label: 'Kirim WA', desc: 'Aksi Dashboard: Mengirim tagihan/kuitansi.' },
+            { key: 'can_manage_isolir', label: 'Proses Isolir / Unisolir', desc: 'Dashboard & Menu Isolir: Blokir/Buka pelanggan.' },
+            { key: 'can_cuti', label: 'Proses Cuti', desc: 'Dashboard & Menu Cuti: Mengajukan pelanggan cuti.' },
+            // Customers
+            { key: 'can_input_customer', label: 'Create Pelanggan', desc: 'Pelanggan: Mendaftarkan pelanggan baru.' },
+            { key: 'can_edit_customer', label: 'Edit Pelanggan', desc: 'Pelanggan: Mengubah data pelanggan.' },
+            { key: 'can_delete_customer', label: 'Delete Pelanggan', desc: 'Pelanggan: Menghapus pelanggan dari sistem.' },
+            // Cuti
+            { key: 'can_manage_cuti', label: 'Restore Pelanggan Cuti', desc: 'Menu Cuti: Mengembalikan pelanggan ke status aktif.' }
         ]
     },
     {
-        id: 'fee',
-        name: 'Komisi, Fee & Saldo',
-        permissions: [] // handled separately
-    },
-    {
-        id: 'network',
-        name: 'Teknikal & Jaringan',
+        id: 'accounting',
+        name: 'Accounting',
         permissions: [
-            { key: 'can_manage_odp', label: 'Kelola ODP / ODC', desc: 'Manajemen tiang/kotak ODP di lapangan.' },
-            { key: 'can_manage_packages', label: 'Kelola Paket', desc: 'Mengatur harga dan profil paket internet.' },
-            { key: 'can_manage_areas', label: 'Kelola Area', desc: 'Pengaturan pembagian wilayah.' },
-            { key: 'can_manage_router', label: 'Manajemen Router', desc: 'Sync, reset, ubah password rahasia PPPoE.' },
-            { key: 'can_manage_olt', label: 'Kelola OLT', desc: 'Manajemen dan konfigurasi perangkat OLT.' },
-            { key: 'can_manage_acs', label: 'Kelola ACS', desc: 'Edit device di ACS.' },
-            { key: 'can_config_map', label: 'Config Peta', desc: 'Pengaturan dan pemetaan GIS ODP dan Router.' },
-            { key: 'can_manage_radius', label: 'Config RADIUS', desc: 'Mengubah pengaturan inti server RADIUS.' },
+            { key: 'can_manage_expenses', label: 'Create Expense & Other Income', desc: 'Income/Expense: Mencatat pengeluaran & pemasukan lain.' },
+            { key: 'can_delete_finance', label: 'Global Void Transaksi', desc: 'Void: Hak membatalkan Pembayaran (Tagihan), Pengeluaran, Pemasukan Lain, dan Setoran.' },
+            { key: 'can_manage_deposits', label: 'Input Setoran', desc: 'Setoran: Melakukan input setoran.' },
+            { key: 'can_manage_saldo', label: 'Add/Min Saldo', desc: 'Saldo: Menambah atau mengurangi saldo.' },
+            { key: 'can_view_finance', label: 'Akses Menu Keuangan', desc: 'Hak melihat laporan keuangan (laba rugi, arus kas, dll).' }
         ]
     },
     {
-        id: 'system',
-        name: 'Sistem & Lanjutan',
+        id: 'master',
+        name: 'Master Data',
         permissions: [
-            { key: 'can_manage_users', label: 'Kelola User', desc: 'Tambah/Edit User yang bisa login.' },
-            { key: 'can_manage_roles', label: 'Kelola Role Akses', desc: 'Halaman ini.' },
-            { key: 'can_view_audit_logs', label: 'Lihat Audit Log', desc: 'Riwayat sistem perbaikan, hapus, dll.' },
-            { key: 'can_backup_restore', label: 'Backup Data', desc: 'Backup database manual.' },
-            { key: 'can_send_wa_blast', label: 'Kirim WA Blast', desc: 'Broadcast ke banyak pelanggan.' },
+            { key: 'can_manage_packages', label: 'Kelola Master Data (Paket, Area, ODP)', desc: 'Paket & Area: Hak penuh melakukan Create, Edit, Delete pada Paket, Area, dan ODP/ODC.' }
         ]
     }
 ];

@@ -6,7 +6,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
-const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'LadaPala-Bill';
+const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'NETORA';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

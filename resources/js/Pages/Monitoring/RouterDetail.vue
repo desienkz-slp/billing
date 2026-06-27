@@ -52,7 +52,7 @@ const filteredSecrets = computed(() => {
 <template>
   <AppLayout :title="router.name || 'Router Details'" :hideSidebar="true">
     <div class="min-h-full font-sans text-[#e5eef8] pb-12" style="background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 28%), radial-gradient(circle at top right, rgba(52, 211, 153, 0.14), transparent 24%), linear-gradient(180deg, #08111f 0%, #0b1728 55%, #08111f 100%);">
-      <div class="max-w-[1360px] mx-auto px-4 py-4 h-full flex flex-col">
+      <div class="max-w-[1360px] mx-auto px-4 py-4 flex flex-col">
 
         <!-- Topbar / Back Link -->
         <div class="flex justify-between items-center mb-4">

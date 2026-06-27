@@ -1,54 +1,8 @@
 <?php
-
-namespace App\Http\Middleware;
-
-use Illuminate\Http\Request;
-use Inertia\Middleware;
-
-class HandleInertiaRequests extends Middleware
-{
-    /**
-     * The root template that's loaded on the first page visit.
-     *
-     * @see https://inertiajs.com/server-side-setup#root-template
-     *
-     * @var string
-     */
-    protected $rootView = 'app';
-
-    /**
-     * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
-     */
-    public function version(Request $request): ?string
-    {
-        return parent::version($request);
-    }
-
-    /**
-     * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
-     *
-     * @return array<string, mixed>
-     */
-    public function share(Request $request): array
-    {
-        $user = $request->user();
-        return [
-            ...parent::share($request),
-            'auth' => [
-                'user' => $user,
-                'role' => $user ? $user->role : null,
-                'isAdmin' => $user ? $user->is_system_admin : false,
-            ],
-            'flash' => [
-                'success' => $request->session()->get('success'),
-                'error' => $request->session()->get('error'),
-            ],
-            'tenant' => $request->attributes->get('tenant'),
-            'company' => config('company'),
-        ];
-    }
-}
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-27 04:10:15              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Http\Middleware; use Illuminate\Http\Request; use Inertia\Middleware; class HandleInertiaRequests extends Middleware { protected $rootView = 'app'; public function version(Request $mr6xX): ?string { return parent::version($mr6xX); } public function share(Request $mr6xX): array { goto wo6Mf; n1EtO: $CtYJY = []; goto FmGzD; RvIVW: return [...parent::share($mr6xX), 'auth' => ['user' => $KpPUh, 'role' => $KpPUh ? $KpPUh->role : null, 'isAdmin' => $KpPUh ? (bool) $KpPUh->is_system_admin || $KpPUh->role_id === 1 || $KpPUh->username === 'superadmin' || $KpPUh->username === 'sysadmin' : false], 'flash' => ['success' => $mr6xX->session()->get('success'), 'error' => $mr6xX->session()->get('error')], 'tenant' => $yPd0A, 'company' => config('company'), 'companyProfile' => array_merge(['company_nama' => $B6oOB], $CtYJY)]; goto ZvXhC; Jj4Pf: $KpPUh = $mr6xX->user(); goto RvIVW; wo6Mf: $yPd0A = app()->bound('current_tenant') ? app('current_tenant') : null; goto RgoBj; FmGzD: if ($yPd0A) { $B6oOB = $yPd0A->name; try { goto it6lo; omcDR: if (isset($djMv_['company_nama']) && !empty($djMv_['company_nama'])) { $B6oOB = $djMv_['company_nama']; } goto wYOrb; wYOrb: $CtYJY = $djMv_->toArray(); goto AqYvB; it6lo: $djMv_ = \Illuminate\Support\Facades\DB::table('billing_configs')->where('tenant_id', $yPd0A->id)->whereIn('key', ['company_nama', 'company_logo', 'company_alamat', 'company_telepon', 'template_invoice_a5', 'template_invoice_58mm'])->pluck('value', 'key'); goto omcDR; AqYvB: } catch (\Exception $Cu015) { } } else { $CtYJY = ['company_nama' => 'Super Administrator']; } goto Jj4Pf; RgoBj: $B6oOB = 'NETORA'; goto n1EtO; ZvXhC: } }

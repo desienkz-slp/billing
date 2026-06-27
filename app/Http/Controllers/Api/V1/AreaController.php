@@ -1,53 +1,8 @@
 <?php
-
-namespace App\Http\Controllers\Api\V1;
-
-use App\Http\Controllers\Controller;
-use App\Http\Resources\AreaResource;
-use App\Models\Area;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-
-class AreaController extends Controller
-{
-    public function index()
-    {
-        return AreaResource::collection(
-            Area::withCount('customers')->orderBy('name')->get()
-        );
-    }
-
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'description' => 'nullable|string|max:500',
-        ]);
-        $area = Area::create($data);
-        return (new AreaResource($area))->response()->setStatusCode(201);
-    }
-
-    public function show(Area $area): AreaResource
-    {
-        return new AreaResource($area->loadCount('customers'));
-    }
-
-    public function update(Request $request, Area $area): AreaResource
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'description' => 'nullable|string|max:500',
-        ]);
-        $area->update($data);
-        return new AreaResource($area);
-    }
-
-    public function destroy(Area $area): JsonResponse
-    {
-        if ($area->customers()->count() > 0) {
-            return response()->json(['message' => 'Area masih digunakan pelanggan.'], 422);
-        }
-        $area->delete();
-        return response()->json(['message' => 'Area berhasil dihapus.']);
-    }
-}
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:34              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Http\Controllers\Api\V1; use App\Http\Controllers\Controller; use App\Http\Resources\AreaResource; use App\Models\Area; use Illuminate\Http\JsonResponse; use Illuminate\Http\Request; class AreaController extends Controller { public function index() { return AreaResource::collection(Area::withCount('customers')->orderBy('name')->get()); } public function store(Request $CaBx1): JsonResponse { goto gFh7d; gFh7d: $bGUSs = $CaBx1->validate(['name' => 'required|string|max:100', 'description' => 'nullable|string|max:500']); goto Jb79l; Jb79l: $VAB0L = Area::create($bGUSs); goto fFgkC; fFgkC: return (new AreaResource($VAB0L))->response()->setStatusCode(201); goto scGd_; scGd_: } public function show(Area $VAB0L): AreaResource { return new AreaResource($VAB0L->loadCount('customers')); } public function update(Request $CaBx1, Area $VAB0L): AreaResource { goto YINYA; YINYA: $bGUSs = $CaBx1->validate(['name' => 'required|string|max:100', 'description' => 'nullable|string|max:500']); goto ESd3h; ESd3h: $VAB0L->update($bGUSs); goto x7iL1; x7iL1: return new AreaResource($VAB0L); goto pIXYh; pIXYh: } public function destroy(Area $VAB0L): JsonResponse { goto gT56e; fstNx: return response()->json(['message' => 'Area berhasil dihapus.']); goto SHNNY; rn2RE: $VAB0L->delete(); goto fstNx; gT56e: if ($VAB0L->customers()->count() > 0) { return response()->json(['message' => 'Area masih digunakan pelanggan.'], 422); } goto rn2RE; SHNNY: } }

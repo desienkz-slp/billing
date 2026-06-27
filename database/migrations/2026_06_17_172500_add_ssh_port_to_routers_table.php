@@ -1,26 +1,8 @@
 <?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::table('routers', function (Blueprint $table) {
-            if (!Schema::hasColumn('routers', 'ssh_port')) {
-                $table->integer('ssh_port')->default(22)->after('port');
-            }
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('routers', function (Blueprint $table) {
-            if (Schema::hasColumn('routers', 'ssh_port')) {
-                $table->dropColumn('ssh_port');
-            }
-        });
-    }
-};
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:38              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::table('routers', function (Blueprint $EUOFn) { if (!Schema::hasColumn('routers', 'ssh_port')) { $EUOFn->integer('ssh_port')->default(22)->after('port'); } }); } public function down(): void { Schema::table('routers', function (Blueprint $EUOFn) { if (Schema::hasColumn('routers', 'ssh_port')) { $EUOFn->dropColumn('ssh_port'); } }); } };

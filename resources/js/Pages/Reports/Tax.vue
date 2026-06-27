@@ -29,7 +29,7 @@ const formatRupiah = (value) => {
     <Head title="Laporan Tax & Biaya" />
 
     <AppLayout title="Laporan Tax & Biaya">
-        <div class="p-2 w-full max-w-full w-full mx-auto flex flex-col h-full">
+        <div class="p-2 w-full max-w-full w-full mx-auto flex flex-col">
             
             <!-- Header Section -->
             <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 sm:px-0 mt-1">

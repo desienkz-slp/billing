@@ -1,24 +1,8 @@
 <?php
-
-namespace App\Models\Radius;
-
-use Illuminate\Database\Eloquent\Model;
-
-/**
- * RadUserGroup — Mapping user ke group RADIUS.
- *
- * Contoh: username=john, groupname=paket-10m, priority=1
- * FreeRADIUS akan apply atribut dari radgroupreply berdasarkan group ini.
- */
-class RadUserGroup extends Model
-{
-    protected $connection = 'radius';
-    protected $table = 'radusergroup';
-    public $timestamps = false;
-
-    protected $fillable = [
-        'username',
-        'groupname',
-        'priority',
-    ];
-}
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:36              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Models\Radius; use Illuminate\Database\Eloquent\Model; class RadUserGroup extends Model { protected $connection = 'radius'; protected $table = 'radusergroup'; public $timestamps = false; protected $fillable = ['username', 'groupname', 'priority']; }

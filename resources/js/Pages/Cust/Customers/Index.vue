@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Daftar Pelanggan">
-        <div class="p-2 w-full max-w-full w-full mx-auto flex flex-col h-full">
+        <div class="p-2 w-full max-w-full w-full mx-auto flex flex-col">
             <!-- Header Section -->
             <div class="mb-6 flex flex-col gap-4 px-4 sm:px-0">
                 <!-- Top Row: Title & Actions -->
@@ -24,6 +24,18 @@
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             Trash
                         </Link>
+                        
+                        <!-- Export Button -->
+                        <a :href="route('cust.customers.export')" class="px-4 py-2 bg-emerald-100 dark:bg-emerald-900/50 hover:bg-emerald-200 dark:hover:bg-emerald-800/70 text-emerald-700 dark:text-emerald-400 text-sm font-medium rounded-xl transition-all flex items-center whitespace-nowrap">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Export
+                        </a>
+
+                        <!-- Import Button -->
+                        <button @click="showImportModal = true" class="px-4 py-2 bg-amber-100 dark:bg-amber-900/50 hover:bg-amber-200 dark:hover:bg-amber-800/70 text-amber-700 dark:text-amber-400 text-sm font-medium rounded-xl transition-all flex items-center whitespace-nowrap">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Import
+                        </button>
                         
                         <!-- Tambah Button -->
                         <button v-if="$page.props.auth.isAdmin || $page.props.auth.role?.can_input_customer" @click="openModal" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-xl shadow-md transition-all flex items-center justify-center whitespace-nowrap">
@@ -213,12 +225,93 @@
                 </div>
             </div>
         </Modal>
+        <!-- Import Modal -->
+        <div v-if="showImportModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity">
+            <div :class="previewData.length ? 'max-w-6xl' : 'max-w-md'" class="bg-white dark:bg-slate-800 rounded-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-xl border border-slate-200 dark:border-slate-700 transition-all duration-300">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center shrink-0">
+                    <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Import Pelanggan</h3>
+                    <button @click="closeImportModal" class="text-slate-400 hover:text-slate-500 transition-colors">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                
+                <div class="p-6 space-y-4 shrink-0" v-if="!previewData.length">
+                    <div class="flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                        <span class="text-sm text-blue-700 dark:text-blue-300">Gunakan format template yang disediakan.</span>
+                        <a :href="route('cust.customers.import-template')" class="text-xs font-semibold bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors">Unduh Template</a>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">File CSV</label>
+                        <input type="file" @change="e => importForm.file = e.target.files[0]" accept=".csv" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-slate-700 dark:file:text-slate-300 dark:hover:file:bg-slate-600" required>
+                        <div v-if="importForm.errors.file" class="mt-1 text-xs text-red-500">{{ importForm.errors.file }}</div>
+                    </div>
+                </div>
+
+                <!-- Preview Table -->
+                <div v-if="previewData.length" class="flex-1 overflow-y-auto p-0 min-h-0">
+                    <div class="px-6 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800/30 text-sm text-blue-700 dark:text-blue-300 flex justify-between items-center">
+                        <span>Preview Data ({{ previewData.length }} baris)</span>
+                        <span v-if="previewErrors > 0" class="text-red-600 dark:text-red-400 font-medium">⚠️ Terdapat {{ previewErrors }} baris bermasalah (akan di-skip).</span>
+                        <span v-else class="text-emerald-600 dark:text-emerald-400 font-medium">✓ Semua baris valid.</span>
+                    </div>
+                    <table class="w-full text-xs text-left text-slate-500 dark:text-slate-400">
+                        <thead class="sticky top-0 text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-[#1E293B] dark:text-slate-400 shadow-sm z-10">
+                            <tr>
+                                <th class="px-4 py-2">Baris</th>
+                                <th class="px-4 py-2">Nama</th>
+                                <th class="px-4 py-2">WA</th>
+                                <th class="px-4 py-2">Paket</th>
+                                <th class="px-4 py-2">Sales</th>
+                                <th class="px-4 py-2">Router</th>
+                                <th class="px-4 py-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                            <tr v-for="row in previewData" :key="row.row" :class="{'bg-red-50 dark:bg-red-900/10': row.status === 'error', 'hover:bg-slate-50 dark:hover:bg-slate-700/50': row.status !== 'error'}">
+                                <td class="px-4 py-2 whitespace-nowrap">{{ row.row }}</td>
+                                <td class="px-4 py-2 whitespace-nowrap">{{ row.nama }}</td>
+                                <td class="px-4 py-2 whitespace-nowrap">{{ row.wa }}</td>
+                                <td class="px-4 py-2 whitespace-nowrap">{{ row.paket }}</td>
+                                <td class="px-4 py-2 whitespace-nowrap">{{ row.sales }}</td>
+                                <td class="px-4 py-2 whitespace-nowrap">{{ row.router }}</td>
+                                <td class="px-4 py-2">
+                                    <span v-if="row.status === 'valid'" class="text-emerald-600 dark:text-emerald-400">Valid</span>
+                                    <div v-else class="text-red-600 dark:text-red-400">
+                                        <ul class="list-disc pl-4">
+                                            <li v-for="(err, i) in row.errors" :key="i">{{ err }}</li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3 shrink-0">
+                    <button type="button" @click="closeImportModal" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Batal</button>
+                    
+                    <button v-if="!previewData.length" @click="doPreview" :disabled="!importForm.file || isPreviewing" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center disabled:opacity-50">
+                        <svg v-if="isPreviewing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Preview
+                    </button>
+                    
+                    <form v-else @submit.prevent="submitImport">
+                        <button type="submit" :disabled="importForm.processing" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center disabled:opacity-50">
+                            <svg v-if="importForm.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            Proses Import
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { router, Link, useForm } from '@inertiajs/vue3';
+import axios from 'axios';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import CustomerForm from './Components/CustomerForm.vue';
@@ -241,6 +334,45 @@ const formFilters = ref({
     sales_id: props.filters?.sales_id || '',
     per_page: props.filters?.per_page || '15',
 });
+
+const showImportModal = ref(false);
+const isPreviewing = ref(false);
+const previewData = ref([]);
+const previewErrors = computed(() => previewData.value.filter(r => r.status === 'error').length);
+
+const importForm = useForm({
+    file: null,
+});
+
+const closeImportModal = () => {
+    showImportModal.value = false;
+    previewData.value = [];
+    importForm.reset();
+};
+
+const doPreview = async () => {
+    if (!importForm.file) return;
+    isPreviewing.value = true;
+    const formData = new FormData();
+    formData.append('file', importForm.file);
+    try {
+        const { data } = await axios.post(route('cust.customers.import-preview'), formData);
+        previewData.value = data;
+    } catch (e) {
+        alert('Gagal mengambil preview: ' + (e.response?.data?.message || e.message));
+    } finally {
+        isPreviewing.value = false;
+    }
+};
+
+const submitImport = () => {
+    importForm.post(route('cust.customers.import'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            closeImportModal();
+        },
+    });
+};
 
 let searchTimeout;
 watch(formFilters, (newValues) => {

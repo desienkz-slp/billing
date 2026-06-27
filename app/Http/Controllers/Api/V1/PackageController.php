@@ -1,58 +1,8 @@
 <?php
-
-namespace App\Http\Controllers\Api\V1;
-
-use App\Http\Controllers\Controller;
-use App\Http\Resources\PackageResource;
-use App\Models\Package;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-
-class PackageController extends Controller
-{
-    public function index()
-    {
-        return PackageResource::collection(
-            Package::withCount('customers')->orderBy('price')->get()
-        );
-    }
-
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'speed' => 'nullable|string|max:50',
-            'price' => 'required|numeric|min:0',
-            'description' => 'nullable|string|max:500',
-        ]);
-
-        $package = Package::create($data);
-        return (new PackageResource($package))->response()->setStatusCode(201);
-    }
-
-    public function show(Package $package): PackageResource
-    {
-        return new PackageResource($package->loadCount('customers'));
-    }
-
-    public function update(Request $request, Package $package): PackageResource
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'speed' => 'nullable|string|max:50',
-            'price' => 'required|numeric|min:0',
-            'description' => 'nullable|string|max:500',
-        ]);
-        $package->update($data);
-        return new PackageResource($package);
-    }
-
-    public function destroy(Package $package): JsonResponse
-    {
-        if ($package->customers()->count() > 0) {
-            return response()->json(['message' => 'Paket masih digunakan pelanggan.'], 422);
-        }
-        $package->delete();
-        return response()->json(['message' => 'Paket berhasil dihapus.']);
-    }
-}
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:34              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ namespace App\Http\Controllers\Api\V1; use App\Http\Controllers\Controller; use App\Http\Resources\PackageResource; use App\Models\Package; use Illuminate\Http\JsonResponse; use Illuminate\Http\Request; class PackageController extends Controller { public function index() { return PackageResource::collection(Package::withCount('customers')->orderBy('price')->get()); } public function store(Request $CaBx1): JsonResponse { goto kf74i; kf74i: $bGUSs = $CaBx1->validate(['name' => 'required|string|max:100', 'speed' => 'nullable|string|max:50', 'price' => 'required|numeric|min:0', 'description' => 'nullable|string|max:500']); goto raoWp; CErqV: return (new PackageResource($unkSP))->response()->setStatusCode(201); goto MblE2; raoWp: $unkSP = Package::create($bGUSs); goto CErqV; MblE2: } public function show(Package $unkSP): PackageResource { return new PackageResource($unkSP->loadCount('customers')); } public function update(Request $CaBx1, Package $unkSP): PackageResource { goto P2kLZ; yv9TO: return new PackageResource($unkSP); goto Oc1M8; ApAUp: $unkSP->update($bGUSs); goto yv9TO; P2kLZ: $bGUSs = $CaBx1->validate(['name' => 'required|string|max:100', 'speed' => 'nullable|string|max:50', 'price' => 'required|numeric|min:0', 'description' => 'nullable|string|max:500']); goto ApAUp; Oc1M8: } public function destroy(Package $unkSP): JsonResponse { goto fytgG; KIfEd: return response()->json(['message' => 'Paket berhasil dihapus.']); goto b6qgA; fytgG: if ($unkSP->customers()->count() > 0) { return response()->json(['message' => 'Paket masih digunakan pelanggan.'], 422); } goto YyDT3; YyDT3: $unkSP->delete(); goto KIfEd; b6qgA: } }

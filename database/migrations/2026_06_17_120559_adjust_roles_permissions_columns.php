@@ -1,61 +1,8 @@
 <?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('roles', function (Blueprint $table) {
-            // Drop old columns
-            $table->dropColumn([
-                'can_import_customer',
-                'can_export_customer',
-                'can_manage_routers',
-                'can_access_mikrotik',
-                'can_manage_config',
-                'can_auto_isolir_config'
-            ]);
-
-            // Add new columns
-            $table->boolean('can_view_dashboard_olt')->default(false)->after('can_view_dashboard_map');
-            $table->boolean('can_import_export_customer')->default(false)->after('can_view_all_customers');
-            $table->boolean('is_saldo_limited')->default(false)->after('fee_locked');
-            $table->boolean('can_delete_customer_cuti')->default(false)->after('can_delete_customer');
-            
-            // Rename columns
-            $table->renameColumn('can_view_map', 'can_config_map');
-            $table->renameColumn('can_deduct_balance', 'can_manage_saldo');
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('roles', function (Blueprint $table) {
-            $table->renameColumn('can_config_map', 'can_view_map');
-            $table->renameColumn('can_manage_saldo', 'can_deduct_balance');
-
-            $table->dropColumn([
-                'can_view_dashboard_olt',
-                'can_import_export_customer',
-                'is_saldo_limited',
-                'can_delete_customer_cuti'
-            ]);
-
-            $table->boolean('can_import_customer')->default(false);
-            $table->boolean('can_export_customer')->default(false);
-            $table->boolean('can_manage_routers')->default(false);
-            $table->boolean('can_access_mikrotik')->default(false);
-            $table->boolean('can_manage_config')->default(false);
-            $table->boolean('can_auto_isolir_config')->default(false);
-        });
-    }
-};
+/*   __________________________________________________
+    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
+    |              on 2026-06-26 22:34:38              |
+    |    GitHub: https://github.com/pk-fr/yakpro-po    |
+    |__________________________________________________|
+*/
+ use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::table('roles', function (Blueprint $EUOFn) { goto XJdsQ; PAcYy: $EUOFn->boolean('can_view_dashboard_olt')->default(false)->after('can_view_dashboard_map'); goto DLYV_; XJdsQ: $EUOFn->dropColumn(['can_import_customer', 'can_export_customer', 'can_manage_routers', 'can_access_mikrotik', 'can_manage_config', 'can_auto_isolir_config']); goto PAcYy; rEwZo: $EUOFn->renameColumn('can_view_map', 'can_config_map'); goto PbwNR; eQfaD: $EUOFn->boolean('is_saldo_limited')->default(false)->after('fee_locked'); goto U0Vcl; U0Vcl: $EUOFn->boolean('can_delete_customer_cuti')->default(false)->after('can_delete_customer'); goto rEwZo; PbwNR: $EUOFn->renameColumn('can_deduct_balance', 'can_manage_saldo'); goto eDvNz; DLYV_: $EUOFn->boolean('can_import_export_customer')->default(false)->after('can_view_all_customers'); goto eQfaD; eDvNz: }); } public function down(): void { Schema::table('roles', function (Blueprint $EUOFn) { goto nNsHS; rYXsq: $EUOFn->boolean('can_export_customer')->default(false); goto Dq5sF; aX2Qf: $EUOFn->boolean('can_manage_config')->default(false); goto NaIGu; KGOYJ: $EUOFn->boolean('can_access_mikrotik')->default(false); goto aX2Qf; nNsHS: $EUOFn->renameColumn('can_config_map', 'can_view_map'); goto O0884; KvmNe: $EUOFn->dropColumn(['can_view_dashboard_olt', 'can_import_export_customer', 'is_saldo_limited', 'can_delete_customer_cuti']); goto QvO4Q; Dq5sF: $EUOFn->boolean('can_manage_routers')->default(false); goto KGOYJ; O0884: $EUOFn->renameColumn('can_manage_saldo', 'can_deduct_balance'); goto KvmNe; QvO4Q: $EUOFn->boolean('can_import_customer')->default(false); goto rYXsq; NaIGu: $EUOFn->boolean('can_auto_isolir_config')->default(false); goto x84VQ; x84VQ: }); } };

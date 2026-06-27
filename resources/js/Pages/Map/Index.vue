@@ -32,6 +32,11 @@
                         <option value="inactive">Nonaktif</option>
                     </select>
 
+                    <label class="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 shadow-sm text-sm text-slate-700 dark:text-slate-300">
+                        <input type="checkbox" v-model="showNames" @change="renderMarkers" class="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600">
+                        <span class="select-none">Tampilkan Nama</span>
+                    </label>
+
                     <button @click="refreshMap" class="p-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-sm" title="Refresh Data">
                         <svg class="w-5 h-5" :class="{'animate-spin text-indigo-500': isLoading}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -185,6 +190,7 @@ const allUnmappedCustomers = ref([]); // Customers without coordinates
 const searchQuery = ref('');
 const filterArea = ref('');
 const filterStatus = ref('');
+const showNames = ref(true);
 
 const unmappedSearch = ref('');
 const showUnmappedDropdown = ref(false);
@@ -423,6 +429,15 @@ function renderMarkers() {
             `;
 
             marker.bindPopup(popupContent);
+            if (showNames.value) {
+                marker.bindTooltip(c.name, {
+                    permanent: true,
+                    direction: 'bottom',
+                    className: 'customer-name-label',
+                    offset: [0, 5],
+                    opacity: 0.95
+                });
+            }
             markerClusterGroup.addLayer(marker);
             customerMarkers[c.id] = marker;
             bounds.push([c.lat, c.lng]);
@@ -603,5 +618,29 @@ async function saveCoordinate() {
 .custom-cluster-icon, .custom-customer-icon, .custom-picker-pin {
     background: transparent;
     border: none;
+}
+.leaflet-marker-icon svg {
+    display: block;
+}
+/* Custom Map Label for Names */
+.customer-name-label {
+    background-color: white !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    padding: 2px 6px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    white-space: nowrap !important;
+    opacity: 0.95 !important;
+}
+.customer-name-label::before {
+    display: none !important; /* Hide leaflet tooltip triangle */
+}
+.dark .customer-name-label {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
 }
 </style>

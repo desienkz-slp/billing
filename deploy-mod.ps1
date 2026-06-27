@@ -37,3 +37,6 @@ Write-Host "Running migrations..."
 ssh $SERVER "cd $REMOTE_PATH && php artisan migrate --force"
 
 Write-Host "Deploy complete!"
+scp "app\Http\Controllers\Api\V1\CustomerController.php" "${SERVER}:${REMOTE_PATH}/app/Http/Controllers/Api/V1/"
+scp "routes\api.php" "${SERVER}:${REMOTE_PATH}/routes/"
+scp "app\Http\Controllers\Web\CustomerController.php" "${SERVER}:${REMOTE_PATH}/app/Http/Controllers/Web/"

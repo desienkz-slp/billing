@@ -1,6 +1,6 @@
 <template>
     <SuperadminLayout :title="pageTitle">
-        <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-full h-full flex flex-col min-h-0 w-full mx-auto">
+        <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-full flex flex-col w-full mx-auto">
             
             <!-- Page Header -->
             <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 sm:px-0">

@@ -2,12 +2,13 @@
     <header class="header">
         <div class="header-left">
             <div class="header-brand">
-                <div class="brand-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <img v-if="$page.props.companyProfile?.company_logo" :src="$page.props.companyProfile.company_logo" alt="Logo" class="h-9 w-9 object-cover rounded-md" />
+                <div v-else class="flex items-center justify-center">
+                    <img src="/logo-netora.png?v=3" alt="Logo" class="h-9 w-9 object-contain drop-shadow-sm" />
                 </div>
                 <div>
-                    <div class="brand-text">LadaPala-Bill</div>
-                    <div class="brand-version">{{ $page.props.tenant?.name ?? 'ISP' }}</div>
+                    <div class="brand-text">NETORA MANAGE SYSTEM</div>
+                    <div class="brand-version max-w-[200px] truncate" :title="$page.props.companyProfile?.company_nama">{{ $page.props.companyProfile?.company_nama ?? 'Nama Perusahaan' }}</div>
                 </div>
             </div>
             <!-- Mobile Menu Toggle -->
