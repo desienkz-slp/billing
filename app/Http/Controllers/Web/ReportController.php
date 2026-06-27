@@ -1,8 +1,972 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-27 01:21:31              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- namespace App\Http\Controllers\Web; use App\Http\Controllers\Controller; use App\Models\Customer; use App\Models\Payment; use App\Models\Package; use App\Services\PermissionService; use Illuminate\Http\Request; use Inertia\Inertia; use Inertia\Response; class ReportController extends Controller { private $permissionService; public function __construct(PermissionService $Dzj0i) { $this->permissionService = $Dzj0i; } private function applyVisibilityFilter($OpYw4, $l8Pdr, $L7byM = 'sales_id', $dhvJK = false) { goto OGgMO; SSrcS: if ($l8Pdr->role->view_by_sales) { $pZPzE = $l8Pdr->perms_view_sales_ids ?? $l8Pdr->role->allowed_sales_ids ?? []; if (!empty($pZPzE)) { if ($dhvJK) { return $OpYw4->where(function ($HcEBQ) use ($pZPzE, $L7byM) { $HcEBQ->whereIn($L7byM, $pZPzE)->orWhereIn('collected_by', $pZPzE); }); } return $OpYw4->whereIn($L7byM, $pZPzE); } else { if ($dhvJK) { return $OpYw4->where(function ($HcEBQ) use ($l8Pdr, $L7byM) { $HcEBQ->where($L7byM, $l8Pdr->id)->orWhere('collected_by', $l8Pdr->id); }); } return $OpYw4->where($L7byM, $l8Pdr->id); } } goto PZyaT; aa1RL: if ($l8Pdr->role->can_view_all_customers) { return $OpYw4; } goto k3oQb; k3oQb: if ($l8Pdr->role->view_own_only) { if ($dhvJK) { return $OpYw4->where(function ($HcEBQ) use ($l8Pdr, $L7byM) { $HcEBQ->where($L7byM, $l8Pdr->id)->orWhere('collected_by', $l8Pdr->id); }); } return $OpYw4->where($L7byM, $l8Pdr->id); } goto SSrcS; OGgMO: if ($l8Pdr->is_system_admin || !$l8Pdr->role) { return $OpYw4; } goto aa1RL; PZyaT: return $OpYw4; goto eyubu; eyubu: } public function statistics(Request $DVgdY) { goto h41nL; DZu_M: $EUm2s = $l8Pdr->tenant; goto Xj5LU; Xj5LU: $ELrvo = clone Payment::where('status', 'paid')->where('payment_date', '>=', now()->subMonths(12)->startOfMonth()); goto GPsNA; kNaI1: $eH3Y2 = clone Payment::where('status', 'paid')->whereYear('payment_date', now()->year); goto ehOiQ; h41nL: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto TVJ6e; ehOiQ: $eH3Y2 = $this->applyVisibilityFilter($eH3Y2, $l8Pdr, 'sales_id', true)->selectRaw('payment_method, COUNT(*) as count, SUM(paid_amount) as total')->groupBy('payment_method')->get(); goto pS6Ej; TgDzR: $pO02o = Customer::where('status', 'active')->selectRaw('package_id, COUNT(*) as count')->groupBy('package_id')->with('package')->get(); goto kNaI1; GPsNA: $ELrvo = $this->applyVisibilityFilter($ELrvo, $l8Pdr, 'sales_id', true)->selectRaw("to_char(payment_date, 'YYYY-MM') as period, COUNT(*) as count, SUM(paid_amount) as total")->groupByRaw("to_char(payment_date, 'YYYY-MM')")->orderBy('period')->get(); goto rj6r9; pS6Ej: return Inertia::render('Reports/Statistics', ['capabilities' => $tMeOZ, 'revenueMonthly' => $ELrvo, 'customerGrowth' => $jPW7D, 'packageDist' => $pO02o, 'methodStats' => $eH3Y2]); goto tiXwM; TVJ6e: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto DZu_M; rj6r9: $jPW7D = Customer::where('registration_date', '>=', now()->subMonths(6)->startOfMonth())->selectRaw("to_char(registration_date, 'YYYY-MM') as period, COUNT(*) as count")->groupByRaw("to_char(registration_date, 'YYYY-MM')")->orderBy('period')->get(); goto TgDzR; tiXwM: } public function finance(Request $DVgdY): Response { goto aQBis; NMazN: return Inertia::render('Reports/Finance', ['capabilities' => $tMeOZ, 'monthlyData' => $see3D, 'yearTotal' => $AiQC6, 'year' => $HO142]); goto G8BRr; gQgB1: $AiQC6 = ['pendapatan' => collect($see3D)->sum('pendapatan'), 'ppn' => collect($see3D)->sum('ppn'), 'pengeluaran' => collect($see3D)->sum('pengeluaran')]; goto NMazN; aQBis: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto Ej1km; mD_aN: for ($iN37n = 1; $iN37n <= 12; $iN37n++) { $tG8jb = Payment::where('status', 'paid')->whereMonth('payment_date', $iN37n)->whereYear('payment_date', $HO142); $Uneug = $this->applyVisibilityFilter($tG8jb, $l8Pdr, 'sales_id', true)->sum('paid_amount'); $lj6k9 = \App\Models\OtherIncome::whereMonth('income_date', $iN37n)->whereYear('income_date', $HO142); $RjNtW = $this->applyVisibilityFilter($lj6k9, $l8Pdr, 'created_by')->sum('amount'); $Uneug += $RjNtW; $eBsn5 = Payment::where('status', 'paid')->whereMonth('payment_date', $iN37n)->whereYear('payment_date', $HO142); $GdnIT = $this->applyVisibilityFilter($eBsn5, $l8Pdr, 'sales_id', true)->sum('ppn_amount'); $nnIT9 = \App\Models\Expense::where('status', 'active')->whereMonth('expense_date', $iN37n)->whereYear('expense_date', $HO142); $GaDcs = $this->applyVisibilityFilter($nnIT9, $l8Pdr, 'created_by')->sum('amount'); $see3D[] = ['month' => \Carbon\Carbon::create($HO142, $iN37n)->locale('id')->isoFormat('MMM'), 'pendapatan' => $Uneug, 'ppn' => $GdnIT, 'pengeluaran' => $GaDcs]; } goto gQgB1; smkM3: $HO142 = $DVgdY->get('year', now()->year); goto MAA2M; MAA2M: $see3D = []; goto mD_aN; Ej1km: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto smkM3; G8BRr: } public function detailPendapatan(Request $DVgdY): Response { goto q1dtY; gh4pO: return Inertia::render('Reports/DetailPendapatan', ['capabilities' => $tMeOZ, 'payments' => $F1NWA, 'totals' => $eIunX, 'month' => $x7ABN, 'areas' => $dbh6Z]); goto tnrCN; kxQ7T: $x7ABN = $DVgdY->get('month', now()->format('Y-m')); goto jzUBt; oOQGT: $F1NWA = $this->applyVisibilityFilter($Sofhk, $l8Pdr, 'sales_id', true)->orderByDesc('payment_date')->orderByDesc('id')->get(); goto U1YiZ; U1YiZ: $eIunX = ['amount' => collect($F1NWA)->sum('paid_amount'), 'count' => count($F1NWA)]; goto DBdUa; ZUhmB: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto kxQ7T; jzUBt: $Sofhk = Payment::with(['customer.package', 'customer.area', 'collector'])->where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$x7ABN]); goto oOQGT; q1dtY: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto ZUhmB; DBdUa: $dbh6Z = Area::orderBy('name')->get(); goto gh4pO; tnrCN: } public function pengeluaran(Request $DVgdY): Response { goto UdwgP; F74PI: return Inertia::render('Reports/Pengeluaran', ['capabilities' => $tMeOZ, 'expenses' => $pdfuQ, 'total' => $izHI3, 'month' => $x7ABN, 'categories' => $bSWby]); goto l8Ctz; LPGZM: $bSWby = ['Operasional', 'Marketing', 'Alat/Material', 'Pajak', 'Deviden', 'Lainnya']; goto F74PI; WQtVF: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto R5kl4; z7PI2: $pdfuQ = $this->applyVisibilityFilter($xBj9o, $l8Pdr, 'created_by')->orderByDesc('id')->get(); goto CgWys; txtV7: $xBj9o = \App\Models\Expense::with('creator')->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$x7ABN])->where('status', 'active'); goto z7PI2; R5kl4: $x7ABN = $DVgdY->get('month', now()->format('Y-m')); goto txtV7; CgWys: $izHI3 = $pdfuQ->sum('amount'); goto LPGZM; UdwgP: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto WQtVF; l8Ctz: } public function storePengeluaran(Request $DVgdY) { goto hu8rR; sHHsa: $UStHU['created_by'] = $DVgdY->user()->id; goto MxVtt; trRX8: $UStHU['status'] = 'active'; goto UqVdk; hu8rR: $UStHU = $DVgdY->validate(['description' => 'required|string|max:255', 'category' => 'required|string|max:100', 'amount' => 'required|integer|min:1']); goto nAdQv; nAdQv: $UStHU['tenant_id'] = $DVgdY->user()->tenant_id; goto sHHsa; YN3DS: return back()->with('success', 'Pengeluaran berhasil ditambahkan.'); goto ehKTP; MxVtt: $UStHU['expense_date'] = now()->toDateString(); goto trRX8; UqVdk: \App\Models\Expense::create($UStHU); goto YN3DS; ehKTP: } public function tax(Request $DVgdY) { goto Gmqih; FuIEL: return Inertia::render('Reports/Tax', ['capabilities' => $tMeOZ, 'payments' => $F1NWA, 'totalPpn' => $Ta8yv, 'totalBhp' => $NnNTs, 'totalAdmin' => $R1aok, 'month' => $x7ABN]); goto oZYMO; dDUbU: $Ta8yv = $BKJb2->sum('ppn'); goto IgZJt; LCxR0: $EUm2s = $l8Pdr->tenant; goto fBSD7; AM68b: $kEM5u = Payment::with(['customer.package'])->where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$x7ABN]); goto cKYL9; TFHoG: $F1NWA = $BKJb2->filter(fn($xQSoW) => $xQSoW['ppn'] > 0 || $xQSoW['bhp_uso'] > 0 || $xQSoW['admin'] > 0)->values(); goto FuIEL; IgZJt: $NnNTs = $BKJb2->sum('bhp_uso'); goto NQJD5; qvfuF: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto LCxR0; NQJD5: $R1aok = $BKJb2->sum('admin'); goto TFHoG; Gmqih: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto qvfuF; fBSD7: $x7ABN = $DVgdY->get('month', now()->format('Y-m')); goto AM68b; cKYL9: $BKJb2 = $this->applyVisibilityFilter($kEM5u, $l8Pdr, 'sales_id', true)->orderByDesc('payment_date')->get()->map(function ($i2QLG) { goto lcdEL; yyiyj: $IzGR8 = $RX5oA?->package; goto HPYPB; TrtSv: $n6XsS = $RX5oA?->pakai_admin ? $rjfm8 : 0; goto dXHRj; HPYPB: $glUnl = $IzGR8?->price ?? 0; goto vLD92; lcdEL: $RX5oA = $i2QLG->customer; goto yyiyj; AESPp: $AMXGL = max(0, $IimT7 - $SpSJR); goto A3AYM; dXHRj: return ['id' => $i2QLG->id, 'payment_date' => $i2QLG->payment_date?->format('d/m/Y H:i'), 'customer_name' => $RX5oA?->name ?? '-', 'package_name' => $IzGR8?->name ?? '-', 'ppn' => (float) $i2QLG->ppn_amount, 'bhp_uso' => (float) $tUJOW, 'admin' => (float) $n6XsS]; goto QLIxV; vLD92: $IimT7 = $i2QLG->invoice ? $i2QLG->invoice->amount : $i2QLG->amount; goto MXUHF; j728m: $rjfm8 = 2500; goto nY31J; A3AYM: $TUNhx = 1.25; goto j728m; nY31J: $tUJOW = $RX5oA?->pakai_bhp ? round($AMXGL * ($TUNhx / 100)) : 0; goto TrtSv; MXUHF: $SpSJR = $i2QLG->discount; goto AESPp; QLIxV: }); goto dDUbU; oZYMO: } public function total(Request $DVgdY): Response { goto Bz2t_; h0X1v: return Inertia::render('Reports/Total', ['capabilities' => $tMeOZ, 'pendapatan' => $vV7mh, 'pendapatanLain' => $OZbWX, 'ppn' => $GdnIT, 'txnCount' => $so3lf, 'pengeluaran' => $GaDcs, 'setoran' => $Tw859, 'month' => $x7ABN, 'tenant' => $EUm2s, 'total_fee' => $SmS2R, 'belum_disetor' => $Y_5rE]); goto MLwYl; yXA90: $GaDcs = $this->applyVisibilityFilter(\App\Models\Expense::where('status', 'active')->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$x7ABN]), $l8Pdr, 'created_by')->sum('amount'); goto NlzBm; jxd2y: $EUm2s = $l8Pdr->tenant; goto NSBph; uQH_7: $vV7mh = $this->applyVisibilityFilter(Payment::where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$x7ABN]), $l8Pdr, 'sales_id', true)->sum('paid_amount'); goto w6lVd; NlzBm: $Tw859 = $this->applyVisibilityFilter(\App\Models\Deposit::where('status', 'active')->whereRaw("to_char(deposit_date, 'YYYY-MM') = ?", [$x7ABN]), $l8Pdr, 'sales_id')->sum('amount'); goto BWD01; BWD01: $Pr3kR = \App\Models\User::where('is_active', true); goto nssTv; t2gVo: $SmS2R = $Fbbpx->sum('fee'); goto w0uFF; NSBph: $x7ABN = $DVgdY->get('month', now()->format('Y-m')); goto uQH_7; bXMIM: $GdnIT = $this->applyVisibilityFilter(Payment::where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$x7ABN]), $l8Pdr, 'sales_id', true)->sum('ppn_amount'); goto Y2gJ3; Y2gJ3: $so3lf = $this->applyVisibilityFilter(Payment::where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$x7ABN]), $l8Pdr, 'sales_id', true)->count(); goto yXA90; w0uFF: $Y_5rE = $Fbbpx->sum('sisa'); goto h0X1v; h3WwS: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto jxd2y; vHGoO: $Fbbpx = $Pr3kR->with(['role', 'collectedPayments' => function ($HcEBQ) use ($x7ABN) { $HcEBQ->where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$x7ABN]); }, 'deposits' => function ($HcEBQ) use ($x7ABN) { $HcEBQ->where('status', 'active')->whereRaw("to_char(deposit_date, 'YYYY-MM') = ?", [$x7ABN]); }, 'expenses' => function ($HcEBQ) use ($x7ABN) { $HcEBQ->where('status', 'active')->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$x7ABN]); }])->get()->map(function ($UwHHl) { goto K2T33; sXVOv: return ['fee' => $en8eD, 'sisa' => $S1cDB]; goto dgQew; Now8u: $S1cDB = $SVrlt - $mTWFs; goto sXVOv; Nx2M3: $en8eD = $UwHHl->fee_persen / 100 * $zUClv + $UwHHl->fee_fix * $LOtNh; goto E81Q5; E81Q5: $GaDcs = $UwHHl->expenses->sum('amount'); goto cIOFQ; HYXrt: $SVrlt = $zUClv - $en8eD - $GaDcs; goto Now8u; xlyZL: $LOtNh = $UwHHl->collectedPayments->count(); goto Nx2M3; K2T33: $zUClv = $UwHHl->collectedPayments->sum('paid_amount'); goto xlyZL; cIOFQ: $mTWFs = $UwHHl->deposits->sum('amount'); goto HYXrt; dgQew: }); goto t2gVo; w6lVd: $OZbWX = $this->applyVisibilityFilter(\App\Models\OtherIncome::whereRaw("to_char(income_date, 'YYYY-MM') = ?", [$x7ABN]), $l8Pdr, 'created_by')->sum('amount'); goto bXMIM; nssTv: if (!$l8Pdr->is_system_admin && $l8Pdr->role && !$l8Pdr->role->can_view_all_customers) { if ($l8Pdr->role->view_own_only) { $Pr3kR->where('id', $l8Pdr->id); } elseif ($l8Pdr->role->view_by_sales) { $pZPzE = $l8Pdr->perms_view_sales_ids ?? $l8Pdr->role->allowed_sales_ids ?? []; if (!empty($pZPzE)) { $Pr3kR->whereIn('id', $pZPzE); } else { $Pr3kR->where('id', $l8Pdr->id); } } } goto vHGoO; Bz2t_: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto h3WwS; MLwYl: } public function cashflow(Request $DVgdY): Response { goto FIdME; cARK1: $KT12w = \Carbon\Carbon::parse($x7ABN . '-01')->startOfDay(); goto Uk02j; vt1SY: $e3lqA = $e3lqA->map(function ($U9Uwf) use (&$ubGSG) { goto Oy4l_; Xkvpp: $U9Uwf['saldo'] = $ubGSG; goto P7_5c; NNr8j: $ubGSG -= $U9Uwf['keluar']; goto Xkvpp; Oy4l_: $ubGSG += $U9Uwf['masuk']; goto NNr8j; P7_5c: return $U9Uwf; goto lbbmG; lbbmG: }); goto GVgql; MWo0Q: $RjNtW = $this->applyVisibilityFilter($lj6k9, $l8Pdr, 'created_by')->get(); goto J1dTZ; ZbJGk: $ubGSG = $WTQVP; goto vt1SY; Qw7Ez: $fPtQ_ = $F1NWA->sum('ppn_amount'); goto tW6o9; KIW6S: $XV0_B = Payment::where('status', 'paid')->where('payment_date', '<', $KT12w)->sum('ppn_amount'); goto Rql6o; R6TBs: $yDdqZ = collect($JQK5q)->map(function ($izHI3, $hwgRJ) { return ['user' => $hwgRJ, 'total' => $izHI3]; })->values(); goto Tqpq1; FIdME: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto hLgeB; ncg2i: $e3lqA = $e3lqA->sortBy('tanggal')->values(); goto cARK1; Uk02j: $ZINhG = Payment::where('status', 'paid')->where('payment_date', '<', $KT12w)->sum('paid_amount'); goto LpnLS; Jgz7z: $xBj9o = \App\Models\Expense::with('creator:id,name')->where('status', 'active')->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$x7ABN]); goto a_Svy; x2DNB: $Ibklb = \App\Models\Expense::where('status', 'active')->where('expense_date', '<', $KT12w)->sum('amount'); goto mpFZr; WiHwS: $LDfuV = $WjpFY->sum('sales_fee_amount') + $WjpFY->sum('collector_fee_amount') + $WjpFY->sum('ppn_amount') + \App\Models\Expense::where('status', 'active')->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$gJfTK])->sum('amount'); goto k9Tg5; SEXxB: if ($O9YwX > 0) { $A93nL = ($e_hB8 - $O9YwX) / $O9YwX * 100; } elseif ($O9YwX <= 0 && $e_hB8 > 0) { $A93nL = 100; } goto hfnbo; hfnbo: $e3lqA = collect(); goto I9rl1; T5sQ7: $QNQa4 = $SmS2R + $mHNiT + $fPtQ_; goto UIBZR; Rql6o: $m4AQn = Payment::where('status', 'paid')->where('payment_date', '<', $KT12w)->sum('sales_fee_amount'); goto XYvbR; h7zgI: $HEI52 = $this->applyVisibilityFilter($beLsq, $l8Pdr, 'sales_id', true)->get(); goto liAW8; DeXap: foreach ($HEI52 as $ZOwGR) { goto dFUPB; ltqq4: if (!isset($JQK5q[$QdPAT])) { $JQK5q[$QdPAT] = 0; } goto lYkJN; dFUPB: $QdPAT = $ZOwGR->sales ? $ZOwGR->sales->name : 'Unknown'; goto ltqq4; lYkJN: $JQK5q[$QdPAT] += $ZOwGR->sales_fee_amount; goto Zmocw; Zmocw: } goto yOAJ1; dRLN9: $tMp5v = $F1NWA->sum('paid_amount'); goto wzbqt; dT6Js: $wg2rm = $tMp5v + $ZXWCa; goto Qw7Ez; J1dTZ: $ZXWCa = $RjNtW->sum('amount'); goto qJlfM; tLOds: $mBdEi = $this->applyVisibilityFilter($n8TwG, $l8Pdr, 'sales_id', true)->get(); goto YuSab; Tqpq1: $SmS2R = $yDdqZ->sum('total'); goto Jgz7z; I9rl1: foreach ($F1NWA as $xQSoW) { goto jkNxX; FmOBs: $N5U7s = \Carbon\Carbon::parse($xQSoW->payment_date)->format('Y-m-d'); goto sQ78I; sQ78I: $bRHe9 = $N5U7s . ' ' . $XY69y; goto fQN_C; jkNxX: $XY69y = $xQSoW->created_at ? \Carbon\Carbon::parse($xQSoW->created_at)->format('H:i:s') : '00:00:00'; goto FmOBs; QjQL3: if ($xQSoW->sales_fee_amount > 0) { $QdPAT = $xQSoW->sales ? $xQSoW->sales->name : 'Unknown'; $e3lqA->push(['tanggal' => $bRHe9, 'keterangan' => 'Pembayaran Fee Sales (' . $QdPAT . ')', 'referensi' => $xQSoW->transaction_id ?: '-', 'masuk' => 0, 'keluar' => $xQSoW->sales_fee_amount]); } goto MQt8s; fQN_C: $e3lqA->push(['tanggal' => $bRHe9, 'keterangan' => 'Penerimaan Pelanggan via ' . ucfirst($xQSoW->payment_method), 'referensi' => $xQSoW->transaction_id ?: '-', 'masuk' => $xQSoW->paid_amount, 'keluar' => 0]); goto sMK_u; sMK_u: if ($xQSoW->ppn_amount > 0) { $e3lqA->push(['tanggal' => $bRHe9, 'keterangan' => 'Potongan PPN Tercatat', 'referensi' => $xQSoW->transaction_id ?: '-', 'masuk' => 0, 'keluar' => $xQSoW->ppn_amount]); } goto QjQL3; MQt8s: if ($xQSoW->collector_fee_amount > 0) { $QdPAT = $xQSoW->collector ? $xQSoW->collector->name : 'Unknown'; $e3lqA->push(['tanggal' => $bRHe9, 'keterangan' => 'Pembayaran Fee Collector (' . $QdPAT . ')', 'referensi' => $xQSoW->transaction_id ?: '-', 'masuk' => 0, 'keluar' => $xQSoW->collector_fee_amount]); } goto A4kp2; A4kp2: } goto zJk10; rZoB3: $x7ABN = $DVgdY->get('month', now()->format('Y-m')); goto E_9sl; a_Svy: $pdfuQ = $this->applyVisibilityFilter($xBj9o, $l8Pdr, 'created_by')->get(); goto S065y; wzbqt: $lj6k9 = \App\Models\OtherIncome::whereRaw("to_char(income_date, 'YYYY-MM') = ?", [$x7ABN]); goto MWo0Q; tW6o9: $beLsq = Payment::with('sales:id,name')->where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$x7ABN])->where('sales_fee_amount', '>', 0); goto h7zgI; QzVVd: return Inertia::render('Reports/Cashflow', ['capabilities' => $tMeOZ, 'reportData' => $VslsR, 'month' => $x7ABN]); goto bOJxC; GVgql: $VslsR = ['arus_masuk' => ['penerimaan_pelanggan' => ['total' => $tMp5v, 'metode' => $hHDuK], 'pendapatan_lain' => ['total' => $ZXWCa, 'items' => $CDNh9], 'total' => $wg2rm], 'arus_keluar' => ['fee_per_user' => ['total' => $SmS2R, 'users' => $yDdqZ], 'pengeluaran_per_user' => ['total' => $mHNiT, 'users' => $CGr2l], 'ppn' => $fPtQ_, 'total' => $QNQa4], 'summary' => ['bersih_bulan_ini' => $e_hB8, 'bersih_bulan_lalu' => $O9YwX, 'last_month_label' => \Carbon\Carbon::createFromFormat('Y-m', $gJfTK)->locale('en')->isoFormat('MMMM YYYY'), 'growth' => round($A93nL, 1)], 'riwayat_transaksi' => ['saldo_awal' => $WTQVP, 'data' => $e3lqA]]; goto QzVVd; LpnLS: $u2X6b = \App\Models\OtherIncome::where('income_date', '<', $KT12w)->sum('amount'); goto KIW6S; NJ2V2: $hHDuK = $F1NWA->groupBy('payment_method')->map(function ($d66dI, $wOqi0) { return ['nama' => ucfirst($wOqi0 ?: 'Lainnya'), 'jumlah_trx' => $d66dI->count(), 'total' => $d66dI->sum('paid_amount')]; })->values(); goto dRLN9; k9Tg5: $O9YwX = $Gw7Y9 - $LDfuV; goto wAg0k; zJk10: foreach ($RjNtW as $YCE3h) { goto wLI1A; xPAQr: $e3lqA->push(['tanggal' => $N5U7s . ' ' . $XY69y, 'keterangan' => 'Pendapatan Lain: ' . $YCE3h->category . ($YCE3h->notes ? ' (' . $YCE3h->notes . ')' : ''), 'referensi' => '-', 'masuk' => $YCE3h->amount, 'keluar' => 0]); goto YpJT9; wLI1A: $XY69y = $YCE3h->created_at ? \Carbon\Carbon::parse($YCE3h->created_at)->format('H:i:s') : '00:00:00'; goto vESch; vESch: $N5U7s = \Carbon\Carbon::parse($YCE3h->income_date)->format('Y-m-d'); goto xPAQr; YpJT9: } goto urJpb; mpFZr: $WTQVP = $ZINhG + $u2X6b - ($XV0_B + $m4AQn + $xqhPi + $Ibklb); goto ZbJGk; qJlfM: $CDNh9 = $RjNtW->groupBy('category')->map(function ($d66dI, $wuIWq) { return ['nama' => $wuIWq ?: 'Lain-lain', 'jumlah_trx' => $d66dI->count(), 'total' => $d66dI->sum('amount')]; })->values(); goto dT6Js; wAg0k: $A93nL = 0; goto SEXxB; O5d0W: $mHNiT = $CGr2l->sum('total'); goto T5sQ7; XYvbR: $xqhPi = Payment::where('status', 'paid')->where('payment_date', '<', $KT12w)->sum('collector_fee_amount'); goto x2DNB; hLgeB: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto rZoB3; yOAJ1: foreach ($mBdEi as $x_6N3) { goto IgSK5; IgSK5: $QdPAT = $x_6N3->collector ? $x_6N3->collector->name : 'Unknown'; goto YO4lf; YO4lf: if (!isset($JQK5q[$QdPAT])) { $JQK5q[$QdPAT] = 0; } goto l_ACv; l_ACv: $JQK5q[$QdPAT] += $x_6N3->collector_fee_amount; goto SJDUd; SJDUd: } goto R6TBs; O1xG_: $gJfTK = \Carbon\Carbon::createFromFormat('Y-m', $x7ABN)->subMonth()->format('Y-m'); goto SHQp1; YuSab: $JQK5q = []; goto DeXap; SHQp1: $WjpFY = Payment::where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$gJfTK])->get(); goto gFjD4; urJpb: foreach ($pdfuQ as $qQzw6) { goto cLT2k; OiPhZ: $QdPAT = $qQzw6->creator ? $qQzw6->creator->name : 'Unknown'; goto GhZbr; cLT2k: $XY69y = $qQzw6->created_at ? \Carbon\Carbon::parse($qQzw6->created_at)->format('H:i:s') : '00:00:00'; goto bARgW; GhZbr: $e3lqA->push(['tanggal' => $N5U7s . ' ' . $XY69y, 'keterangan' => 'Pengeluaran (' . $QdPAT . '): ' . $qQzw6->category . ($qQzw6->description ? ' (' . $qQzw6->description . ')' : ''), 'referensi' => '-', 'masuk' => 0, 'keluar' => $qQzw6->amount]); goto iOCyH; bARgW: $N5U7s = \Carbon\Carbon::parse($qQzw6->expense_date)->format('Y-m-d'); goto OiPhZ; iOCyH: } goto ncg2i; UIBZR: $e_hB8 = $wg2rm - $QNQa4; goto O1xG_; E_9sl: $Sofhk = Payment::where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$x7ABN]); goto tcaIh; S065y: $CGr2l = $pdfuQ->groupBy('created_by')->map(function ($d66dI, $Tas2N) { $il_KW = $d66dI->first(); return ['user' => $il_KW->creator ? $il_KW->creator->name : 'Unknown', 'jumlah_item' => $d66dI->count(), 'total' => $d66dI->sum('amount')]; })->values(); goto O5d0W; tcaIh: $F1NWA = $this->applyVisibilityFilter($Sofhk, $l8Pdr, 'sales_id', true)->get(); goto NJ2V2; liAW8: $n8TwG = Payment::with('collector:id,name')->where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$x7ABN])->where('collector_fee_amount', '>', 0); goto tLOds; gFjD4: $Gw7Y9 = $WjpFY->sum('paid_amount') + \App\Models\OtherIncome::whereRaw("to_char(income_date, 'YYYY-MM') = ?", [$gJfTK])->sum('amount'); goto WiHwS; bOJxC: } public function fee(Request $DVgdY): Response { goto v5Afe; wqEiZ: return Inertia::render('Sales/Fee', ['capabilities' => $tMeOZ, 'userFees' => $oLHzL, 'month' => $x7ABN, 'totalSalesFee' => $FlKGw, 'totalCollectorFee' => $KOrfG, 'totalKeseluruhan' => $Ainte]); goto WSCnW; uQZXJ: $oLHzL = []; goto meAFS; Vlghe: $nP20R = \Carbon\Carbon::parse($x7ABN . '-01')->endOfMonth(); goto Cs59g; HjHxI: $Ainte = $FlKGw + $KOrfG; goto wqEiZ; oZcQH: foreach ($HEI52 as $ZOwGR) { if (!isset($MoING[$ZOwGR->user_id])) { $MoING[$ZOwGR->user_id] = ['sales' => 0, 'collector' => 0, 'total' => 0]; } $MoING[$ZOwGR->user_id]['sales'] += $ZOwGR->total_fee; } goto pwgS4; Wl45n: $MoING = []; goto oZcQH; GMr4q: $mBdEi = $o_QuJ->groupBy('collected_by')->selectRaw('collected_by as user_id, SUM(collector_fee_amount) as total_fee')->get(); goto Wl45n; nK7AJ: if (!$l8Pdr->is_system_admin && $l8Pdr->role && !$l8Pdr->role->can_view_all_customers) { if ($l8Pdr->role->view_own_only) { $Vtebf->where('sales_id', $l8Pdr->id); $o_QuJ->where('collected_by', $l8Pdr->id); } elseif ($l8Pdr->role->view_by_sales) { $pZPzE = $l8Pdr->perms_view_sales_ids ?? $l8Pdr->role->allowed_sales_ids ?? []; if (!empty($pZPzE)) { $Vtebf->whereIn('sales_id', $pZPzE); $o_QuJ->whereIn('collected_by', $pZPzE); } else { $Vtebf->where('sales_id', $l8Pdr->id); $o_QuJ->where('collected_by', $l8Pdr->id); } } } goto JlMAy; pwgS4: foreach ($mBdEi as $x_6N3) { if (!isset($MoING[$x_6N3->user_id])) { $MoING[$x_6N3->user_id] = ['sales' => 0, 'collector' => 0, 'total' => 0]; } $MoING[$x_6N3->user_id]['collector'] += $x_6N3->total_fee; } goto uQZXJ; b3F9w: $C4_33 = \Carbon\Carbon::parse($x7ABN . '-01')->startOfMonth(); goto Vlghe; i6h5Y: $ehJb7 = \App\Models\User::whereIn('id', $kekNT)->with('role')->get()->keyBy('id'); goto Qh_EX; B3KrO: foreach ($MoING as $JTqGa => $en8eD) { goto tOj9Z; o0QuI: $FlKGw += $en8eD['sales']; goto K5o1j; u0B3H: $oLHzL[] = ['id' => $JTqGa, 'name' => $ehJb7[$JTqGa]->name ?? 'Unknown', 'role_name' => $ehJb7[$JTqGa]->role->name ?? 'Unknown', 'sales_fee' => $en8eD['sales'], 'collector_fee' => $en8eD['collector'], 'total_fee' => $en8eD['total']]; goto vrIU2; K5o1j: $KOrfG += $en8eD['collector']; goto u0B3H; tOj9Z: $en8eD['total'] = $en8eD['sales'] + $en8eD['collector']; goto o0QuI; vrIU2: } goto gyWBg; zM_kl: $x7ABN = $DVgdY->get('month', now()->format('Y-m')); goto b3F9w; JlMAy: $HEI52 = $Vtebf->groupBy('sales_id')->selectRaw('sales_id as user_id, SUM(sales_fee_amount) as total_fee')->get(); goto GMr4q; iZI4z: $C6ucv = $l8Pdr->tenant_id; goto zM_kl; v5Afe: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto Wa8N6; meAFS: $kekNT = array_keys($MoING); goto i6h5Y; Cs59g: $Vtebf = Payment::where('tenant_id', $C6ucv)->whereBetween('payment_date', [$C4_33, $nP20R])->where('status', 'paid')->whereNotNull('sales_id'); goto RXUw7; nHFbl: $KOrfG = 0; goto B3KrO; Wa8N6: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto iZI4z; gyWBg: usort($oLHzL, function ($Gamxx, $v7zgj) { return $v7zgj['total_fee'] <=> $Gamxx['total_fee']; }); goto HjHxI; RXUw7: $o_QuJ = Payment::where('tenant_id', $C6ucv)->whereBetween('payment_date', [$C4_33, $nP20R])->where('status', 'paid')->whereNotNull('collected_by'); goto nK7AJ; Qh_EX: $FlKGw = 0; goto nHFbl; WSCnW: } public function setoran(Request $DVgdY): Response { goto QQ0Jn; ktmnF: return Inertia::render('Sales/Setoran', ['capabilities' => $tMeOZ, 'salesUsers' => $Fbbpx, 'month' => $x7ABN, 'totalUangDiterima' => $qpTcs, 'totalTxn' => $QMVZx, 'totalFee' => $a2UO3, 'totalHarusDisetor' => $gcLaj, 'totalSales' => $QXHVa]); goto aSHE5; VUCB0: $a2UO3 = $Fbbpx->sum('fee'); goto O4NDf; CwSu_: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto ashfm; UgKLI: $Fbbpx = $Pr3kR->with(['role', 'collectedPayments' => function ($HcEBQ) use ($x7ABN) { $HcEBQ->where('status', 'paid')->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$x7ABN]); }, 'deposits' => function ($HcEBQ) use ($x7ABN) { $HcEBQ->where('status', 'active')->whereRaw("to_char(deposit_date, 'YYYY-MM') = ?", [$x7ABN]); }, 'expenses' => function ($HcEBQ) use ($x7ABN) { $HcEBQ->where('status', 'active')->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$x7ABN]); }])->get()->map(function ($UwHHl) { goto Nz38N; TGcHk: $S1cDB = $SVrlt - $mTWFs; goto lwZGt; YCCXc: $LOtNh = $UwHHl->collectedPayments->count(); goto KFL57; TWB96: $SVrlt = $zUClv - $en8eD - $GaDcs; goto TGcHk; Nz38N: $zUClv = $UwHHl->collectedPayments->sum('paid_amount'); goto YCCXc; lwZGt: return ['id' => $UwHHl->id, 'name' => $UwHHl->name, 'role_name' => $UwHHl->role ? $UwHHl->role->name : '-', 'uang_diterima' => $zUClv, 'fee' => $en8eD, 'pengeluaran' => $GaDcs, 'harus_disetor' => $SVrlt, 'sudah_disetor' => $mTWFs, 'sisa' => $S1cDB, 'txn' => $LOtNh]; goto Hktqa; KFL57: $en8eD = $UwHHl->fee_persen / 100 * $zUClv + $UwHHl->fee_fix * $LOtNh; goto KrAIn; KrAIn: $GaDcs = $UwHHl->expenses->sum('amount'); goto GHWdU; GHWdU: $mTWFs = $UwHHl->deposits->sum('amount'); goto TWB96; Hktqa: })->filter(fn($UwHHl) => $UwHHl['uang_diterima'] > 0 || $UwHHl['sudah_disetor'] > 0 || $UwHHl['pengeluaran'] > 0)->values(); goto SkX8D; QQ0Jn: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto CwSu_; QqLFT: $QXHVa = $Fbbpx->count(); goto ktmnF; LczT9: $Pr3kR = \App\Models\User::where('is_active', true); goto NJks3; ashfm: $x7ABN = $DVgdY->get('month', now()->format('Y-m')); goto LczT9; NJks3: if (!$l8Pdr->is_system_admin && $l8Pdr->role && !$l8Pdr->role->can_view_all_customers) { if ($l8Pdr->role->view_own_only) { $Pr3kR->where('id', $l8Pdr->id); } elseif ($l8Pdr->role->view_by_sales) { $pZPzE = $l8Pdr->perms_view_sales_ids ?? $l8Pdr->role->allowed_sales_ids ?? []; if (!empty($pZPzE)) { $Pr3kR->whereIn('id', $pZPzE); } else { $Pr3kR->where('id', $l8Pdr->id); } } } goto UgKLI; O4NDf: $gcLaj = $Fbbpx->sum('harus_disetor'); goto QqLFT; SkX8D: $qpTcs = $Fbbpx->sum('uang_diterima'); goto FkASP; FkASP: $QMVZx = $Fbbpx->sum('txn'); goto VUCB0; aSHE5: } public function storeSetoran(Request $DVgdY) { goto TMQWg; TMQWg: $UStHU = $DVgdY->validate(['sales_id' => 'required|exists:users,id', 'amount' => 'required|integer|min:1', 'method' => 'required|string|max:30', 'notes' => 'nullable|string|max:255']); goto zDcTf; aPhum: $UStHU['received_by'] = $DVgdY->user()->id; goto bTvK_; bTvK_: $UStHU['deposit_date'] = now()->toDateString(); goto Duved; Duved: $UStHU['status'] = 'active'; goto uSovI; zDcTf: $UStHU['tenant_id'] = $DVgdY->user()->tenant_id; goto aPhum; uSovI: \App\Models\Deposit::create($UStHU); goto M5dB3; M5dB3: return back()->with('success', 'Setoran berhasil dicatat.'); goto W8HLH; W8HLH: } public function destroySetoran(Request $DVgdY, \App\Models\Deposit $ets3C) { goto GEr0d; sQIOt: $ets3C->update(['status' => 'cancelled', 'cancelled_at' => now()]); goto cvYT0; pp43H: if (!app(\App\Services\PermissionService::class)->userCan($l8Pdr, 'billing.deposits.cancel')) { abort(403); } goto sQIOt; cvYT0: return back()->with('success', 'Setoran berhasil dibatalkan.'); goto xMc23; GEr0d: $l8Pdr = $DVgdY->user(); goto pp43H; xMc23: } public function mitra(Request $DVgdY) { goto t6Oni; XE4CB: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto AU8XN; h8uzN: $YI1OX = $uieV1->filter(function ($UwHHl) { return app(\App\Services\PermissionService::class)->userCan($UwHHl, 'billing.payments.create'); })->values()->map(function ($UwHHl) { return ['id' => $UwHHl->id, 'name' => $UwHHl->name, 'role_name' => $UwHHl->role ? $UwHHl->role->name : '-', 'fee_persen' => $UwHHl->fee_persen, 'fee_fix' => $UwHHl->fee_fix, 'customers_count' => $UwHHl->customers_count]; }); goto tsZPf; tsZPf: return Inertia::render('Sales/Mitra', ['capabilities' => $tMeOZ, 'salesData' => $YI1OX]); goto Jng2J; fm1PX: if (!$l8Pdr->is_system_admin && $l8Pdr->role && !$l8Pdr->role->can_view_all_customers) { if ($l8Pdr->role->view_own_only) { $oKPRU->where('id', $l8Pdr->id); } elseif ($l8Pdr->role->view_by_sales) { $pZPzE = $l8Pdr->perms_view_sales_ids ?? $l8Pdr->role->allowed_sales_ids ?? []; if (!empty($pZPzE)) { $oKPRU->whereIn('id', $pZPzE); } else { $oKPRU->where('id', $l8Pdr->id); } } } goto B_Wbj; B_Wbj: $uieV1 = $oKPRU->get(); goto h8uzN; AU8XN: $oKPRU = \App\Models\User::where('is_active', true)->with('role')->withCount('customers'); goto fm1PX; t6Oni: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto XE4CB; Jng2J: } public function mitraDeposits(Request $DVgdY, \App\Models\User $l8Pdr) { goto zRhLs; pxCXf: return response()->json($TM3ru); goto uhy4g; e0HSZ: if ($x7ABN) { $OpYw4->whereRaw("to_char(deposit_date, 'YYYY-MM') = ?", [$x7ABN]); } goto NZ7Qg; NZ7Qg: $TM3ru = $OpYw4->get()->map(function ($WcvYA) { return ['id' => $WcvYA->id, 'amount' => $WcvYA->amount, 'deposit_date' => $WcvYA->deposit_date ? $WcvYA->deposit_date->format('d/m/Y') : '-', 'period_label' => $WcvYA->deposit_date ? $WcvYA->deposit_date->translatedFormat('F Y') : '-', 'notes' => $WcvYA->notes ?? '—', 'status' => $WcvYA->status, 'receiver_name' => $WcvYA->receiver ? $WcvYA->receiver->name : 'admin']; }); goto pxCXf; zRhLs: $x7ABN = $DVgdY->get('month'); goto b7L0e; b7L0e: $OpYw4 = \App\Models\Deposit::with(['receiver'])->where('sales_id', $l8Pdr->id)->orderByDesc('deposit_date')->orderByDesc('id'); goto e0HSZ; uhy4g: } public function saldo(Request $DVgdY): Response { goto FfCUG; A96Pu: return Inertia::render('Sales/Saldo', ['capabilities' => $tMeOZ, 'salesUsers' => $Fbbpx]); goto c1N0D; qpzFi: $Pr3kR = \App\Models\User::where('is_active', true)->whereHas('role', function ($HcEBQ) { $HcEBQ->where('is_saldo_limited', true); })->with('role'); goto mz0rO; GtPIm: $Fbbpx = $Pr3kR->get()->map(function ($UwHHl) { return ['id' => $UwHHl->id, 'name' => $UwHHl->name, 'role_name' => $UwHHl->role ? $UwHHl->role->name : '-', 'deposit_balance' => (float) $UwHHl->deposit_balance]; }); goto A96Pu; mz0rO: if (!$l8Pdr->is_system_admin && $l8Pdr->role && !$l8Pdr->role->can_view_all_customers) { if ($l8Pdr->role->view_own_only) { $Pr3kR->where('id', $l8Pdr->id); } elseif ($l8Pdr->role->view_by_sales) { $pZPzE = $l8Pdr->perms_view_sales_ids ?? $l8Pdr->role->allowed_sales_ids ?? []; if (!empty($pZPzE)) { $Pr3kR->whereIn('id', $pZPzE); } else { $Pr3kR->where('id', $l8Pdr->id); } } } goto GtPIm; HXWsg: $tMeOZ = $this->permissionService->getUserCapabilities($l8Pdr); goto qpzFi; FfCUG: $l8Pdr = $DVgdY->user()->load('role', 'tenant'); goto HXWsg; c1N0D: } public function addSaldo(Request $DVgdY, \App\Models\User $l8Pdr) { goto Lq2_S; sWiXj: $n6XsS = $DVgdY->user(); goto NYnFG; GlgPz: return back()->with('success', 'Saldo berhasil ditambahkan.'); goto N8KxS; uEqrP: $ISVFS = $RdI95 + $oM_09; goto Ztw4Z; gra5W: $RdI95 = $l8Pdr->deposit_balance ?? 0; goto uEqrP; Lq2_S: $DVgdY->validate(['amount' => 'required|numeric|min:1', 'notes' => 'nullable|string|max:255']); goto sWiXj; Ztw4Z: \Illuminate\Support\Facades\DB::transaction(function () use ($l8Pdr, $oM_09, $RdI95, $ISVFS, $DVgdY, $n6XsS) { $l8Pdr->update(['deposit_balance' => $ISVFS]); \App\Models\DepositMutation::create(['user_id' => $l8Pdr->id, 'type' => 'credit', 'amount' => $oM_09, 'balance_before' => $RdI95, 'balance_after' => $ISVFS, 'notes' => $DVgdY->notes ?? 'Penambahan saldo oleh ' . $n6XsS->name, 'created_by' => $n6XsS->id]); }); goto GlgPz; NYnFG: $oM_09 = $DVgdY->amount; goto gra5W; N8KxS: } public function deductSaldo(Request $DVgdY, \App\Models\User $l8Pdr) { goto zukCO; OojKz: return back()->with('success', 'Saldo berhasil dikurangi.'); goto Dz9Pk; fRbJE: $ISVFS = $RdI95 - $oM_09; goto UhKxF; jOz04: $RdI95 = $l8Pdr->deposit_balance ?? 0; goto VQ6JF; zukCO: $DVgdY->validate(['amount' => 'required|numeric|min:1', 'notes' => 'nullable|string|max:255']); goto vPCMM; UhKxF: \Illuminate\Support\Facades\DB::transaction(function () use ($l8Pdr, $oM_09, $RdI95, $ISVFS, $DVgdY, $n6XsS) { $l8Pdr->update(['deposit_balance' => $ISVFS]); \App\Models\DepositMutation::create(['user_id' => $l8Pdr->id, 'type' => 'debit', 'amount' => $oM_09, 'balance_before' => $RdI95, 'balance_after' => $ISVFS, 'notes' => $DVgdY->notes ?? 'Pengurangan saldo oleh ' . $n6XsS->name, 'created_by' => $n6XsS->id]); }); goto OojKz; VQ6JF: if ($RdI95 < $oM_09) { return back()->withErrors(['amount' => 'Saldo tidak mencukupi untuk pengurangan ini.']); } goto fRbJE; vPCMM: $n6XsS = $DVgdY->user(); goto r3sN6; r3sN6: $oM_09 = $DVgdY->amount; goto jOz04; Dz9Pk: } public function saldoHistory(Request $DVgdY, \App\Models\User $l8Pdr) { $i4cqn = \App\Models\DepositMutation::with('creator')->where('user_id', $l8Pdr->id)->orderByDesc('id')->get()->map(function ($iN37n) { return ['id' => $iN37n->id, 'type' => $iN37n->type, 'amount' => (float) $iN37n->amount, 'balance_before' => (float) $iN37n->balance_before, 'balance_after' => (float) $iN37n->balance_after, 'notes' => $iN37n->notes, 'created_at' => $iN37n->created_at->format('d/m/Y H:i'), 'creator_name' => $iN37n->creator ? $iN37n->creator->name : 'Sistem']; }); return response()->json($i4cqn); } }
+
+namespace App\Http\Controllers\Web;
+
+use App\Http\Controllers\Controller;
+use App\Models\Customer;
+use App\Models\Payment;
+use App\Models\Package;
+use App\Services\PermissionService;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class ReportController extends Controller
+{
+    private $permissionService;
+    public function __construct(PermissionService $permissionService) {
+        $this->permissionService = $permissionService;
+    }
+
+    private function applyVisibilityFilter($query, $user, $column = 'sales_id', $isPayment = false) {
+        if ($user->is_system_admin || !$user->role) return $query;
+        
+        if ($user->role->can_view_all_customers) return $query;
+
+        // If they have view_own_only, force their own ID
+        if ($user->role->view_own_only) {
+            if ($isPayment) {
+                return $query->where(function($q) use ($user, $column) {
+                    $q->where($column, $user->id)->orWhere('collected_by', $user->id);
+                });
+            }
+            return $query->where($column, $user->id);
+        }
+
+        // If they have view_by_sales, allow allowed_sales_ids
+        if ($user->role->view_by_sales) {
+            $salesIds = $user->perms_view_sales_ids ?? $user->role->allowed_sales_ids ?? [];
+            if (!empty($salesIds)) {
+                if ($isPayment) {
+                    return $query->where(function($q) use ($salesIds, $column) {
+                        $q->whereIn($column, $salesIds)->orWhereIn('collected_by', $salesIds);
+                    });
+                }
+                return $query->whereIn($column, $salesIds);
+            } else {
+                if ($isPayment) {
+                    return $query->where(function($q) use ($user, $column) {
+                        $q->where($column, $user->id)->orWhere('collected_by', $user->id);
+                    });
+                }
+                return $query->where($column, $user->id);
+            }
+        }
+        return $query;
+    }
+
+    public function statistics(Request $request)
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+        $tenant = $user->tenant;
+
+        // Monthly revenue (12 months)
+        $revenueMonthly = clone Payment::where('status', 'paid')
+            ->where('payment_date', '>=', now()->subMonths(12)->startOfMonth());
+        $revenueMonthly = $this->applyVisibilityFilter($revenueMonthly, $user, 'sales_id', true)
+            ->selectRaw("to_char(payment_date, 'YYYY-MM') as period, COUNT(*) as count, SUM(paid_amount) as total")
+            ->groupByRaw("to_char(payment_date, 'YYYY-MM')")
+            ->orderBy('period')
+            ->get();
+
+        // Customer growth
+        $customerGrowth = Customer::where('registration_date', '>=', now()->subMonths(6)->startOfMonth())
+            ->selectRaw("to_char(registration_date, 'YYYY-MM') as period, COUNT(*) as count")
+            ->groupByRaw("to_char(registration_date, 'YYYY-MM')")
+            ->orderBy('period')
+            ->get();
+
+        // Package distribution
+        $packageDist = Customer::where('status', 'active')
+            ->selectRaw('package_id, COUNT(*) as count')
+            ->groupBy('package_id')
+            ->with('package')
+            ->get();
+
+        // Payment method stats
+        $methodStats = clone Payment::where('status', 'paid')
+            ->whereYear('payment_date', now()->year);
+        $methodStats = $this->applyVisibilityFilter($methodStats, $user, 'sales_id', true)
+            ->selectRaw('payment_method, COUNT(*) as count, SUM(paid_amount) as total')
+            ->groupBy('payment_method')
+            ->get();
+
+        return Inertia::render('Reports/Statistics', ['capabilities' => $capabilities, 'revenueMonthly' => $revenueMonthly, 'customerGrowth' => $customerGrowth, 'packageDist' => $packageDist, 'methodStats' => $methodStats]);
+    }
+
+    public function finance(Request $request): Response
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+        $year = $request->get('year', now()->year);
+
+        // Monthly P&L
+        $monthlyData = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $revenueQ = Payment::where('status', 'paid')
+                ->whereMonth('payment_date', $m)->whereYear('payment_date', $year);
+            $revenue = $this->applyVisibilityFilter($revenueQ, $user, 'sales_id', true)->sum('paid_amount');
+            
+            $otherIncomesQ = \App\Models\OtherIncome::whereMonth('income_date', $m)->whereYear('income_date', $year);
+            $otherIncomes = $this->applyVisibilityFilter($otherIncomesQ, $user, 'created_by')->sum('amount');
+            
+            $revenue += $otherIncomes;
+
+            $ppnQ = Payment::where('status', 'paid')
+                ->whereMonth('payment_date', $m)->whereYear('payment_date', $year);
+            $ppn = $this->applyVisibilityFilter($ppnQ, $user, 'sales_id', true)->sum('ppn_amount');
+
+            $pengeluaranQ = \App\Models\Expense::where('status', 'active')
+                ->whereMonth('expense_date', $m)->whereYear('expense_date', $year);
+            $pengeluaran = $this->applyVisibilityFilter($pengeluaranQ, $user, 'created_by')->sum('amount');
+
+            $monthlyData[] = [
+                'month' => \Carbon\Carbon::create($year, $m)->locale('id')->isoFormat('MMM'),
+                'pendapatan' => $revenue,
+                'ppn' => $ppn,
+                'pengeluaran' => $pengeluaran,
+            ];
+        }
+
+        $yearTotal = [
+            'pendapatan' => collect($monthlyData)->sum('pendapatan'),
+            'ppn' => collect($monthlyData)->sum('ppn'),
+            'pengeluaran' => collect($monthlyData)->sum('pengeluaran'),
+        ];
+
+        return Inertia::render('Reports/Finance', ['capabilities' => $capabilities, 'monthlyData' => $monthlyData, 'yearTotal' => $yearTotal, 'year' => $year]);
+    }
+
+    public function detailPendapatan(Request $request): Response
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+        $month = $request->get('month', now()->format('Y-m'));
+
+        $paymentsQ = Payment::with(['customer.package', 'customer.area', 'collector'])
+            ->where('status', 'paid')
+            ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$month]);
+        $payments = $this->applyVisibilityFilter($paymentsQ, $user, 'sales_id', true)
+            ->orderByDesc('payment_date')->orderByDesc('id')
+            ->get();
+
+        $totals = [
+            'amount' => collect($payments)->sum('paid_amount'),
+            'count' => count($payments),
+        ];
+
+        $areas = Area::orderBy('name')->get();
+
+        return Inertia::render('Reports/DetailPendapatan', ['capabilities' => $capabilities, 'payments' => $payments, 'totals' => $totals, 'month' => $month, 'areas' => $areas]);
+    }
+
+    public function pengeluaran(Request $request): Response
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+        $month = $request->get('month', now()->format('Y-m'));
+
+        $expensesQ = \App\Models\Expense::with('creator')
+            ->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$month])
+            ->where('status', 'active');
+        $expenses = $this->applyVisibilityFilter($expensesQ, $user, 'created_by')
+            ->orderByDesc('id')->get();
+
+        $total = $expenses->sum('amount');
+        $categories = ['Operasional', 'Marketing', 'Alat/Material', 'Pajak', 'Deviden', 'Lainnya'];
+
+        return Inertia::render('Reports/Pengeluaran', ['capabilities' => $capabilities, 'expenses' => $expenses, 'total' => $total, 'month' => $month, 'categories' => $categories]);
+    }
+
+    public function storePengeluaran(Request $request)
+    {
+        $data = $request->validate([
+            'description' => 'required|string|max:255',
+            'category' => 'required|string|max:100',
+            'amount' => 'required|integer|min:1',
+        ]);
+        $data['tenant_id'] = $request->user()->tenant_id;
+        $data['created_by'] = $request->user()->id;
+        $data['expense_date'] = now()->toDateString();
+        $data['status'] = 'active';
+        \App\Models\Expense::create($data);
+        return back()->with('success', 'Pengeluaran berhasil ditambahkan.');
+    }
+
+    // ===== TAX =====
+    public function tax(Request $request)
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+        $tenant = $user->tenant;
+        $month = $request->get('month', now()->format('Y-m'));
+
+        $paymentsCollectionQ = Payment::with(['customer.package'])
+            ->where('status', 'paid')
+            ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$month]);
+        $paymentsCollection = $this->applyVisibilityFilter($paymentsCollectionQ, $user, 'sales_id', true)
+            ->orderByDesc('payment_date')->get()
+            ->map(function ($payment) {
+                $customer = $payment->customer;
+                $package = $customer?->package;
+                
+                $harga = $package?->price ?? 0;
+                // If invoice exists, take its amount as base price to be consistent
+                $amountBase = $payment->invoice ? $payment->invoice->amount : $payment->amount;
+                $diskon = $payment->discount;
+                $afterDiskon = max(0, $amountBase - $diskon);
+                
+                $bhpRate = 1.25;
+                $adminFee = 2500;
+                
+                $bhp = $customer?->pakai_bhp ? round($afterDiskon * ($bhpRate / 100)) : 0;
+                $admin = $customer?->pakai_admin ? $adminFee : 0;
+
+                return [
+                    'id' => $payment->id,
+                    'payment_date' => $payment->payment_date?->format('d/m/Y H:i'),
+                    'customer_name' => $customer?->name ?? '-',
+                    'package_name' => $package?->name ?? '-',
+                    'ppn' => (float)$payment->ppn_amount,
+                    'bhp_uso' => (float)$bhp,
+                    'admin' => (float)$admin,
+                ];
+            });
+
+        $totalPpn = $paymentsCollection->sum('ppn');
+        $totalBhp = $paymentsCollection->sum('bhp_uso');
+        $totalAdmin = $paymentsCollection->sum('admin');
+
+        // Hanya tampilkan data yang memiliki nilai pajak/biaya admin setidaknya salah satu
+        $payments = $paymentsCollection->filter(fn($p) => $p['ppn'] > 0 || $p['bhp_uso'] > 0 || $p['admin'] > 0)->values();
+
+        return Inertia::render('Reports/Tax', ['capabilities' => $capabilities, 'payments' => $payments, 'totalPpn' => $totalPpn, 'totalBhp' => $totalBhp, 'totalAdmin' => $totalAdmin, 'month' => $month]);
+    }
+
+    // ===== Total =====
+    public function total(Request $request): Response
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+        $tenant = $user->tenant;
+        $month = $request->get('month', now()->format('Y-m'));
+
+        $pendapatan = $this->applyVisibilityFilter(Payment::where('status', 'paid')
+            ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$month]), $user, 'sales_id', true)->sum('paid_amount');
+        $pendapatanLain = $this->applyVisibilityFilter(\App\Models\OtherIncome::whereRaw("to_char(income_date, 'YYYY-MM') = ?", [$month]), $user, 'created_by')->sum('amount');
+        $ppn = $this->applyVisibilityFilter(Payment::where('status', 'paid')
+            ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$month]), $user, 'sales_id', true)->sum('ppn_amount');
+        $txnCount = $this->applyVisibilityFilter(Payment::where('status', 'paid')
+            ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$month]), $user, 'sales_id', true)->count();
+        $pengeluaran = $this->applyVisibilityFilter(\App\Models\Expense::where('status', 'active')
+            ->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$month]), $user, 'created_by')->sum('amount');
+        $setoran = $this->applyVisibilityFilter(\App\Models\Deposit::where('status', 'active')
+            ->whereRaw("to_char(deposit_date, 'YYYY-MM') = ?", [$month]), $user, 'sales_id')->sum('amount');
+
+        // Calculate fees and remaining un-deposited amounts similar to the Setoran page
+        $userQuery = \App\Models\User::where('is_active', true);
+        if (!$user->is_system_admin && $user->role && !$user->role->can_view_all_customers) {
+            if ($user->role->view_own_only) {
+                $userQuery->where('id', $user->id);
+            } elseif ($user->role->view_by_sales) {
+                $salesIds = $user->perms_view_sales_ids ?? $user->role->allowed_sales_ids ?? [];
+                if (!empty($salesIds)) {
+                    $userQuery->whereIn('id', $salesIds);
+                } else {
+                    $userQuery->where('id', $user->id);
+                }
+            }
+        }
+        $salesUsers = $userQuery
+            ->with(['role', 
+                'collectedPayments' => function($q) use ($month) {
+                    $q->where('status', 'paid')
+                      ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$month]);
+                },
+                'deposits' => function($q) use ($month) {
+                    $q->where('status', 'active')
+                      ->whereRaw("to_char(deposit_date, 'YYYY-MM') = ?", [$month]);
+                },
+                'expenses' => function($q) use ($month) {
+                    $q->where('status', 'active')
+                      ->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$month]);
+                }
+            ])
+            ->get()
+            ->map(function($u) {
+                $uang_diterima = $u->collectedPayments->sum('paid_amount');
+                $txn = $u->collectedPayments->count();
+                $fee = ($u->fee_persen / 100 * $uang_diterima) + ($u->fee_fix * $txn);
+                $pengeluaran = $u->expenses->sum('amount');
+                $sudah_disetor = $u->deposits->sum('amount');
+                
+                $harus_disetor = $uang_diterima - $fee - $pengeluaran;
+                $sisa = $harus_disetor - $sudah_disetor;
+                return [
+                    'fee' => $fee,
+                    'sisa' => $sisa,
+                ];
+            });
+
+        $total_fee = $salesUsers->sum('fee');
+        $belum_disetor = $salesUsers->sum('sisa');
+
+        return Inertia::render('Reports/Total', ['capabilities' => $capabilities, 'pendapatan' => $pendapatan, 'pendapatanLain' => $pendapatanLain, 'ppn' => $ppn, 'txnCount' => $txnCount, 'pengeluaran' => $pengeluaran, 'setoran' => $setoran, 'month' => $month, 'tenant' => $tenant, 'total_fee' => $total_fee, 'belum_disetor' => $belum_disetor]);
+    }
+
+    // ===== Arus Kas =====
+    public function cashflow(Request $request): Response
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+        $month = $request->get('month', now()->format('Y-m'));
+
+        // ============================
+        // 1. ARUS MASUK
+        // ============================
+        $paymentsQ = Payment::where('status', 'paid')
+            ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$month]);
+        $payments = $this->applyVisibilityFilter($paymentsQ, $user, 'sales_id', true)->get();
+
+        $penerimaan_metode = $payments->groupBy('payment_method')->map(function ($items, $method) {
+            return [
+                'nama' => ucfirst($method ?: 'Lainnya'),
+                'jumlah_trx' => $items->count(),
+                'total' => $items->sum('paid_amount'),
+            ];
+        })->values();
+
+        $total_penerimaan = $payments->sum('paid_amount');
+
+        $otherIncomesQ = \App\Models\OtherIncome::whereRaw("to_char(income_date, 'YYYY-MM') = ?", [$month]);
+        $otherIncomes = $this->applyVisibilityFilter($otherIncomesQ, $user, 'created_by')->get();
+        $total_pendapatan_lain = $otherIncomes->sum('amount');
+        $pendapatan_lain_items = $otherIncomes->groupBy('category')->map(function ($items, $category) {
+             return [
+                 'nama' => $category ?: 'Lain-lain',
+                 'jumlah_trx' => $items->count(),
+                 'total' => $items->sum('amount'),
+             ];
+        })->values();
+
+        $total_arus_masuk = $total_penerimaan + $total_pendapatan_lain;
+
+        // ============================
+        // 2. ARUS KELUAR
+        // ============================
+        $ppn_tercatat = $payments->sum('ppn_amount');
+
+        $salesFeesQ = Payment::with('sales:id,name')
+            ->where('status', 'paid')
+            ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$month])
+            ->where('sales_fee_amount', '>', 0);
+        $salesFees = $this->applyVisibilityFilter($salesFeesQ, $user, 'sales_id', true)->get();
+            
+        $collectorFeesQ = Payment::with('collector:id,name')
+            ->where('status', 'paid')
+            ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$month])
+            ->where('collector_fee_amount', '>', 0);
+        $collectorFees = $this->applyVisibilityFilter($collectorFeesQ, $user, 'sales_id', true)->get();
+
+        $feeUsers = [];
+        foreach ($salesFees as $sf) {
+            $name = $sf->sales ? $sf->sales->name : 'Unknown';
+            if (!isset($feeUsers[$name])) $feeUsers[$name] = 0;
+            $feeUsers[$name] += $sf->sales_fee_amount;
+        }
+        foreach ($collectorFees as $cf) {
+            $name = $cf->collector ? $cf->collector->name : 'Unknown';
+            if (!isset($feeUsers[$name])) $feeUsers[$name] = 0;
+            $feeUsers[$name] += $cf->collector_fee_amount;
+        }
+
+        $pembayaran_fee = collect($feeUsers)->map(function ($total, $user_name) {
+            return [
+                'user' => $user_name,
+                'total' => $total
+            ];
+        })->values();
+        $total_fee = $pembayaran_fee->sum('total');
+
+        $expensesQ = \App\Models\Expense::with('creator:id,name')
+            ->where('status', 'active')
+            ->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$month]);
+        $expenses = $this->applyVisibilityFilter($expensesQ, $user, 'created_by')->get();
+
+        $pengeluaran_per_user = $expenses->groupBy('created_by')->map(function ($items, $user_id) {
+            $first = $items->first();
+            return [
+                'user' => $first->creator ? $first->creator->name : 'Unknown',
+                'jumlah_item' => $items->count(),
+                'total' => $items->sum('amount')
+            ];
+        })->values();
+        $total_pengeluaran_user = $pengeluaran_per_user->sum('total');
+
+        $total_arus_keluar = $total_fee + $total_pengeluaran_user + $ppn_tercatat;
+        $arus_kas_bersih = $total_arus_masuk - $total_arus_keluar;
+
+        // ============================
+        // 3. DATA BULAN SEBELUMNYA (Growth)
+        // ============================
+        $lastMonth = \Carbon\Carbon::createFromFormat('Y-m', $month)->subMonth()->format('Y-m');
+        
+        $lm_payments = Payment::where('status', 'paid')
+            ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$lastMonth])
+            ->get();
+        $lm_arus_masuk = $lm_payments->sum('paid_amount') + \App\Models\OtherIncome::whereRaw("to_char(income_date, 'YYYY-MM') = ?", [$lastMonth])->sum('amount');
+        $lm_arus_keluar = $lm_payments->sum('sales_fee_amount') + $lm_payments->sum('collector_fee_amount') + $lm_payments->sum('ppn_amount') + \App\Models\Expense::where('status', 'active')->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$lastMonth])->sum('amount');
+        $lm_arus_kas_bersih = $lm_arus_masuk - $lm_arus_keluar;
+
+        $growth = 0;
+        if ($lm_arus_kas_bersih > 0) {
+            $growth = (($arus_kas_bersih - $lm_arus_kas_bersih) / $lm_arus_kas_bersih) * 100;
+        } elseif ($lm_arus_kas_bersih <= 0 && $arus_kas_bersih > 0) {
+            $growth = 100;
+        }
+
+        // ============================
+        // 4. RINCIAN TRANSAKSI (LEDGER)
+        // ============================
+        $transactions = collect();
+        foreach ($payments as $p) {
+            $time = $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('H:i:s') : '00:00:00';
+            $date = \Carbon\Carbon::parse($p->payment_date)->format('Y-m-d');
+            $datetime = $date . ' ' . $time;
+
+            // Income
+            $transactions->push([
+                'tanggal' => $datetime,
+                'keterangan' => 'Penerimaan Pelanggan via ' . ucfirst($p->payment_method),
+                'referensi' => $p->transaction_id ?: '-',
+                'masuk' => $p->paid_amount,
+                'keluar' => 0,
+            ]);
+            // PPN Out
+            if ($p->ppn_amount > 0) {
+                $transactions->push([
+                    'tanggal' => $datetime,
+                    'keterangan' => 'Potongan PPN Tercatat',
+                    'referensi' => $p->transaction_id ?: '-',
+                    'masuk' => 0,
+                    'keluar' => $p->ppn_amount,
+                ]);
+            }
+            // Sales Fee Out
+            if ($p->sales_fee_amount > 0) {
+                $name = $p->sales ? $p->sales->name : 'Unknown';
+                $transactions->push([
+                    'tanggal' => $datetime,
+                    'keterangan' => 'Pembayaran Fee Sales (' . $name . ')',
+                    'referensi' => $p->transaction_id ?: '-',
+                    'masuk' => 0,
+                    'keluar' => $p->sales_fee_amount,
+                ]);
+            }
+            // Collector Fee Out
+            if ($p->collector_fee_amount > 0) {
+                $name = $p->collector ? $p->collector->name : 'Unknown';
+                $transactions->push([
+                    'tanggal' => $datetime,
+                    'keterangan' => 'Pembayaran Fee Collector (' . $name . ')',
+                    'referensi' => $p->transaction_id ?: '-',
+                    'masuk' => 0,
+                    'keluar' => $p->collector_fee_amount,
+                ]);
+            }
+        }
+
+        foreach ($otherIncomes as $oi) {
+            $time = $oi->created_at ? \Carbon\Carbon::parse($oi->created_at)->format('H:i:s') : '00:00:00';
+            $date = \Carbon\Carbon::parse($oi->income_date)->format('Y-m-d');
+            $transactions->push([
+                'tanggal' => $date . ' ' . $time,
+                'keterangan' => 'Pendapatan Lain: ' . $oi->category . ($oi->notes ? ' (' . $oi->notes . ')' : ''),
+                'referensi' => '-',
+                'masuk' => $oi->amount,
+                'keluar' => 0,
+            ]);
+        }
+
+        foreach ($expenses as $ex) {
+            $time = $ex->created_at ? \Carbon\Carbon::parse($ex->created_at)->format('H:i:s') : '00:00:00';
+            $date = \Carbon\Carbon::parse($ex->expense_date)->format('Y-m-d');
+            $name = $ex->creator ? $ex->creator->name : 'Unknown';
+            $transactions->push([
+                'tanggal' => $date . ' ' . $time,
+                'keterangan' => 'Pengeluaran (' . $name . '): ' . $ex->category . ($ex->description ? ' (' . $ex->description . ')' : ''),
+                'referensi' => '-',
+                'masuk' => 0,
+                'keluar' => $ex->amount,
+            ]);
+        }
+
+        // Sort by date
+        $transactions = $transactions->sortBy('tanggal')->values();
+
+        // Calculate Running Balance
+        $startOfMonthDate = \Carbon\Carbon::parse($month . '-01')->startOfDay();
+        
+        $pastPaymentsIn = Payment::where('status', 'paid')->where('payment_date', '<', $startOfMonthDate)->sum('paid_amount');
+        $pastOtherIn = \App\Models\OtherIncome::where('income_date', '<', $startOfMonthDate)->sum('amount');
+        $pastPpnOut = Payment::where('status', 'paid')->where('payment_date', '<', $startOfMonthDate)->sum('ppn_amount');
+        $pastSalesFeeOut = Payment::where('status', 'paid')->where('payment_date', '<', $startOfMonthDate)->sum('sales_fee_amount');
+        $pastCollectorFeeOut = Payment::where('status', 'paid')->where('payment_date', '<', $startOfMonthDate)->sum('collector_fee_amount');
+        $pastExpOut = \App\Models\Expense::where('status', 'active')->where('expense_date', '<', $startOfMonthDate)->sum('amount');
+        
+        $saldo_awal = ($pastPaymentsIn + $pastOtherIn) - ($pastPpnOut + $pastSalesFeeOut + $pastCollectorFeeOut + $pastExpOut);
+        
+        $runningBalance = $saldo_awal;
+        $transactions = $transactions->map(function ($trx) use (&$runningBalance) {
+            $runningBalance += $trx['masuk'];
+            $runningBalance -= $trx['keluar'];
+            $trx['saldo'] = $runningBalance;
+            return $trx;
+        });
+
+        $reportData = [
+            'arus_masuk' => [
+                'penerimaan_pelanggan' => [
+                    'total' => $total_penerimaan,
+                    'metode' => $penerimaan_metode
+                ],
+                'pendapatan_lain' => [
+                    'total' => $total_pendapatan_lain,
+                    'items' => $pendapatan_lain_items
+                ],
+                'total' => $total_arus_masuk
+            ],
+            'arus_keluar' => [
+                'fee_per_user' => [
+                    'total' => $total_fee,
+                    'users' => $pembayaran_fee
+                ],
+                'pengeluaran_per_user' => [
+                    'total' => $total_pengeluaran_user,
+                    'users' => $pengeluaran_per_user
+                ],
+                'ppn' => $ppn_tercatat,
+                'total' => $total_arus_keluar
+            ],
+            'summary' => [
+                'total_masuk' => $total_arus_masuk,
+                'total_keluar' => $total_arus_keluar,
+                'bersih_bulan_ini' => $arus_kas_bersih,
+                'bersih_bulan_lalu' => $lm_arus_kas_bersih,
+                'last_month_label' => \Carbon\Carbon::createFromFormat('Y-m', $lastMonth)->locale('en')->isoFormat('MMMM YYYY'),
+                'growth' => round($growth, 1)
+            ],
+            'riwayat_transaksi' => [
+                'saldo_awal' => $saldo_awal,
+                'data' => $transactions
+            ]
+        ];
+
+        return Inertia::render('Reports/Cashflow', ['capabilities' => $capabilities, 'reportData' => $reportData, 'month' => $month]);
+    }
+
+    // ===== BATCH C: Fee =====
+    public function fee(Request $request): Response
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+        $tenantId = $user->tenant_id;
+        $month = $request->get('month', now()->format('Y-m'));
+
+        $start = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
+        $end = \Carbon\Carbon::parse($month . '-01')->endOfMonth();
+
+        // Sales fee
+        $salesQuery = Payment::where('tenant_id', $tenantId)
+            ->whereBetween('payment_date', [$start, $end])
+            ->where('status', 'paid')
+            ->whereNotNull('sales_id');
+
+        // Collector fee
+        $collectorQuery = Payment::where('tenant_id', $tenantId)
+            ->whereBetween('payment_date', [$start, $end])
+            ->where('status', 'paid')
+            ->whereNotNull('collected_by');
+
+        if (!$user->is_system_admin && $user->role && !$user->role->can_view_all_customers) {
+            if ($user->role->view_own_only) {
+                $salesQuery->where('sales_id', $user->id);
+                $collectorQuery->where('collected_by', $user->id);
+            } elseif ($user->role->view_by_sales) {
+                $salesIds = $user->perms_view_sales_ids ?? $user->role->allowed_sales_ids ?? [];
+                if (!empty($salesIds)) {
+                    $salesQuery->whereIn('sales_id', $salesIds);
+                    $collectorQuery->whereIn('collected_by', $salesIds);
+                } else {
+                    $salesQuery->where('sales_id', $user->id);
+                    $collectorQuery->where('collected_by', $user->id);
+                }
+            }
+        }
+
+        $salesFees = $salesQuery->groupBy('sales_id')
+            ->selectRaw('sales_id as user_id, SUM(sales_fee_amount) as total_fee')
+            ->get();
+
+        $collectorFees = $collectorQuery->groupBy('collected_by')
+            ->selectRaw('collected_by as user_id, SUM(collector_fee_amount) as total_fee')
+            ->get();
+
+        $userFees = [];
+        foreach ($salesFees as $sf) {
+            if (!isset($userFees[$sf->user_id])) {
+                $userFees[$sf->user_id] = ['sales' => 0, 'collector' => 0, 'total' => 0];
+            }
+            $userFees[$sf->user_id]['sales'] += $sf->total_fee;
+        }
+        foreach ($collectorFees as $cf) {
+            if (!isset($userFees[$cf->user_id])) {
+                $userFees[$cf->user_id] = ['sales' => 0, 'collector' => 0, 'total' => 0];
+            }
+            $userFees[$cf->user_id]['collector'] += $cf->total_fee;
+        }
+
+        $formattedUserFees = [];
+        $userIds = array_keys($userFees);
+        $users = \App\Models\User::whereIn('id', $userIds)->with('role')->get()->keyBy('id');
+
+        $totalSalesFee = 0;
+        $totalCollectorFee = 0;
+
+        foreach ($userFees as $userId => $fee) {
+            $fee['total'] = $fee['sales'] + $fee['collector'];
+            $totalSalesFee += $fee['sales'];
+            $totalCollectorFee += $fee['collector'];
+            
+            $formattedUserFees[] = [
+                'id' => $userId,
+                'name' => $users[$userId]->name ?? 'Unknown',
+                'role_name' => $users[$userId]->role->name ?? 'Unknown',
+                'sales_fee' => $fee['sales'],
+                'collector_fee' => $fee['collector'],
+                'total_fee' => $fee['total']
+            ];
+        }
+
+        // Sort by total_fee descending
+        usort($formattedUserFees, function($a, $b) {
+            return $b['total_fee'] <=> $a['total_fee'];
+        });
+
+        $totalKeseluruhan = $totalSalesFee + $totalCollectorFee;
+
+        return Inertia::render('Sales/Fee', [
+            'capabilities' => $capabilities,
+            'userFees' => $formattedUserFees,
+            'month' => $month,
+            'totalSalesFee' => $totalSalesFee,
+            'totalCollectorFee' => $totalCollectorFee,
+            'totalKeseluruhan' => $totalKeseluruhan
+        ]);
+    }
+
+    // ===== Setoran =====
+    public function setoran(Request $request): Response
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+        $month = $request->get('month', now()->format('Y-m'));
+
+        $userQuery = \App\Models\User::where('is_active', true);
+        if (!$user->is_system_admin && $user->role && !$user->role->can_view_all_customers) {
+            if ($user->role->view_own_only) {
+                $userQuery->where('id', $user->id);
+            } elseif ($user->role->view_by_sales) {
+                $salesIds = $user->perms_view_sales_ids ?? $user->role->allowed_sales_ids ?? [];
+                if (!empty($salesIds)) {
+                    $userQuery->whereIn('id', $salesIds);
+                } else {
+                    $userQuery->where('id', $user->id);
+                }
+            }
+        }
+
+        $salesUsers = $userQuery->with(['role', 
+                'collectedPayments' => function($q) use ($month) {
+                    $q->where('status', 'paid')
+                      ->whereRaw("to_char(payment_date, 'YYYY-MM') = ?", [$month]);
+                },
+                'deposits' => function($q) use ($month) {
+                    $q->where('status', 'active')
+                      ->whereRaw("to_char(deposit_date, 'YYYY-MM') = ?", [$month]);
+                },
+                'expenses' => function($q) use ($month) {
+                    $q->where('status', 'active')
+                      ->whereRaw("to_char(expense_date, 'YYYY-MM') = ?", [$month]);
+                }
+            ])
+            ->get()
+            ->map(function($u) {
+                $uang_diterima = $u->collectedPayments->sum('paid_amount');
+                $txn = $u->collectedPayments->count();
+                $fee = ($u->fee_persen / 100 * $uang_diterima) + ($u->fee_fix * $txn);
+                $pengeluaran = $u->expenses->sum('amount');
+                $sudah_disetor = $u->deposits->sum('amount');
+                
+                $harus_disetor = $uang_diterima - $fee - $pengeluaran;
+                $sisa = $harus_disetor - $sudah_disetor;
+
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'role_name' => $u->role ? $u->role->name : '-',
+                    'uang_diterima' => $uang_diterima,
+                    'fee' => $fee,
+                    'pengeluaran' => $pengeluaran,
+                    'harus_disetor' => $harus_disetor,
+                    'sudah_disetor' => $sudah_disetor,
+                    'sisa' => $sisa,
+                    'txn' => $txn,
+                ];
+            })
+            // Filter users who have any activity
+            ->filter(fn($u) => $u['uang_diterima'] > 0 || $u['sudah_disetor'] > 0 || $u['pengeluaran'] > 0)
+            ->values();
+
+        // Calculate globals
+        $totalUangDiterima = $salesUsers->sum('uang_diterima');
+        $totalTxn = $salesUsers->sum('txn');
+        $totalFee = $salesUsers->sum('fee');
+        $totalHarusDisetor = $salesUsers->sum('harus_disetor');
+        $totalSales = $salesUsers->count();
+
+        return Inertia::render('Sales/Setoran', ['capabilities' => $capabilities, 'salesUsers' => $salesUsers, 'month' => $month, 'totalUangDiterima' => $totalUangDiterima, 'totalTxn' => $totalTxn, 'totalFee' => $totalFee, 'totalHarusDisetor' => $totalHarusDisetor, 'totalSales' => $totalSales]);
+    }
+
+    public function storeSetoran(Request $request)
+    {
+        $data = $request->validate([
+            'sales_id' => 'required|exists:users,id',
+            'amount' => 'required|integer|min:1',
+            'method' => 'required|string|max:30',
+            'notes' => 'nullable|string|max:255',
+        ]);
+        $data['tenant_id'] = $request->user()->tenant_id;
+        $data['received_by'] = $request->user()->id;
+        $data['deposit_date'] = now()->toDateString();
+        $data['status'] = 'active';
+        \App\Models\Deposit::create($data);
+        return back()->with('success', 'Setoran berhasil dicatat.');
+    }
+
+    public function destroySetoran(Request $request, \App\Models\Deposit $deposit)
+    {
+        $user = $request->user();
+        if (!app(\App\Services\PermissionService::class)->userCan($user, 'billing.deposits.cancel')) {
+            abort(403);
+        }
+
+        $deposit->update([
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+        ]);
+
+        return back()->with('success', 'Setoran berhasil dibatalkan.');
+    }
+
+    // ===== Mitra =====
+    public function mitra(Request $request)
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+        
+        // Fetch all active users with role and customer count
+        $allUsersQuery = \App\Models\User::where('is_active', true)
+            ->with('role')
+            ->withCount('customers');
+
+        if (!$user->is_system_admin && $user->role && !$user->role->can_view_all_customers) {
+            if ($user->role->view_own_only) {
+                $allUsersQuery->where('id', $user->id);
+            } elseif ($user->role->view_by_sales) {
+                $salesIds = $user->perms_view_sales_ids ?? $user->role->allowed_sales_ids ?? [];
+                if (!empty($salesIds)) {
+                    $allUsersQuery->whereIn('id', $salesIds);
+                } else {
+                    $allUsersQuery->where('id', $user->id);
+                }
+            }
+        }
+
+        $allUsers = $allUsersQuery->get();
+
+        // Filter users who have the payment capability (can_bayar -> billing.payments.create)
+        $salesData = $allUsers->filter(function($u) {
+            return app(\App\Services\PermissionService::class)->userCan($u, 'billing.payments.create');
+        })->values()->map(function($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'role_name' => $u->role ? $u->role->name : '-',
+                'fee_persen' => $u->fee_persen,
+                'fee_fix' => $u->fee_fix,
+                'customers_count' => $u->customers_count,
+            ];
+        });
+
+        return Inertia::render('Sales/Mitra', ['capabilities' => $capabilities, 'salesData' => $salesData]);
+    }
+
+    public function mitraDeposits(Request $request, \App\Models\User $user)
+    {
+        // Must have view permissions or be the user
+        $month = $request->get('month'); // e.g. YYYY-MM or null for all periods
+        
+        $query = \App\Models\Deposit::with(['receiver'])
+            ->where('sales_id', $user->id)
+            ->orderByDesc('deposit_date')
+            ->orderByDesc('id');
+
+        if ($month) {
+            $query->whereRaw("to_char(deposit_date, 'YYYY-MM') = ?", [$month]);
+        }
+
+        $deposits = $query->get()->map(function($d) {
+            return [
+                'id' => $d->id,
+                'amount' => $d->amount,
+                'deposit_date' => $d->deposit_date ? $d->deposit_date->format('d/m/Y') : '-',
+                'period_label' => $d->deposit_date ? $d->deposit_date->translatedFormat('F Y') : '-',
+                'notes' => $d->notes ?? '—',
+                'status' => $d->status,
+                'receiver_name' => $d->receiver ? $d->receiver->name : 'admin',
+            ];
+        });
+
+        return response()->json($deposits);
+    }
+
+    // ===== Saldo =====
+    public function saldo(Request $request): Response
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+
+        // Ambil semua user yang role-nya memiliki is_saldo_limited = true
+        $userQuery = \App\Models\User::where('is_active', true)
+            ->whereHas('role', function($q) {
+                $q->where('is_saldo_limited', true);
+            })
+            ->with('role');
+
+        if (!$user->is_system_admin && $user->role && !$user->role->can_view_all_customers) {
+            if ($user->role->view_own_only) {
+                $userQuery->where('id', $user->id);
+            } elseif ($user->role->view_by_sales) {
+                $salesIds = $user->perms_view_sales_ids ?? $user->role->allowed_sales_ids ?? [];
+                if (!empty($salesIds)) {
+                    $userQuery->whereIn('id', $salesIds);
+                } else {
+                    $userQuery->where('id', $user->id);
+                }
+            }
+        }
+
+        $salesUsers = $userQuery->get()
+            ->map(function($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'role_name' => $u->role ? $u->role->name : '-',
+                    'deposit_balance' => (float) $u->deposit_balance,
+                ];
+            });
+
+        return Inertia::render('Sales/Saldo', ['capabilities' => $capabilities, 'salesUsers' => $salesUsers]);
+    }
+
+    public function addSaldo(Request $request, \App\Models\User $user)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        $admin = $request->user();
+        
+        // TODO: check capability can_manage_saldo
+
+        $amount = $request->amount;
+        $balanceBefore = $user->deposit_balance ?? 0;
+        $balanceAfter = $balanceBefore + $amount;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $amount, $balanceBefore, $balanceAfter, $request, $admin) {
+            $user->update(['deposit_balance' => $balanceAfter]);
+
+            \App\Models\DepositMutation::create([
+                'user_id' => $user->id,
+                'type' => 'credit',
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'notes' => $request->notes ?? 'Penambahan saldo oleh ' . $admin->name,
+                'created_by' => $admin->id,
+            ]);
+        });
+
+        return back()->with('success', 'Saldo berhasil ditambahkan.');
+    }
+
+    public function deductSaldo(Request $request, \App\Models\User $user)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        $admin = $request->user();
+        
+        $amount = $request->amount;
+        $balanceBefore = $user->deposit_balance ?? 0;
+        
+        if ($balanceBefore < $amount) {
+            return back()->withErrors(['amount' => 'Saldo tidak mencukupi untuk pengurangan ini.']);
+        }
+
+        $balanceAfter = $balanceBefore - $amount;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $amount, $balanceBefore, $balanceAfter, $request, $admin) {
+            $user->update(['deposit_balance' => $balanceAfter]);
+
+            \App\Models\DepositMutation::create([
+                'user_id' => $user->id,
+                'type' => 'debit',
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'notes' => $request->notes ?? 'Pengurangan saldo oleh ' . $admin->name,
+                'created_by' => $admin->id,
+            ]);
+        });
+
+        return back()->with('success', 'Saldo berhasil dikurangi.');
+    }
+
+    public function saldoHistory(Request $request, \App\Models\User $user)
+    {
+        $mutations = \App\Models\DepositMutation::with('creator')
+            ->where('user_id', $user->id)
+            ->orderByDesc('id')
+            ->get()
+            ->map(function($m) {
+                return [
+                    'id' => $m->id,
+                    'type' => $m->type,
+                    'amount' => (float) $m->amount,
+                    'balance_before' => (float) $m->balance_before,
+                    'balance_after' => (float) $m->balance_after,
+                    'notes' => $m->notes,
+                    'created_at' => $m->created_at->format('d/m/Y H:i'),
+                    'creator_name' => $m->creator ? $m->creator->name : 'Sistem',
+                ];
+            });
+
+        return response()->json($mutations);
+    }
+}
