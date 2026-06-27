@@ -86,7 +86,7 @@ class StatisticController extends Controller
                 $unpaidCount = $unpaidBalance->distinct('customer_id')->count('customer_id');
                 $unpaidAmount = $unpaidBalance->sum('balance');
                 
-                $overdueCnt = Invoice::where('tenant_id', $tenantId)->where('status', 'issued')->where('due_date', '<', $today)->count();
+                $overdueCnt = MonthlyBalance::where('tenant_id', $tenantId)->where('status', '!=', 'paid')->where('period', '<', $bulan)->count();
                 
                 $activeCust = max(1, Customer::where('tenant_id', $tenantId)->where('status', 'active')->where('is_isolated', false)->count());
                 $paidCust = Payment::where('tenant_id', $tenantId)->whereBetween('payment_date', [$mStart, $mEnd])->distinct('customer_id')->count('customer_id');
@@ -332,33 +332,30 @@ class StatisticController extends Controller
 
             case 'aging_analysis':
                 $now = Carbon::now();
-                $invoices = Invoice::where('tenant_id', $tenantId)
-                    ->where('status', 'unpaid')
-                    ->select('due_date', 'amount')
+                $unpaidBalances = MonthlyBalance::where('tenant_id', $tenantId)
+                    ->where('status', '!=', 'paid')
+                    ->select('period', 'balance as amount')
                     ->get();
                 
                 $aging = [
-                    '0-30 Hari' => ['count' => 0, 'amount' => 0, 'label' => '0-30 Hari'],
-                    '31-60 Hari' => ['count' => 0, 'amount' => 0, 'label' => '31-60 Hari'],
-                    '61-90 Hari' => ['count' => 0, 'amount' => 0, 'label' => '61-90 Hari'],
-                    '> 90 Hari' => ['count' => 0, 'amount' => 0, 'label' => '> 90 Hari'],
+                    '0_30' => ['label' => '0-30 Hari', 'amount' => 0, 'count' => 0],
+                    '31_60' => ['label' => '31-60 Hari', 'amount' => 0, 'count' => 0],
+                    '61_90' => ['label' => '61-90 Hari', 'amount' => 0, 'count' => 0],
+                    '90_plus' => ['label' => '>90 Hari', 'amount' => 0, 'count' => 0],
                 ];
 
-                foreach ($invoices as $inv) {
-                    if (!$inv->due_date) continue;
-                    $days = $inv->due_date->diffInDays($now, false);
+                foreach ($unpaidBalances as $bal) {
+                    if (!$bal->period) continue;
+                    $dueDate = Carbon::parse($bal->period . '-01')->addMonth();
+                    $days = $dueDate->diffInDays($now, false);
                     if ($days < 0) $days = 0;
                     
-                    if ($days <= 30) {
-                        $aging['0-30 Hari']['count']++; $aging['0-30 Hari']['amount'] += $inv->amount;
-                    } elseif ($days <= 60) {
-                        $aging['31-60 Hari']['count']++; $aging['31-60 Hari']['amount'] += $inv->amount;
-                    } elseif ($days <= 90) {
-                        $aging['61-90 Hari']['count']++; $aging['61-90 Hari']['amount'] += $inv->amount;
-                    } else {
-                        $aging['> 90 Hari']['count']++; $aging['> 90 Hari']['amount'] += $inv->amount;
-                    }
+                    if ($days <= 30) { $aging['0_30']['amount'] += $bal->amount; $aging['0_30']['count']++; }
+                    elseif ($days <= 60) { $aging['31_60']['amount'] += $bal->amount; $aging['31_60']['count']++; }
+                    elseif ($days <= 90) { $aging['61_90']['amount'] += $bal->amount; $aging['61_90']['count']++; }
+                    else { $aging['90_plus']['amount'] += $bal->amount; $aging['90_plus']['count']++; }
                 }
+                
                 return response()->json(['status' => 'success', 'data' => array_values($aging)]);
 
             case 'revenue_by_area':
