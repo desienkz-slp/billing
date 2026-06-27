@@ -1,8 +1,201 @@
 <?php
-/*   __________________________________________________
-    |  Obfuscated by YAK Pro - Php Obfuscator  3.0.0   |
-    |              on 2026-06-27 04:10:15              |
-    |    GitHub: https://github.com/pk-fr/yakpro-po    |
-    |__________________________________________________|
-*/
- namespace App\Http\Controllers\Api\V1; use App\Http\Controllers\Controller; use App\Models\Payment; use App\Services\PermissionService; use Illuminate\Http\Request; use Illuminate\Http\JsonResponse; class IncomeApiController extends Controller { private $permissionService; public function __construct(PermissionService $juA6f) { $this->permissionService = $juA6f; } public function index(Request $mr6xX): JsonResponse { goto b3s2x; V3CB4: $pWMzH = Payment::with(['customer.area', 'customer.package', 'sales', 'collector', 'invoice'])->where('status', 'paid')->orderByDesc('payment_date')->orderByDesc('id'); goto nYWr_; kzqBL: $uGcSc = clone $pWMzH; goto xYnP_; nYWr_: if ($mr6xX->filled('search')) { $z6yb0 = strtolower($mr6xX->search); $pWMzH->whereHas('customer', function ($GY5Vw) use ($z6yb0) { $GY5Vw->whereRaw('LOWER(name) LIKE ?', ["%{$z6yb0}%"])->orWhereRaw('LOWER(username) LIKE ?', ["%{$z6yb0}%"]); }); } goto gEDFP; hZqH8: if ($mr6xX->filled('area_id')) { $pWMzH->whereHas('customer', function ($GY5Vw) use ($mr6xX) { $GY5Vw->where('area_id', $mr6xX->area_id); }); } goto rbCfB; YsUDA: $WBhIL = $this->permissionService->getUserCapabilities($KpPUh); goto V3CB4; xYnP_: $UUQV0 = $uGcSc->get(); goto rndjo; NR4xC: $w_Pb5 = $stt_c->map(function ($S3Ak7) { goto u5_tD; iwwBk: return ['id' => $S3Ak7->id, 'uuid' => $S3Ak7->uuid, 'payment_date' => $S3Ak7->payment_date?->format('Y-m-d') . ' ' . $S3Ak7->created_at?->format('H:i'), 'period' => $axy0L, 'customer_id' => $M7Rqo?->id, 'customer_name' => $M7Rqo?->name ?? '-', 'package_name' => $fQvPa?->name ?? '-', 'sales_name' => $S3Ak7->sales?->name ?? '-', 'payment_method' => $S3Ak7->payment_method, 'harga' => $n2bAQ, 'diskon' => $hI6_t, 'tambahan' => $CsrbD, 'ppn' => $h6vx3, 'bhp_uso' => $SnLMR, 'admin' => $OtlJe, 'terima' => $S3Ak7->paid_amount, 'status' => $S3Ak7->status, 'created_by_name' => $S3Ak7->collector?->name ?? 'Sistem']; goto Hp9CT; Vh9J0: $M7Rqo = $S3Ak7->customer; goto Nw2SJ; jkTwM: $m0OQy = $F0L2I - $hI6_t; goto V4G79; vrNG4: $vsw3F = 2500; goto iWW12; pDcvB: try { $axy0L = \Carbon\Carbon::createFromFormat('Y-m', $S3Ak7->period)->translatedFormat('M y'); } catch (\Exception $Cu015) { } goto rNH5N; YV4ZD: $OtlJe = $M7Rqo?->pakai_admin ? $vsw3F : 0; goto iwwBk; V4G79: $JSvk_ = 1.25; goto vrNG4; gZPyu: $h6vx3 = $S3Ak7->ppn_amount; goto jkTwM; rNH5N: $n2bAQ = $fQvPa?->price ?? 0; goto KPbaz; iWW12: $SnLMR = $M7Rqo?->pakai_bhp ? round($m0OQy * ($JSvk_ / 100)) : 0; goto YV4ZD; KPbaz: $F0L2I = $BdvvP ? $BdvvP->amount : $S3Ak7->amount; goto Apr82; oLpcj: $axy0L = $S3Ak7->period; goto pDcvB; Nw2SJ: $fQvPa = $M7Rqo?->package; goto oLpcj; Apr82: $CsrbD = max(0, $F0L2I - $n2bAQ); goto PvFA4; PvFA4: $hI6_t = $S3Ak7->discount; goto gZPyu; u5_tD: $BdvvP = $S3Ak7->invoice; goto Vh9J0; Hp9CT: }); goto eWZQ0; rbCfB: if ($mr6xX->filled('sales_id')) { $pWMzH->where('sales_id', $mr6xX->sales_id); } goto kzqBL; SntHe: $L6AFj = $mr6xX->input('per_page', 25); goto napwX; rndjo: $x1Bb2 = ['Total Harga' => 0, 'Total Diskon' => 0, 'Total Tambahan' => 0, 'Total PPN' => 0, 'Total BHP USO' => 0, 'Total Admin' => 0, 'Total Terima' => 0]; goto NQImv; b3s2x: $KpPUh = $mr6xX->user()->load('role', 'tenant'); goto YsUDA; gEDFP: if ($mr6xX->filled('month')) { $DWOqp = $mr6xX->month; $pWMzH->whereYear('payment_date', substr($DWOqp, 0, 4))->whereMonth('payment_date', substr($DWOqp, 5, 2)); } else if (!$mr6xX->has('month')) { $DWOqp = date('Y-m'); $pWMzH->whereYear('payment_date', substr($DWOqp, 0, 4))->whereMonth('payment_date', substr($DWOqp, 5, 2)); } goto hZqH8; NQImv: foreach ($UUQV0 as $Jt3aP) { goto o5i11; LRyyx: $x1Bb2['Total Terima'] += $Jt3aP->paid_amount; goto aD0j0; ACEhc: $x1Bb2['Total Admin'] += $OtlJe; goto LRyyx; omF9h: $hjDm8 = max(0, $jGJAj - $N4Tb1); goto Y6H6D; XVJJJ: $u0B1D = $jGJAj - $zpKZt; goto Ukzem; nozKN: $x1Bb2['Total Harga'] += $N4Tb1; goto SR6hJ; HtDMu: $x1Bb2['Total PPN'] += $h6vx3; goto gfTXa; ia3nx: $x1Bb2['Total Tambahan'] += $hjDm8; goto HtDMu; SR6hJ: $x1Bb2['Total Diskon'] += $zpKZt; goto ia3nx; Y6H6D: $zpKZt = $Jt3aP->discount; goto vyuQA; OPIr0: $wF_z1 = $rdfam?->package; goto VJDM4; kSxep: $rdfam = $Jt3aP->customer; goto OPIr0; vyuQA: $h6vx3 = $Jt3aP->ppn_amount; goto XVJJJ; VJDM4: $N4Tb1 = $wF_z1?->price ?? 0; goto yTb7h; Ukzem: $SnLMR = $rdfam?->pakai_bhp ? round($u0B1D * (1.25 / 100)) : 0; goto dgDsq; o5i11: $ohipx = $Jt3aP->invoice; goto kSxep; yTb7h: $jGJAj = $ohipx ? $ohipx->amount : $Jt3aP->amount; goto omF9h; gfTXa: $x1Bb2['Total BHP USO'] += $SnLMR; goto ACEhc; dgDsq: $OtlJe = $rdfam?->pakai_admin ? 2500 : 0; goto nozKN; aD0j0: } goto SntHe; napwX: $stt_c = $pWMzH->paginate($L6AFj); goto NR4xC; eWZQ0: return response()->json(['data' => $w_Pb5, 'kpi' => $x1Bb2, 'capabilities' => $WBhIL, 'pagination' => ['current_page' => $stt_c->currentPage(), 'last_page' => $stt_c->lastPage(), 'per_page' => $stt_c->perPage(), 'total' => $stt_c->total()]]); goto q279P; q279P: } }
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Http\Controllers\Controller;
+use App\Models\Payment;
+use App\Services\PermissionService;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class IncomeApiController extends Controller
+{
+    private $permissionService;
+    public function __construct(PermissionService $permissionService) {
+        $this->permissionService = $permissionService;
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user()->load('role', 'tenant');
+        $capabilities = $this->permissionService->getUserCapabilities($user);
+
+        $query = Payment::with(['customer.area', 'customer.package', 'sales', 'collector', 'invoice'])
+            ->where('status', 'paid')
+            ->orderByDesc('payment_date')
+            ->orderByDesc('id');
+
+        if ($request->filled('search')) {
+            $search = strtolower($request->search);
+            $query->whereHas('customer', function($q) use ($search) {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                  ->orWhereRaw('LOWER(username) LIKE ?', ["%{$search}%"]);
+            });
+        }
+
+        if ($request->filled('month')) {
+            $month = $request->month;
+            $query->whereYear('payment_date', substr($month, 0, 4))
+                  ->whereMonth('payment_date', substr($month, 5, 2));
+        } else if (!$request->has('month')) {
+            $month = date('Y-m');
+            $query->whereYear('payment_date', substr($month, 0, 4))
+                  ->whereMonth('payment_date', substr($month, 5, 2));
+        }
+
+        if ($request->filled('area_id')) {
+            $query->whereHas('customer', function($q) use ($request) {
+                $q->where('area_id', $request->area_id);
+            });
+        }
+
+        if ($request->filled('sales_id')) {
+            $query->where('sales_id', $request->sales_id);
+        }
+
+        if ($request->filled('collected_by')) {
+            $query->where('collected_by', $request->collected_by);
+        }
+
+        // Calculate KPI Data for all filtered records
+        $kpiQuery = clone $query;
+        $allFiltered = $kpiQuery->get();
+        
+        $kpiData = [
+            'Total Harga' => 0,
+            'Total Diskon' => 0,
+            'Total Tambahan' => 0,
+            'Total PPN' => 0,
+            'Total BHP USO' => 0,
+            'Total Admin' => 0,
+            'Total Terima' => 0,
+        ];
+
+        foreach ($allFiltered as $p) {
+            $inv = $p->invoice;
+            $cust = $p->customer;
+            $pkg = $cust?->package;
+            
+            $h = $pkg?->price ?? 0;
+            $amtBase = $inv ? $inv->amount : $p->amount;
+            $t = max(0, $amtBase - $h);
+            $d = $p->discount;
+            $ppn = $p->ppn_amount;
+            
+            $afterD = $amtBase - $d;
+            $bhp = $cust?->pakai_bhp ? round($afterD * (1.25 / 100)) : 0;
+            $admin = $cust?->pakai_admin ? 2500 : 0;
+
+            $kpiData['Total Harga'] += $h;
+            $kpiData['Total Diskon'] += $d;
+            $kpiData['Total Tambahan'] += $t;
+            $kpiData['Total PPN'] += $ppn;
+            $kpiData['Total BHP USO'] += $bhp;
+            $kpiData['Total Admin'] += $admin;
+            $kpiData['Total Terima'] += $p->paid_amount;
+        }
+
+        $perPage = $request->input('per_page', 25);
+        $paginator = $query->paginate($perPage);
+
+        $mappedData = $paginator->map(function ($payment) {
+            $invoice = $payment->invoice;
+            $customer = $payment->customer;
+            $package = $customer?->package;
+            
+            $formattedPeriod = $payment->period;
+            $monthCount = 1;
+            
+            // Cek apakah invoice memiliki multi-bulan di notes
+            if ($invoice && !empty($invoice->notes) && str_contains($invoice->notes, '20')) {
+                $periods = explode(',', $invoice->notes);
+                // Validasi sederhana apakah format Y-m
+                $validPeriods = array_filter($periods, fn($p) => preg_match('/^\d{4}-\d{2}$/', trim($p)));
+                
+                if (count($validPeriods) > 1) {
+                    $monthCount = count($validPeriods);
+                    sort($validPeriods);
+                    try {
+                        $first = \Carbon\Carbon::createFromFormat('Y-m', $validPeriods[0]);
+                        $last = \Carbon\Carbon::createFromFormat('Y-m', end($validPeriods));
+                        
+                        if ($first->year === $last->year) {
+                            $formattedPeriod = $first->translatedFormat('M') . ' - ' . $last->translatedFormat('M y');
+                        } else {
+                            $formattedPeriod = $first->translatedFormat('M y') . ' - ' . $last->translatedFormat('M y');
+                        }
+                    } catch (\Exception $e) {}
+                } else {
+                    try {
+                        $formattedPeriod = \Carbon\Carbon::createFromFormat('Y-m', $payment->period)->translatedFormat('M y');
+                    } catch (\Exception $e) {}
+                }
+            } else {
+                try {
+                    $formattedPeriod = \Carbon\Carbon::createFromFormat('Y-m', $payment->period)->translatedFormat('M y');
+                } catch (\Exception $e) {}
+            }
+            
+            $harga = $package?->price ?? 0;
+            $amountBase = $invoice ? $invoice->amount : $payment->amount;
+            
+            // Tambahan adalah sisa dari harga dikali jumlah bulan
+            $expectedBase = $harga * $monthCount;
+            $tambahan = max(0, $amountBase - $expectedBase);
+            
+            $diskon = $payment->discount;
+            $ppn = $payment->ppn_amount;
+            
+            $afterDiskon = $amountBase - $diskon;
+            $bhpRate = 1.25; 
+            $adminFee = 2500; 
+            
+            $bhp = $customer?->pakai_bhp ? round($afterDiskon * ($bhpRate / 100)) : 0;
+            $admin = $customer?->pakai_admin ? $adminFee : 0;
+
+            return [
+                'id' => $payment->id,
+                'uuid' => $payment->uuid,
+                'payment_date' => $payment->payment_date?->format('Y-m-d') . ' ' . $payment->created_at?->format('H:i'),
+                'period' => $formattedPeriod,
+                'customer_id' => $customer?->id,
+                'customer_name' => $customer?->name ?? '-',
+                'package_name' => $package?->name ?? '-',
+                'sales_name' => $payment->sales?->name ?? '-',
+                'payment_method' => $payment->payment_method,
+                'harga' => $harga,
+                'diskon' => $diskon,
+                'tambahan' => $tambahan,
+                'ppn' => $ppn,
+                'bhp_uso' => $bhp,
+                'admin' => $admin,
+                'terima' => $payment->paid_amount,
+                'status' => $payment->status,
+                'created_by_name' => $payment->collector?->name ?? 'Sistem',
+            ];
+        });
+
+        $areas = \App\Models\Area::select('id', 'name')->get();
+        $sales = \App\Models\User::whereHas('roles', function($q) {
+            $q->where('name', 'sales');
+        })->orWhere('is_default_sales', true)->select('id', 'name')->get();
+        $collectors = \App\Models\User::select('id', 'name')->get();
+
+        return response()->json([
+            'data' => $mappedData,
+            'kpi' => $kpiData,
+            'capabilities' => $capabilities,
+            'filter_options' => [
+                'areas' => $areas,
+                'sales' => $sales,
+                'collectors' => $collectors,
+            ],
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ]
+        ]);
+    }
+}
